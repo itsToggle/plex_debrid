@@ -47,3 +47,9 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 - It will be updated entirely every 30 minutes, which is when it will try to find newly released episodes from watchlisted series.
 - You can change these intervals in the 'run()' definition.
 - When some content could repeatedly not be downloaded, it will be marked as 'watched' in the Discovery feature of the first specified user. This will cause the scraper to ignore the content, until its marked as 'unwatched' again.
+
+## Limitations:
+- There is no user interface as of now.
+- The plex discover API only provides a release date, not a release time for new episodes. This makes it hard to determined when to ignore an episode.
+- It is significantly faster to only add the 'best' scraped release, and not all scraped releases. Which release is considered to be 'the best' is determined by sorting the releases by multiple, user-defined categories. For now these can be found in the 'releases.sort()' method.
+
