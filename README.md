@@ -3,6 +3,10 @@ Plex torrent streaming through RealDebrid, using the new Plex Discover feature.
 
 **Using the new Plex Discover Feature, your Plex Home users can add movies/shows to their watchlist and they become available to stream in seconds.**
 
+## In Action:
+
+![Alt Text](https://i.ibb.co/4SmVGTG/final-6279217a77f1110078928cf3-366957.gif)
+
 ## Description:
 
 *This python script makes use of my rclone fork, which allows you to mount the RealDebrid /downloads history as a virtual drive. After creating a plex library of this virtual drive, you can stream torrents that are cached on RealDebrid without the need to download them first.*
