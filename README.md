@@ -43,4 +43,5 @@ Once new content is found, torrent indexers are scraped for the best, cached rel
 - Simply run the script to start. 
 - The Plex Watchlist of your specified users will polled for changes every 10 seconds, which is when it will try to find newly added content. 
 - It will be updated entirely every 30 minutes, which is when it will try to find newly released episodes from watchlisted series.
+- You can change these intervals in the 'run()' definition.
 - When some content could repeatedly not be downloaded, it will be marked as 'watched' in the Discovery feature of the first specified user. This will cause the scraper to ignore the content, until its marked as 'unwatched' again.
