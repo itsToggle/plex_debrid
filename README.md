@@ -17,6 +17,8 @@ Once new content is found, torrent indexers are scraped for the best, cached rel
 - For a movie or a one-season tv shows this takes about 20 seconds
 - For multi-season tv shows it takes an additional 10 seconds per season.
 
+This is a pre-alpha release. shits not ready! Feel free to check it out though, I will continously improve the speed, reliability and user-friendlyness.
+
 ## Setup:
 
 **Pre-Setup:**
