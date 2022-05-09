@@ -14,8 +14,8 @@ Plex torrent streaming through RealDebrid, using the new Plex Discover feature.
 The plex watchlist of specified users is constantly checked for newly added movies/shows and newly released episodes of watchlisted shows.
 Once new content is found, torrent indexers are scraped for the best, cached release on RealDebrid. The torrent is then added to RealDebrid and a library refresh is performed to make the newly added content available. 
 
-- For a movie or a one-season tv shows this takes about 10 seconds
-- For multi-season tv shows this may take a little longer, since all seasons will be added to RealDebrid.
+- For a movie or a one-season tv shows this takes about 20 seconds
+- For multi-season tv shows it takes an additional 10 seconds per season.
 
 ## Setup:
 
