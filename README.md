@@ -36,7 +36,7 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 3. in the subclass 'plex.library', change the variable 'url' to point to your server. e.g.:
 **url = 'https://localhost:32400'**
 4. in the subclass 'plex.library', change the variable 'movies' to the section number of your movies library. e.g. **movies = '1'**
-5. in the subclass 'plex.library', change the variable 'shows' to the section number of your shows library. e.g. **shows = '1'**
+5. in the subclass 'plex.library', change the variable 'shows' to the section number of your shows library. e.g. **shows = '2'**
 6. in the class 'debrid', change the variable 'api_key' to your RealDebrid API key. e.g. **api_key = '...'**
 7. Youre done!
 
