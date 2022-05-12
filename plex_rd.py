@@ -8,15 +8,14 @@ from types import SimpleNamespace
 import regex
 regex.DEFAULT_VERSION = regex.VERSION1
 from bs4 import BeautifulSoup
-from fake_useragent import UserAgent
 import sys
 import copy
 import random
-
+ 
 #Plex Class
 class plex:
     session = requests.Session()  
-    users = [{'name':'admin','token':''},]
+    users = []
     headers = {'Content-Type':'application/json','Accept':'application/json'}
     def get(url):
         try:
@@ -42,7 +41,7 @@ class plex:
             watchlist_entries = []
             try:
                 for user in plex.users:
-                    url = 'https://metadata.provider.plex.tv/library/sections/watchlist/all?X-Plex-Token=' + user['token']
+                    url = 'https://metadata.provider.plex.tv/library/sections/watchlist/all?X-Plex-Token=' + user[1]
                     response = plex.get(url)
                     if hasattr(response.MediaContainer,'Metadata'):
                         for entry in response.MediaContainer.Metadata:
@@ -62,18 +61,25 @@ class plex:
                 print('done')
                 sys.stdout.flush()
             return watchlist_entries
-        def remove(self,item):
-            print('item: "' + item.title + '" removed from '+ item.user['name'] +'`s plex watchlist')
+        def remove(item):
+            print('[' + str(datetime.datetime.now()) + '] item: "' + item.title + '" removed from '+ item.user[0] +'`s plex watchlist')
             sys.stdout.flush()
-            url = 'https://metadata.provider.plex.tv/actions/removeFromWatchlist?ratingKey=' + item.ratingKey + '&X-Plex-Token=' + item.user['token']
+            url = 'https://metadata.provider.plex.tv/actions/removeFromWatchlist?ratingKey=' + item.ratingKey + '&X-Plex-Token=' + item.user[1]
             response = plex.session.put(url,data={'ratingKey':item.ratingKey})
     class media:
+        def __init__(self,other):
+            self.__dict__.update(other.__dict__)
+        def __eq__(self, other) -> bool:
+            if not self.type == other.type:
+                return False
+            if self.type == 'movie' or self.type == 'show':
+                return self.guid == other.guid
+            elif self.type == 'season':
+                return self.parentGuid == other.parentGuid and self.index == other.index
+            elif self.type == 'episode':
+                return self.grandparentGuid == other.grandparentGuid and self.parentIndex == other.parentIndex and self.index == other.index
         def __repr__(self):
             return str(self.__dict__)
-        def __eq__(self, other):
-            if hasattr(self,'leafCount') and hasattr(other,'leafCount') and hasattr(self,'viewedLeafCount') and hasattr(other,'viewedLeafCount'):
-                return self.ratingKey == other.ratingKey and self.leafCount == other.leafCount and self.viewedLeafCount == other.viewedLeafCount
-            return self.ratingKey == other.ratingKey 
         def query(self):
             if self.type == 'movie':
                 return releases.rename(self.title) + '.' + str(self.year)
@@ -95,23 +101,40 @@ class plex:
             elif self.type == 'episode':
                 print('ignoring item: ' + self.title + 'S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index)))
                 sys.stdout.flush()
-            url = 'https://metadata.provider.plex.tv/actions/scrobble?identifier=tv.plex.provider.metadata&key='+self.ratingKey+'&X-Plex-Token='+ plex.users[0]['token']
+            url = 'https://metadata.provider.plex.tv/actions/scrobble?identifier=tv.plex.provider.metadata&key='+self.ratingKey+'&X-Plex-Token='+ plex.users[0][1]
             plex.get(url)
         def watched(self):
             if self.type == 'movie' or self.type == 'episode':
                 return self.viewCount > 0
             else:
                 return self.viewedLeafCount == self.leafCount
-        def uncollected(self):
+        def collected(self,list):
+            if self.type == 'show' or self.type == 'season':
+                match = next((x for x in list if x == self),None)
+                if not hasattr(match,'leafCount'):
+                    return False
+                if match.leafCount == self.leafCount:
+                    return True
+                return False
+            else:
+                if self in list:
+                    return True
+                return False            
+        def uncollected(self,list):
             if self.type == 'movie':
-                if not debrid.collected(self.query()):
+                if not self.collected(list):
                     return [self]
             elif self.type == 'show':
+                if self.collected(list):
+                    return []
                 Seasons = copy.deepcopy(self.Seasons)
                 for season in Seasons[:]:
-                    for episode in season.Episodes[:]:
-                        if debrid.collected(episode.query()):
-                            season.Episodes.remove(episode)
+                    if not season.collected(list):
+                        for episode in season.Episodes[:]:
+                            if episode.collected(list):
+                                season.Episodes.remove(episode)
+                    else:
+                        Seasons.remove(season)
                     if len(season.Episodes) == 0:
                         Seasons.remove(season)
                 return Seasons
@@ -120,22 +143,23 @@ class plex:
             i = 0
             refresh = False
             self.Releases = []
+            library = plex.library()
             if self.type == 'movie':
                 if self.released() and not self.watched():
-                    if len(self.uncollected()) > 0:
+                    if len(self.uncollected(library)) > 0:
                         while len(self.Releases) == 0 and i <= retries:
                             self.Releases += releases.scrape(self.query())
                             i += 1
                         if self.debrid_download():
                             refresh = True
+                            plex.watchlist.remove(self)
             elif self.type == 'show':
                 if self.released() and not self.watched():
-                    for season in self.uncollected():
+                    for season in self.uncollected(library):
                         if season.download():
                             refresh = True
             elif self.type == 'season':
                 if self.released() and not self.watched():
-                    released = False
                     for episode in self.Episodes[:]:
                         if not episode.released() or episode.watched():
                             self.Episodes.remove(episode)
@@ -177,6 +201,7 @@ class plex:
                     plex.library.refresh(plex.library.movies)
                 elif self.type == 'show':
                     plex.library.refresh(plex.library.shows)
+                return True
         def debrid_download(self):
             if not debrid.download(self,stream=True):
                 if not debrid.download(self,stream=False):
@@ -188,7 +213,7 @@ class plex:
             self.Episodes = []
             self.Parent = parent
             while len(self.Episodes) < self.leafCount:
-                url = 'https://metadata.provider.plex.tv/library/metadata/'+self.ratingKey+'/children?includeUserState=1&X-Plex-Container-Size=200&X-Plex-Container-Start='+str(len(self.Episodes))+'&X-Plex-Token='+plex.users[0]['token']
+                url = 'https://metadata.provider.plex.tv/library/metadata/'+self.ratingKey+'/children?includeUserState=1&X-Plex-Container-Size=200&X-Plex-Container-Start='+str(len(self.Episodes))+'&X-Plex-Token='+plex.users[0][1]
                 response = plex.get(url)
                 for episode in response.MediaContainer.Metadata:
                     self.Episodes += [plex.episode(episode,self)]        
@@ -201,9 +226,9 @@ class plex:
             if not isinstance(ratingKey,str):
                 self.__dict__.update(ratingKey.__dict__)
                 ratingKey = ratingKey.ratingKey
-                token = self.user['token']
+                token = self.user[1]
             else:
-                token = plex.users[0]['token']
+                token = plex.users[0][1]
             url = 'https://metadata.provider.plex.tv/library/metadata/'+ratingKey+'?includeUserState=1&X-Plex-Token='+token
             response = plex.get(url)
             self.__dict__.update(response.MediaContainer.Metadata[0].__dict__)
@@ -218,23 +243,30 @@ class plex:
             if not isinstance(ratingKey,str):
                 self.__dict__.update(ratingKey.__dict__)
                 ratingKey = ratingKey.ratingKey
-            url = 'https://metadata.provider.plex.tv/library/metadata/'+ratingKey+'?includeUserState=1&X-Plex-Token='+plex.users[0]['token']
+            url = 'https://metadata.provider.plex.tv/library/metadata/'+ratingKey+'?includeUserState=1&X-Plex-Token='+plex.users[0][1]
             response = plex.get(url)
             self.__dict__.update(response.MediaContainer.Metadata[0].__dict__)            
     class library:
-        url = ''
+        url = 'http://localhost:32400'
         movies = '1'
         shows = '2'
         def refresh(section):
             print('[' + str(datetime.datetime.now()) + '] refreshing library section '+section+' ...', end=' ')
             sys.stdout.flush()
-            url = plex.library.url + '/library/sections/' + section + '/refresh?X-Plex-Token=' + plex.users[0]['token']
+            url = plex.library.url + '/library/sections/' + section + '/refresh?X-Plex-Token=' + plex.users[0][1]
             plex.session.get(url)
             print('done')
             sys.stdout.flush()
+        def __new__(self):
+            url = plex.library.url + '/library/all?X-Plex-Token='+ plex.users[0][1]
+            list = []
+            response = plex.get(url)
+            for element in response.MediaContainer.Metadata:
+                list += [plex.media(element)]
+            return list
     def search(query):
         query = query.replace(' ','%20')
-        url = 'https://metadata.provider.plex.tv/library/search?query='+query+'&limit=30&searchTypes=movies%2Ctv&includeMetadata=1&X-Plex-Token='+plex.users[0]['token']
+        url = 'https://metadata.provider.plex.tv/library/search?query='+query+'&limit=30&searchTypes=movies%2Ctv&includeMetadata=1&X-Plex-Token='+plex.users[0][1]
         response = plex.get(url)
         return response.MediaContainer.SearchResult    
 #Debrid Class 
@@ -244,7 +276,7 @@ class debrid:
     session = requests.Session()
     #Get Function
     def get(url): 
-        headers = {'User-Agent': UserAgent().random, 'authorization' : 'Bearer ' + debrid.api_key , 'Connection' : 'close'}
+        headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'authorization' : 'Bearer ' + debrid.api_key , 'Connection' : 'close'}
         try :
             response = debrid.session.get(url, headers = headers)
             response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
@@ -365,7 +397,7 @@ class debrid:
                                                 break
                                         print('done')
                                         sys.stdout.flush()
-                                        print('streaming release: ' + release.title)
+                                        print('[' + str(datetime.datetime.now()) + '] streaming release: ' + release.title)
                                         sys.stdout.flush()
                                         return True
                                 else:
@@ -419,7 +451,7 @@ class debrid:
             altquery = regex.split(r'(S[0-9]+)',altquery) 
             altquery = altquery[0] + '[0-9]*.*' + altquery[1] + altquery[2]
         try:
-            files = os.listdir('X:') 
+            files = os.listdir(debrid.mount.destination) 
             for file in files:
                 if regex.match(r'('+altquery+')',file,regex.I):
                     collected = True
@@ -442,6 +474,7 @@ class releases:
     #Scrape Classes
     class scrape: 
         def __new__(cls,query):
+            print ('done')
             print('[' + str(datetime.datetime.now()) + '] scraping sources for query "' + query + '" ...' , end = ' ')
             sys.stdout.flush()
             scraped_releases = []
@@ -460,7 +493,7 @@ class releases:
                     altquery = regex.split(r'(S[0-9]+)',altquery) 
                     altquery = altquery[0] + '[0-9]*.*' + altquery[1] + altquery[2]
                 scraped_releases = []
-                headers = {'User-Agent': UserAgent().random}
+                headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
                 response = None
                 retries = 0
                 while not hasattr(response, "torrent_results") and retries < 5:
@@ -508,7 +541,7 @@ class releases:
                     altquery = regex.split(r'(S[0-9]+)',altquery) 
                     altquery = altquery[0] + '[0-9]*.*' + altquery[1] + altquery[2]
                 scraped_releases = []
-                headers = {'User-Agent': UserAgent().random}
+                headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
                 url = 'https://1337x.to/search/' + str(query) + '/1/'
                 try:
                     response = releases.scrape.x1337.session.get(url, headers = headers)
@@ -540,6 +573,53 @@ class releases:
                     print('[' + str(datetime.datetime.now()) + '] 1337x error: exception')
                     sys.stdout.flush()
                 return scraped_releases
+    #Sort Method
+    class sort:
+        ranking= [
+            [
+                "(1080|720|480)(?=p)",
+                "title",
+                "number",
+                "1"
+            ],
+            [
+                "(EXTENDED|REMASTERED)",
+                "title",
+                "text",
+                "1"
+            ],
+            [
+                "(h.?265|x.?265)",
+                "title",
+                "text",
+                "1"
+            ],
+            [
+                "(.*)",
+                "size",
+                "number",
+                "0"
+            ]
+        ]
+        def __new__(self,scraped_releases:list):
+            for release in scraped_releases:
+                release.rank = []
+                for group,attribute,type,descending in releases.sort.ranking:
+                    search = regex.search(group,str(getattr(release,attribute)),regex.I)
+                    if search:
+                        if type == 'text':
+                            for rank,match in enumerate(search.groups()):
+                                if match:
+                                    release.rank += [{attribute+': '+group:len(search.groups())-rank}]
+                        if type == 'number':
+                            release.rank += [{attribute+': '+group:int(float(search.group()))}]
+                    else:
+                        release.rank += [{attribute+': '+group:0}]
+            index = len(releases.sort.ranking)-1
+            for group,attribute,type,descending in reversed(releases.sort.ranking):
+                scraped_releases.sort(key=lambda s: s.rank[index][attribute+': '+group], reverse=int(descending))
+                index += -1
+            return scraped_releases
     #Rename Method
     def rename(string):
         deleteChars = ['.',':','(',')','`','´',',','!','?',' - ',"'","\u200b"]
@@ -566,105 +646,298 @@ class releases:
                 season_query = title + '.S' + str("{:02d}".format(season.index)) + '.'
                 queries += [[season_query,episode_queries],]
         return queries
-    #Sort Method
-    def sort(releases):
-        ranking= [
-            [
-                "(GERMAN)",
-                "title",
-                "text",
-                "1"
-            ],
-            [
-                "(1080|720|480)(?=p)",
-                "title",
-                "number",
-                "1"
-            ],
-            [
-                "(EXTENDED|REMASTERED)",
-                "title",
-                "text",
-                "1"
-            ],
-            [
-                "(rarbg)",
-                "source",
-                "text",
-                "1"
-            ],
-            [
-                "(h.?265|x.?265)",
-                "title",
-                "text",
-                "1"
-            ],
-            [
-                "(torrent)|(hoster)",
-                "type",
-                "text",
-                "1"
-            ],
-            [
-                "(.*)",
-                "size",
-                "number",
-                "0"
+#Script Class
+class download_script:   
+    def run(): 
+        ui.cls()    
+        timeout = 10
+        regular_check = 1800
+        timeout_counter = 0
+        old_watchlist = plex.watchlist()
+        if len(old_watchlist) == 0:
+            print('[' + str(datetime.datetime.now()) + '] checking new content ... done' )
+            sys.stdout.flush()
+        else:
+            print('[' + str(datetime.datetime.now()) + '] checking new content ...', end=' ')
+            sys.stdout.flush()
+            printed = False
+            for element in old_watchlist:
+                if element.download():
+                    printed = True
+            if not printed:
+                print('done')
+        while True:   
+            watchlist = plex.watchlist(old=old_watchlist)
+            if len(watchlist) > 0:
+                print('[' + str(datetime.datetime.now()) + '] checking new content ...', end=' ')
+                sys.stdout.flush()
+                printed = False
+                for element in watchlist:
+                    if element.download():
+                        printed = True
+                if not printed:
+                    print('done')
+                old_watchlist = plex.watchlist()
+            elif timeout_counter >= regular_check:
+                old_watchlist = plex.watchlist()
+                timeout_counter = 0
+                if len(old_watchlist) == 0:
+                    print('[' + str(datetime.datetime.now()) + '] checking new content ... done' )
+                    sys.stdout.flush()
+                else:
+                    print('[' + str(datetime.datetime.now()) + '] checking new content ...', end=' ')
+                    sys.stdout.flush()
+                    printed = False
+                    for element in old_watchlist:
+                        if element.download():
+                            printed = True
+                    if not printed:
+                        print('done')
+            else:
+                debrid.monitor()
+                timeout_counter += timeout
+            time.sleep(timeout)
+#Ui Preference Class:
+class ui_settings:
+    run_directly = "true"
+#Ui Class
+class ui:
+    class option:
+        def __init__(self,name,cls,key):
+            self.name = name
+            self.cls = cls
+            self.key = key
+        def input(self):
+            func = getattr(self.cls,self.key)
+            func()
+    class setting:
+        def __init__(self,name,prompt,cls,key,required=False):
+            self.name = name
+            self.prompt = prompt
+            self.cls = cls
+            self.key = key
+            self.required = required
+        def input(self):
+            print('Current ' + self.name + ': "' + str(getattr(self.cls,self.key)) + '"')
+            print()
+            print('0) Back')
+            print('1) Edit')
+            print()
+            choice = input('Choose an action: ')
+            if choice == '1':
+                if isinstance(getattr(self.cls,self.key),list):
+                    lists = getattr(self.cls,self.key)
+                    print()
+                    print('0) Back')
+                    print('1) Add entry')
+                    if len(lists) > 0:
+                        print('2) Edit entries')
+                    print()
+                    choice = input('Choose an action: ')
+                    if choice == '1':
+                        edit = []
+                        for prompt in self.prompt:
+                            edit += [input(prompt)]
+                        lists += [edit]
+                        setattr(self.cls,self.key,lists)
+                        return True
+                    if choice == '2':
+                        print()
+                        print('0) Back')
+                        indices = []
+                        for index,entry in enumerate(lists):
+                            print(str(index+1)+') Edit entry ' + str(index+1) + ': ' + str(entry))
+                            indices += [str(index+1)]
+                        print()
+                        index = input('Choose an entry: ')
+                        back3 = False
+                        while not back3:
+                            if index == '0':
+                                back3 = True
+                            if index in indices:
+                                print()
+                                print('Entry '+index+': ' + str(lists[int(index)-1]))
+                                print()
+                                print('0) Back')
+                                print('1) Edit')
+                                print('2) Delete')
+                                if len(lists) > 1:
+                                    print('3) Move')
+                                print()
+                                choice = input('Choose an action: ')
+                                back2 = False
+                                while not back2:
+                                    print()
+                                    if choice == '0':
+                                        back2 = True
+                                    if choice == '1':
+                                        edit = []
+                                        for k,prompt in enumerate(self.prompt):
+                                            edit += [input(prompt + '- currently "'+lists[int(index)-1][k]+'": ')]
+                                        lists[int(index)-1] = edit
+                                        setattr(self.cls,self.key,lists)
+                                        return True
+                                    if choice == '2':
+                                        del lists[int(index)-1]
+                                        return True
+                                    if choice == '3':
+                                        back = False
+                                        while not back:
+                                            print('0) Back')
+                                            for i in indices:
+                                                print( i +') Position '+i)
+                                            print()
+                                            choice = input('Move entry ' + index + ' to: ')
+                                            if choice == '0':
+                                                back = True
+                                            if choice in indices:
+                                                lists.insert(int(choice)-1,lists[int(index)-1])
+                                                del lists[int(index)-1]
+                                                setattr(self.cls,self.key,lists)
+                                                return True
+                                
+
+                else:        
+                    console_input = input(self.prompt)
+                    setattr(self.cls,self.key,console_input)
+                    return True
+        def setup(self):
+            if isinstance(getattr(self.cls,self.key),list):
+                edit = []
+                print(self.name + ' - current value: ' + str(getattr(self.cls,self.key)))
+                print()
+                lists = getattr(self.cls,self.key)
+                for prompt in self.prompt:
+                    edit += [input(prompt)]
+                lists = [edit,]
+                setattr(self.cls,self.key,lists)
+            else:
+                print(self.name + ' - current value: ' + str(getattr(self.cls,self.key)))
+                print()
+                console_input = input(self.prompt)
+                setattr(self.cls,self.key,console_input)
+        def set(self,value):
+            setattr(self.cls,self.key,value)
+        def get(self):
+            return getattr(self.cls,self.key)
+    settings_list = [
+        ['Real Debrid Settings', [
+            setting('Real Debrid API Key','Please enter your Real Debrid API Key: ',debrid,'api_key',required=True),
+            ]
+        ],
+        ['Plex Settings',[
+            setting('Plex users',['Please provide a name for this Plex user: ','Please provide the Plex token for this Plex user: '],plex,'users',required=True),
+            setting('Plex server address','Please enter your Plex server address: ',plex.library,'url',required=True),
+            setting('Plex "movies" library','Please enter the section number of the "movies" library, that should be refreshed after a movie download: ',plex.library,'movies',required=True),
+            setting('Plex "shows" library','Please enter the section number of the "shows" library, that should be refreshed after a show download: ',plex.library,'shows',required=True)
+            ]
+        ],
+        ['Scraper Settings',[
+            setting('Release sorting',['Please specify what this sorting rule should to look for by providing one or more regex match group(s): ','Please specify in which release attribute ("title","source" or "size") this sorting rule should search: ','Please specify if the match should be interpreted as a number or as text ("number" or "text")','Please specify in which order the releases should be by ranked by this sorting rule ("0" = ascending or "1" = descending): '],releases.sort,'ranking'),
+            ]
+        ],
+        ['UI Settings',[
+            setting('Show Menu on Startup','Please enter "true" or "false": ',ui_settings,'run_directly'),
             ]
         ]
-        for release in releases:
-            release.rank = []
-            for group,attribute,type,descending in ranking:
-                search = regex.search(group,str(getattr(release,attribute)),regex.I)
-                if search:
-                    if type == 'text':
-                        for rank,match in enumerate(search.groups()):
-                            if match:
-                                release.rank += [{attribute+': '+group:len(search.groups())-rank}]
-                    if type == 'number':
-                        release.rank += [{attribute+': '+group:int(float(search.group()))}]
-                else:
-                    release.rank += [{attribute+': '+group:0}]
-        index = len(ranking)-1
-        for group,attribute,type,descending in reversed(ranking):
-            releases.sort(key=lambda s: s.rank[index][attribute+': '+group], reverse=int(descending))
-            index += -1
-        return releases
 
-def run():     
-    timeout = 10
-    regular_check = 1800
-    timeout_counter = 0
-    old_watchlist = plex.watchlist()
-    if len(old_watchlist) == 0:
-        print('[' + str(datetime.datetime.now()) + '] downloading new content ... done' )
-        sys.stdout.flush()
-    else:
-        print('[' + str(datetime.datetime.now()) + '] downloading new content ... ')
-        sys.stdout.flush()
-        for element in old_watchlist:
-            element.download()
-    while True:   
-        watchlist = plex.watchlist(old=old_watchlist)
-        if len(watchlist) > 0:
-            print('[' + str(datetime.datetime.now()) + '] downloading new content ...')
-            sys.stdout.flush()
-            for element in watchlist:
-                element.download()
-            old_watchlist = plex.watchlist()
-        elif timeout_counter >= regular_check:
-            old_watchlist = plex.watchlist()
-            timeout_counter = 0
-            if len(old_watchlist) == 0:
-                print('[' + str(datetime.datetime.now()) + '] downloading new content ... done' )
-                sys.stdout.flush()
-            else:
-                print('[' + str(datetime.datetime.now()) + '] downloading new content ... ')
-                sys.stdout.flush()
-                for element in old_watchlist:
-                    element.download()
+    ]
+    def cls(path=''):
+        os.system('cls' if os.name=='nt' else 'clear')
+        ui.logo(path=path)
+    def logo(path=''):
+        print('           __                        __')
+        print('    ____  / /__  _  __     _________/ /')
+        print('   / __ \/ / _ \| |/_/    / ___/ __  / ')
+        print('  / /_/ / /  __/>  <     / /  / /_/ /  ')
+        print(' / .___/_/\___/_/|_|____/_/   \__,_/   ')
+        print('/_/               /_____/              ')
+        print()
+        print(path)
+        print()
+    def settings():
+        list = ui.settings_list
+        ui.cls('Options/Settings/')
+        print('0) Back')
+        for index,category in enumerate (list):
+            print(str(index+1) + ') ' + category[0])
+        print()
+        choice = input('Choose an action: ')
+        if choice == '0':
+            ui.options()
         else:
-            debrid.monitor()
-            timeout_counter += timeout
-        time.sleep(timeout)
-run()
+            ui.cls('Options/Settings/'+list[int(choice)-1][0]+'/')
+            print('0) Back')
+            for index,setting in enumerate (list[int(choice)-1][1]):
+                print(str(index+1) + ') ' + setting.name)
+            print()
+            choice2 = input('Choose an action: ')
+            for index,setting in enumerate (list[int(choice)-1][1]):
+                if choice2 == str(index+1):
+                    ui.cls('Options/Settings/'+list[int(choice)-1][0]+'/'+setting.name)
+                    setting.input()
+                    ui.settings()
+            ui.settings()
+    def options():
+        list = [
+            ui.option('Run',download_script,'run'),
+            ui.option('Settings',ui,'settings'),
+            ui.option('Save current settings',ui,'save'),
+        ]
+        ui.cls('Options/')
+        for index,option in enumerate(list):
+            print(str(index+1) + ') ' + option.name)
+        print()
+        choice = input('Choose an action: ')
+        for index,option in enumerate(list):
+            if choice == str(index+1):
+                option.input()
+                ui.options()
+        ui.options()
+    def setup():
+        if os.path.exists('.\settings.json'):
+            with open('settings.json', 'r') as f:
+                settings = json.loads(f.read())
+            if settings['Show Menu on Startup'] == "false":
+                return False
+            ui.load()
+            return True
+        else:
+            ui.cls('Initial Setup')
+            input('Press any key to continue: ')
+            for category, settings in ui.settings_list:
+                for setting in settings:
+                    if setting.required:
+                        ui.cls('Options/Settings/'+category+'/'+setting.name)
+                        setting.setup()
+            ui.cls('Done!')
+            input('Press any key to continue to the main menu: ')
+            return True
+    def save():
+        save_settings = {}
+        for category, settings in ui.settings_list:
+            for setting in settings:
+                save_settings[setting.name] = setting.get()
+        with open('settings.json', 'w') as f:
+            json.dump(save_settings, f,indent=4)
+        print('Current settings saved!')
+        time.sleep(2)
+    def load():
+        with open('settings.json', 'r') as f:
+            settings = json.loads(f.read())
+        for category, load_settings in ui.settings_list:
+            for setting in load_settings:
+                setting.set(settings[setting.name])
+    def run():
+        if ui.setup():
+            ui.options()
+        else:
+            ui.load()
+            download_script.run()
+
+#TODO
+#season scrape like episode scrape with parent release check
+#multiprocessing for watchlist creation and element download
+#downloading boolean for element to check if in realdebrid uncached torrents
+
+ui.run()
