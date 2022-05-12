@@ -65,7 +65,7 @@ Lets make some rules:
 ### Example resolution sorting:
 We want to download releases up to our prefered resolution of 1080p.
 For this, we will choose the following setup:
-- regex definition: "(1080|720|480)(?=p)" - This is one match group, that matches either "1080", "720" or "480", followed by the letter "p".
+- regex definition: "(1080|720|480)(?=p)" - This is one match group, that matches either "1080", "720" or "480", followed by the letter "p". This is a typical Resolution definition of releases.
 - attribute definition: "title" - we want to look for this inside the release title
 - interpretation method: "number" - we want to sort the releases by the highest number to the lowest number
 - ascending/descending: "1" - 1 means descending. We want to sort the releases in decending order to get the highest resolution release.
@@ -79,9 +79,9 @@ For this, we will choose the following setup:
 - ascending/descending: "1" - 1 means descending. Descending in this context means, that the First matchgroup is preffered over the second matchgroup, and both are prefered over a release that doesnt match.
 
 ### Example release exclusion:
-We don't want to download releases that are HDR or 3D
+We don't want to download releases that are HDR or 3D.
 For this, we will choose the following setup:
-- regex definition: "(\.HDR\.|\.3D\.)"
+- regex definition: "(\\.HDR\\.|\\.3D\\.)"
 - attribute definition: "title" - we want to look for this inside the release title
 - interpretation method: "text" - by choosing this, we define that the releases should be sorted by the match group they are in.
 - ascending/descending: "0" - 0 means ascending. Ascending in this context means, that releases that don't match are prefered over releases that do.
