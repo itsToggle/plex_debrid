@@ -29,27 +29,49 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 4. *Recommendation: disable 'video preview thumbnails', disable 'intro detection', disable the scheduled task 'perfom extensive media analysis' to reduce the download traffic
 5. You and your home users can now stream cached torrents from RealDebrid!
 
-**Setup (will make this easier in future versions):**
-1. Open the script in your favorite editor
-2. In the class 'plex', edit the list 'users'. Give each user that is allowed to download new content a 'name' attribute and provide their plex-token in the 'token' attribute: e.g.: 
-**users = [{'name':'admin','token':'your-admin-token'},{'name':'HomeUser1','token':'someones-token'},]**
-3. in the subclass 'plex.library', change the variable 'url' to point to your server. e.g.:
-**url = 'https://localhost:32400'**
-4. in the subclass 'plex.library', change the variable 'movies' to the section number of your movies library. e.g. **movies = '1'**
-5. in the subclass 'plex.library', change the variable 'shows' to the section number of your shows library. e.g. **shows = '2'**
-6. in the class 'debrid', change the variable 'api_key' to your RealDebrid API key. e.g. **api_key = '...'**
+**Setup:**
+1. Run the script!
+2. The script will guide you through the initial setup.
+3. Once you are done, you will find yourself in the main menu
+4. **make sure to save the current settings** by choosing option '3'
+5. Choose option '2' to explore or edit the settings.
+6. If you are happy with your settings, save them again and choose option '1' to run the download automation.
 7. Youre done!
 
-## Usage:
+## Usage and Tips:
 
-- Simply run the script to start. 
 - The Plex Watchlist of your specified users will polled for changes every 10 seconds, which is when it will try to find newly added content. 
-- It will be updated entirely every 30 minutes, which is when it will try to find newly released episodes from watchlisted series.
-- You can change these intervals in the 'run()' definition.
+- The Plex Watchlist will be updated entirely every 30 minutes, which is when it will try to find newly released episodes from watchlisted series. This is only done every 30 minutes, because building the whole watchlist can take more than a minute, depending on the amount of shows you have in there.
+- Your *entire* Plex Library is checked for any existing seasons/episodes of a watchlisted show and will avoid downloading those.
+- If you dont want to download a specific episode or season of a show, navigate to that show in the discovery feature and mark the episodes/seasons that you want to ignore as 'watched'. The watch status inside the discovery feature is not connected to the watch status inside your libraries.
 - When some content could repeatedly not be downloaded, it will be marked as 'watched' in the Discovery feature of the first specified user. This will cause the scraper to ignore the content, until its marked as 'unwatched' again.
+- This script will automatically pick the best release that could be found. To change how the script picks the best release, check out the next section.
+
+## Sorting the scraped releases:
+
+The scrapers usually provide a whole bunch of releases. Adding them all to realdebrid would clutter your library and slow things down. This is why this script automatically sorts the releases by completely customizable categories and picks the best one.
+
+The sorting is done by providing an unlimited number of sorting 'rules'. Rules can be added, edited, delted or moved. The first rule has the highest priority, the last one the lowest.
+
+Each rule consist of:
+- a regex match group that defines what we are looking for. Check out regexr.com to try out some regex match definitions.
+- an attribute definition that defines which attribute of the release we want to look in (can be the title, the source, or the size)
+- an interpretation method. This can be either:
+  - "number" : the first regex match group will be interpreted as an integer and releases will be ranked by this number.
+  - "text" : we will give each release a rank accoring to which match group its in.
+- lastly we define wheter to rank the releases in ascending or descending order.
+
+Lets make some rules: 
+### Example Resolution:
+We want to download releases up to our prefered resolution of 1080p.
+For this, we will choose the following setup:
+- regex definition: "(1080|720|480)(?=p)" -This is one match group, that matches either "1080p", "720p" or "480p".
+- attribute definition: "title" - we want to look for this inside the release title
+- interpretation method: "number" - we want to sort the releases by the highest number to the lowest number
+- ascending/descending: "1" - 1 means descending. We want to sort the releases in decending order to get the highest resolution release.
+
+
 
 ## Limitations:
-- There is no user interface as of now.
-- The plex discover API only provides a release date, not a release time for new episodes. This makes it hard to determined when to ignore an episode.
-- It is significantly faster to only add the 'best' scraped release, and not all scraped releases. Which release is considered to be 'the best' is determined by sorting the releases by multiple, user-defined categories. For now these can be found in the 'releases.sort()' method.
-
+- The plex discover API only provides a release date, not a release time for new episodes. This makes it hard to determined when to start looking for releases and when to ignore an episode.
+- Since this is more of a proof of concept at the moment, There are only two scrapers implemented - rarbg and 1337x.
