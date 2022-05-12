@@ -62,14 +62,37 @@ Each rule consist of:
 - lastly we define wheter to rank the releases in ascending or descending order.
 
 Lets make some rules: 
-### Example Resolution:
+### Example resolution sorting:
 We want to download releases up to our prefered resolution of 1080p.
 For this, we will choose the following setup:
-- regex definition: "(1080|720|480)(?=p)" -This is one match group, that matches either "1080p", "720p" or "480p".
+- regex definition: "(1080|720|480)(?=p)" - This is one match group, that matches either "1080", "720" or "480", followed by the letter "p".
 - attribute definition: "title" - we want to look for this inside the release title
 - interpretation method: "number" - we want to sort the releases by the highest number to the lowest number
 - ascending/descending: "1" - 1 means descending. We want to sort the releases in decending order to get the highest resolution release.
 
+### Example codec sorting:
+We want to download releases that use the x265 Codec, rather then the x264 codec. 
+For this, we will choose the following setup:
+- regex definition: "(h.?265|x.?265)|(h.?264|x.?264)" - These are two match groups, that match typical codec descriptions in the release titles
+- attribute definition: "title" - we want to look for this inside the release title
+- interpretation method: "text" - by choosing this, we define that the releases should be sorted by the match group they are in.
+- ascending/descending: "1" - 1 means descending. Descending in this context means, that the First matchgroup is preffered over the second matchgroup, and both are prefered over a release that doesnt match.
+
+### Example release exclusion:
+We don't want to download releases that are HDR or 3D
+For this, we will choose the following setup:
+- regex definition: "(\.HDR\.|\.3D\.)"
+- attribute definition: "title" - we want to look for this inside the release title
+- interpretation method: "text" - by choosing this, we define that the releases should be sorted by the match group they are in.
+- ascending/descending: "0" - 0 means ascending. Ascending in this context means, that releases that don't match are prefered over releases that do.
+
+### Example size sorting:
+We want to sort or releases by size - this should be implemented as one of the last rules.
+For this, we will choose the following setup:
+- regex definition: "(.*)" - This is one match group that simply matches everything.
+- attribute definition: "size" - we want to look for this inside the release size
+- interpretation method: "number" - by choosing number, we define that the release size should be interpreted as a number.
+- ascending/descending: "0" - 0 means ascending. We want to select the smallest release.
 
 
 ## Limitations:
