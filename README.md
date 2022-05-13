@@ -80,7 +80,7 @@ For this, we will choose the following setup:
 - ascending/descending: "1" - 1 means descending. Descending in this context means, that the First matchgroup is preffered over the second matchgroup, and both are prefered over a release that doesnt match.
 
 ### Example release exclusion:
-We don't want to download releases that are HDR or 3D.
+We don't want to download releases that are HDR or 3D. For this rule to ne effective, we need to make it our first rule.
 For this, we will choose the following setup:
 - regex definition: "(\\.HDR\\.|\\.3D\\.)"
 - attribute definition: "title" - we want to look for this inside the release title
