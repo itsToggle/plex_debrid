@@ -196,7 +196,6 @@ class plex:
                         i += 1
                     return self.debrid_download()
             if refresh:
-                debrid.monitor()
                 if self.type == 'movie':
                     plex.library.refresh(plex.library.movies)
                 elif self.type == 'show':
@@ -387,8 +386,6 @@ class debrid:
                                     else:
                                         debrid.delete('https://api.real-debrid.com/rest/1.0/torrents/delete/' + torrent_id)
                                         continue
-                                    #delete the torrent
-                                    debrid.delete('https://api.real-debrid.com/rest/1.0/torrents/delete/' + torrent_id)
                                     if len(release.download) > 0:
                                         for link in release.download:
                                             try:
@@ -428,36 +425,6 @@ class debrid:
         print('done')
         sys.stdout.flush()
         return False
-    #Monitor Function
-    def monitor():
-        response = debrid.get('https://api.real-debrid.com/rest/1.0/torrents')
-        if not response == None and isinstance(response,list):
-            for torrent in response:
-                if torrent.status == 'downloaded':
-                    torrent.Releases = [releases('[debrid]','hoster',torrent.filename,None,None,torrent.links),]
-                    debrid.download(torrent,query=torrent.filename)
-                    debrid.delete('https://api.real-debrid.com/rest/1.0/torrents/delete/' + str(torrent.id))
-        elif hasattr(response,'error'):
-            print('[' + str(datetime.datetime.now()) + '] debrid error: ' + str(response.error))
-            sys.stdout.flush()
-        else:
-            print('[' + str(datetime.datetime.now()) + '] debrid error: could not get content')
-            sys.stdout.flush()
-    #Collected Method
-    def collected(query):
-        collected = False
-        altquery = copy.deepcopy(query)
-        if regex.search(r'(S[0-9][0-9])',altquery):
-            altquery = regex.split(r'(S[0-9]+)',altquery) 
-            altquery = altquery[0] + '[0-9]*.*' + altquery[1] + altquery[2]
-        try:
-            files = os.listdir(debrid.mount.destination) 
-            for file in files:
-                if regex.match(r'('+altquery+')',file,regex.I):
-                    collected = True
-        except:
-            collected = False
-        return collected
 #Release Class
 class releases:
     #Define release attributes
@@ -694,7 +661,6 @@ class download_script:
                     if not printed:
                         print('done')
             else:
-                debrid.monitor()
                 timeout_counter += timeout
             time.sleep(timeout)
 #Ui Preference Class:
@@ -760,8 +726,8 @@ class ui:
                                 print()
                                 print('0) Back')
                                 print('1) Edit')
-                                print('2) Delete')
                                 if len(lists) > 1:
+                                    print('2) Delete')
                                     print('3) Move')
                                 print()
                                 choice = input('Choose an action: ')
@@ -791,8 +757,9 @@ class ui:
                                             if choice == '0':
                                                 back = True
                                             if choice in indices:
-                                                lists.insert(int(choice)-1,lists[int(index)-1])
+                                                temp = copy.deepcopy(lists[int(index)-1])
                                                 del lists[int(index)-1]
+                                                lists.insert(int(choice)-1,temp)
                                                 setattr(self.cls,self.key,lists)
                                                 return True
                                 
