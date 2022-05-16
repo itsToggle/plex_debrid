@@ -9,7 +9,7 @@ Plex torrent streaming through RealDebrid, using the new Plex Discover feature.
 
 ## Description:
 
-*This python script makes use of my rclone fork, which allows you to mount the RealDebrid /downloads history as a virtual drive. After creating a plex library of this virtual drive, you can stream torrents that are cached on RealDebrid without the need to download them first.*
+*This python script makes use of my rclone fork, which allows you to mount the RealDebrid /torrent directory as a virtual drive. After creating a plex library of this virtual drive, you can stream torrents that are cached on RealDebrid without the need to download them first.*
 
 The plex watchlist of specified users is constantly checked for newly added movies/shows and newly released episodes of watchlisted shows.
 Once new content is found, torrent indexers are scraped for the best, cached release on RealDebrid. The torrent is then added to RealDebrid and a library refresh is performed to make the newly added content available. 
@@ -36,7 +36,8 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 4. **make sure to save the current settings** by choosing option '3'
 5. Choose option '2' to explore or edit the settings.
 6. If you are happy with your settings, save them again and choose option '1' to run the download automation.
-7. Youre done!
+7. You can always edit your settings in the main menu or by opening the "settings.json" file the script creates after the first run.
+8. Youre done!
 
 ## Usage and Tips:
 
