@@ -32,12 +32,8 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 **Setup:**
 1. Run the script! (google "how to run a python script" ;) )
 2. The script will guide you through the initial setup.
-3. Once you are done, you will find yourself in the main menu
-4. **make sure to save the current settings** by choosing option '3'
-5. Choose option '2' to explore or edit the settings.
-6. If you are happy with your settings, save them again and choose option '1' to run the download automation.
-7. You can always edit your settings in the main menu or by opening the "settings.json" file the script creates after the first run.
-8. Youre done!
+3. You're done!
+5. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run. Make sure to save your settings after you edit them by choosing option '3' in the main menu.
 
 ## Usage and Tips:
 
