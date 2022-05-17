@@ -129,9 +129,9 @@ class plex:
                     return []
                 Seasons = copy.deepcopy(self.Seasons)
                 for season in Seasons[:]:
-                    if not season.collected(list):
+                    if not season.collected(list) and not season.watched() and season.released():
                         for episode in season.Episodes[:]:
-                            if episode.collected(list):
+                            if episode.collected(list) or episode.watched() or not episode.released():
                                 season.Episodes.remove(episode)
                     else:
                         Seasons.remove(season)
@@ -139,11 +139,10 @@ class plex:
                         Seasons.remove(season)
                 return Seasons
             return []
-        def download(self,retries=1):
+        def download(self,retries=1,library=[],parentReleases=[]):
             i = 0
             refresh = False
             self.Releases = []
-            library = plex.library()
             if self.type == 'movie':
                 if self.released() and not self.watched():
                     if len(self.uncollected(library)) > 0:
@@ -153,48 +152,58 @@ class plex:
                         if self.debrid_download():
                             refresh = True
                             plex.watchlist.remove(self)
+                        else:
+                            self.watch()
             elif self.type == 'show':
                 if self.released() and not self.watched():
                     for season in self.uncollected(library):
-                        if season.download():
+                        if len(self.Releases) == 0:
+                            self.Releases += releases.scrape(self.query())
+                        if season.download(library=library,parentReleases=self.Releases):
                             refresh = True
             elif self.type == 'season':
-                if self.released() and not self.watched():
-                    for episode in self.Episodes[:]:
-                        if not episode.released() or episode.watched():
-                            self.Episodes.remove(episode)
-                    for episode in self.Episodes:
-                        if not len(self.Episodes) <= self.leafCount/2:
-                            while len(self.Releases) == 0 and i <= retries:
-                                self.Releases += releases.scrape(self.query())
-                                i += 1
-                        if not self.debrid_download():
-                            self.Releases += releases.scrape(self.query()[:-1])
-                            for episode in self.Episodes:
-                                if episode.download(retries=1):
-                                    refresh = True
-                                else:
-                                    episode.watch()
-                            if refresh:
-                                return True
-                        else:
-                            return True
-            elif self.type == 'episode':
-                if self.released() and not self.watched():
-                    while len(self.Releases) == 0 and i <= retries:
-                        altquery = self.query()
-                        if regex.search(r'(S[0-9][0-9])',altquery):
-                            altquery = regex.split(r'(S[0-9]+)',altquery) 
-                            altquery = altquery[0] + '[0-9]*.*' + altquery[1] + altquery[2]
-                        for release in self.Parent.Releases:
-                            if regex.match(r'('+altquery+')',release.title,regex.I):
-                                self.Releases += [release]
+                altquery = self.query()
+                if regex.search(r'(S[0-9]+)',altquery):
+                    altquery = regex.split(r'(S[0-9]+)',altquery) 
+                    altquery = altquery[0] + '[0-9]*.*' + altquery[1] + altquery[2]
+                for release in parentReleases:
+                    if regex.match(r'('+altquery+')',release.title,regex.I):
+                        self.Releases += [release]
+                for episode in self.Episodes:
+                    if not len(self.Episodes) <= self.leafCount/2:
                         if self.debrid_download():
                             return True
                         else:
-                            self.Releases = releases.scrape(self.query())
-                        i += 1
-                    return self.debrid_download()
+                            self.Releases = []
+                        while len(self.Releases) == 0 and i <= retries:
+                            self.Releases += releases.scrape(self.query())
+                            i += 1
+                    if not self.debrid_download():
+                        self.Releases += releases.scrape(self.query()[:-1])
+                        for episode in self.Episodes:
+                            if episode.download(library=library,parentReleases=self.Releases):
+                                refresh = True
+                            else:
+                                episode.watch()
+                        if refresh:
+                            return True
+                    else:
+                        return True
+            elif self.type == 'episode':
+                while len(self.Releases) == 0 and i <= retries:
+                    altquery = self.query()
+                    if regex.search(r'(S[0-9]+)',altquery):
+                        altquery = regex.split(r'(S[0-9]+)',altquery) 
+                        altquery = altquery[0] + '[0-9]*.*' + altquery[1] + altquery[2]
+                    for release in parentReleases:
+                        if regex.match(r'('+altquery+')',release.title,regex.I):
+                            self.Releases += [release]
+                    if self.debrid_download():
+                        return True
+                    else:
+                        self.Releases = releases.scrape(self.query())
+                    i += 1
+                return self.debrid_download()
             if refresh:
                 if self.type == 'movie':
                     plex.library.refresh(plex.library.movies)
@@ -207,19 +216,17 @@ class plex:
                     return False
             return True             
     class season(media):
-        def __init__(self,other,parent):
+        def __init__(self,other):
             self.__dict__.update(other.__dict__)
             self.Episodes = []
-            self.Parent = parent
             while len(self.Episodes) < self.leafCount:
                 url = 'https://metadata.provider.plex.tv/library/metadata/'+self.ratingKey+'/children?includeUserState=1&X-Plex-Container-Size=200&X-Plex-Container-Start='+str(len(self.Episodes))+'&X-Plex-Token='+plex.users[0][1]
                 response = plex.get(url)
                 for episode in response.MediaContainer.Metadata:
-                    self.Episodes += [plex.episode(episode,self)]        
+                    self.Episodes += [plex.episode(episode)]        
     class episode(media):
-        def __init__(self,other,parent):
+        def __init__(self,other):
             self.__dict__.update(other.__dict__)
-            self.Parent = parent
     class show(media):
         def __init__(self, ratingKey):
             if not isinstance(ratingKey,str):
@@ -236,7 +243,7 @@ class plex:
             response = plex.get(url)
             for season in response.MediaContainer.Metadata:
                 if not season.index == 0:
-                    self.Seasons += [plex.season(season,self)]
+                    self.Seasons += [plex.season(season)]
     class movie(media):
         def __init__(self, ratingKey):
             if not isinstance(ratingKey,str):
@@ -300,7 +307,7 @@ class debrid:
         headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'authorization' : 'Bearer ' + debrid.api_key , 'Connection' : 'close'}
         try :
             requests.delete(url, headers = headers)
-            time.sleep(1)
+            #time.sleep(1)
         except :
             None
         return None
@@ -456,7 +463,7 @@ class releases:
             session = requests.Session()
             def __new__(cls,query):
                 altquery = copy.deepcopy(query)
-                if regex.search(r'(S[0-9][0-9])',altquery):
+                if regex.search(r'(S[0-9]+)',altquery):
                     altquery = regex.split(r'(S[0-9]+)',altquery) 
                     altquery = altquery[0] + '[0-9]*.*' + altquery[1] + altquery[2]
                 scraped_releases = []
@@ -504,7 +511,7 @@ class releases:
             session = requests.Session()
             def __new__(cls,query):
                 altquery = copy.deepcopy(query)
-                if regex.search(r'(S[0-9][0-9])',altquery):
+                if regex.search(r'(S[0-9]+)',altquery):
                     altquery = regex.split(r'(S[0-9]+)',altquery) 
                     altquery = altquery[0] + '[0-9]*.*' + altquery[1] + altquery[2]
                 scraped_releases = []
@@ -625,28 +632,31 @@ class download_script:
             print('[' + str(datetime.datetime.now()) + '] checking new content ... done' )
             sys.stdout.flush()
         else:
+            library = plex.library()
             print('[' + str(datetime.datetime.now()) + '] checking new content ...', end=' ')
             sys.stdout.flush()
             printed = False
             for element in old_watchlist:
-                if element.download():
+                if element.download(library=library):
                     printed = True
             if not printed:
                 print('done')
         while True:   
             watchlist = plex.watchlist(old=old_watchlist)
             if len(watchlist) > 0:
+                library = plex.library()
                 print('[' + str(datetime.datetime.now()) + '] checking new content ...', end=' ')
                 sys.stdout.flush()
                 printed = False
                 for element in watchlist:
-                    if element.download():
+                    if element.download(library=library):
                         printed = True
                 if not printed:
                     print('done')
                 old_watchlist = plex.watchlist()
             elif timeout_counter >= regular_check:
                 old_watchlist = plex.watchlist()
+                library = plex.library()
                 timeout_counter = 0
                 if len(old_watchlist) == 0:
                     print('[' + str(datetime.datetime.now()) + '] checking new content ... done' )
@@ -656,7 +666,7 @@ class download_script:
                     sys.stdout.flush()
                     printed = False
                     for element in old_watchlist:
-                        if element.download():
+                        if element.download(library=library):
                             printed = True
                     if not printed:
                         print('done')
@@ -879,6 +889,7 @@ class ui:
                         setting.setup()
             ui.cls('Done!')
             input('Press any key to continue to the main menu: ')
+            ui.save()
             return True
     def save():
         save_settings = {}
@@ -903,7 +914,6 @@ class ui:
             download_script.run()
 
 #TODO
-#season scrape like episode scrape with parent release check
 #multiprocessing for watchlist creation and element download
 #downloading boolean for element to check if in realdebrid uncached torrents
 
