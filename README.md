@@ -30,7 +30,7 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 5. You and your home users can now stream cached torrents from RealDebrid!
 
 **Setup:**
-1. Run the script!
+1. Run the script! (google "how to run a python script" ;) )
 2. The script will guide you through the initial setup.
 3. Once you are done, you will find yourself in the main menu
 4. **make sure to save the current settings** by choosing option '3'
