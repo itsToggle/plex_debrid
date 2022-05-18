@@ -11,7 +11,8 @@ from bs4 import BeautifulSoup
 import sys
 import copy
 import random
- 
+from threading import Thread
+
 #Plex Class
 class plex:
     session = requests.Session()  
@@ -36,8 +37,7 @@ class plex:
             pass
         def __new__(self,old=[]):
             if old == []:
-                print('[' + str(datetime.datetime.now()) + '] updating entire plex watchlist ...', end = ' ')
-                sys.stdout.flush()
+                ui.print('updating entire plex watchlist ...')
             watchlist_entries = []
             try:
                 for user in plex.users:
@@ -53,17 +53,13 @@ class plex:
                                     watchlist_entries += [plex.movie(entry)]
             except:
                 if old == []:
-                    print('done')
-                    sys.stdout.flush()
-                print('[' + str(datetime.datetime.now()) + '] plex error: could not reach plex')
-                sys.stdout.flush()
+                    ui.print('done') 
+                ui.print('plex error: could not reach plex')
             if old == []:
-                print('done')
-                sys.stdout.flush()
+                ui.print('done')
             return watchlist_entries
         def remove(item):
-            print('[' + str(datetime.datetime.now()) + '] item: "' + item.title + '" removed from '+ item.user[0] +'`s plex watchlist')
-            sys.stdout.flush()
+            ui.print('item: "' + item.title + '" removed from '+ item.user[0] +'`s plex watchlist')
             url = 'https://metadata.provider.plex.tv/actions/removeFromWatchlist?ratingKey=' + item.ratingKey + '&X-Plex-Token=' + item.user[1]
             response = plex.session.put(url,data={'ratingKey':item.ratingKey})
     class media:
@@ -93,14 +89,11 @@ class plex:
             return datetime.datetime.today() > datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
         def watch(self):
             if self.type == 'movie' or self.type == 'show':
-                print('ignoring item: ' + self.title)
-                sys.stdout.flush()
+                ui.print('ignoring item: ' + self.title)
             elif self.type == 'season':
-                print('ignoring item: ' + self.title + 'S' + str("{:02d}".format(self.index)))
-                sys.stdout.flush()
+                ui.print('ignoring item: ' + self.title + 'S' + str("{:02d}".format(self.index)))
             elif self.type == 'episode':
-                print('ignoring item: ' + self.title + 'S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index)))
-                sys.stdout.flush()
+                ui.print('ignoring item: ' + self.title + 'S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index)))
             url = 'https://metadata.provider.plex.tv/actions/scrobble?identifier=tv.plex.provider.metadata&key='+self.ratingKey+'&X-Plex-Token='+ plex.users[0][1]
             plex.get(url)
         def watched(self):
@@ -156,10 +149,21 @@ class plex:
                             self.watch()
             elif self.type == 'show':
                 if self.released() and not self.watched():
-                    for season in self.uncollected(library):
-                        if len(self.Releases) == 0:
-                            self.Releases += releases.scrape(self.query())
-                        if season.download(library=library,parentReleases=self.Releases):
+                    Seasons = self.uncollected(library)
+                    if len(Seasons) > 1:
+                        self.Releases += releases.scrape(self.query())
+                    results = [None] * len(Seasons)
+                    threads = []
+                    #start thread for each season
+                    for index,Season in enumerate(Seasons):
+                        t = Thread(target=download, args=(Season,library,self.Releases,results,index))
+                        threads.append(t)
+                        t.start()
+                    # wait for the threads to complete
+                    for t in threads:
+                        t.join()
+                    for result in results:
+                        if result:
                             refresh = True
             elif self.type == 'season':
                 altquery = self.query()
@@ -241,9 +245,20 @@ class plex:
             self.Seasons = []
             url = 'https://metadata.provider.plex.tv/library/metadata/'+ratingKey+'/children?includeUserState=1&X-Plex-Container-Size=200&X-Plex-Container-Start=0&X-Plex-Token='+token
             response = plex.get(url)
-            for season in response.MediaContainer.Metadata:
-                if not season.index == 0:
-                    self.Seasons += [plex.season(season)]
+            for Season in response.MediaContainer.Metadata[:]:
+                if Season.index == 0:
+                    response.MediaContainer.Metadata.remove(Season)
+            results = [None] * len(response.MediaContainer.Metadata)
+            threads = []
+            #start thread for each season
+            for index,Season in enumerate(response.MediaContainer.Metadata):
+                t = Thread(target=multi_init, args=(plex.season,Season,results,index))
+                threads.append(t)
+                t.start()
+            # wait for the threads to complete
+            for t in threads:
+                t.join()
+            self.Seasons = results
     class movie(media):
         def __init__(self, ratingKey):
             if not isinstance(ratingKey,str):
@@ -257,12 +272,10 @@ class plex:
         movies = '1'
         shows = '2'
         def refresh(section):
-            print('[' + str(datetime.datetime.now()) + '] refreshing library section '+section+' ...', end=' ')
-            sys.stdout.flush()
+            ui.print('refreshing library section '+section+' ...')
             url = plex.library.url + '/library/sections/' + section + '/refresh?X-Plex-Token=' + plex.users[0][1]
             plex.session.get(url)
-            print('done')
-            sys.stdout.flush()
+            ui.print('done')
         def __new__(self):
             url = plex.library.url + '/library/all?X-Plex-Token='+ plex.users[0][1]
             list = []
@@ -328,8 +341,6 @@ class debrid:
             mode = 'cached'
         else:
             mode = 'uncached'
-        print('[' + str(datetime.datetime.now()) + '] checking debrid for '+mode+' releases ...', end = ' ')
-        sys.stdout.flush()
         if regex.search(r'(S[0-9][0-9])',query):
             query = regex.split(r'(S[0-9]+)',query) 
             query = query[0] + '[0-9]*.*' + query[1] + query[2]
@@ -399,15 +410,11 @@ class debrid:
                                                 response = debrid.post('https://api.real-debrid.com/rest/1.0/unrestrict/link', {'link' : link})
                                             except:
                                                 break
-                                        print('done')
-                                        sys.stdout.flush()
-                                        print('[' + str(datetime.datetime.now()) + '] streaming release: ' + release.title)
-                                        sys.stdout.flush()
+                                        ui.print('adding cached release: ' + release.title)
                                         return True
                                 else:
                                     debrid.delete('https://api.real-debrid.com/rest/1.0/torrents/delete/' + torrent_id)
-                        print('done')
-                        sys.stdout.flush()
+                        ui.print('done')
                         return False
                     else:
                         if len(release.download) > 0:
@@ -416,21 +423,13 @@ class debrid:
                                     response = debrid.post('https://api.real-debrid.com/rest/1.0/unrestrict/link', {'link' : link})
                                 except:
                                     break
-                            print('done')
-                            sys.stdout.flush()
-                            print('[' + str(datetime.datetime.now()) + '] streaming release: ' + release.title)
-                            sys.stdout.flush()
+                            ui.print('adding cached release: ' + release.title)
                             return True
                 else:
-                    print('done')
-                    sys.stdout.flush()
-                    print('[' + str(datetime.datetime.now()) + '] adding uncached release to debrid: '+ release.title)
-                    sys.stdout.flush()
+                    ui.print('adding uncached release: '+ release.title)
                     response = debrid.post('https://api.real-debrid.com/rest/1.0/torrents/addMagnet',{'magnet':release.download[0]})
                     debrid.post('https://api.real-debrid.com/rest/1.0/torrents/selectFiles/' + str(response.id), {'files':'all'})
                     return True
-        print('done')
-        sys.stdout.flush()
         return False
 #Release Class
 class releases:
@@ -449,14 +448,22 @@ class releases:
     class scrape: 
         def __new__(cls,query):
             print ('done')
-            print('[' + str(datetime.datetime.now()) + '] scraping sources for query "' + query + '" ...' , end = ' ')
-            sys.stdout.flush()
+            ui.print('scraping sources for query "' + query + '" ...')
+            scrapers = [releases.scrape.rarbg,releases.scrape.x1337]
             scraped_releases = []
-            scraped_releases += releases.scrape.rarbg(query)
-            scraped_releases += releases.scrape.x1337(query)
+            results = [[],[],]
+            threads = []
+            for index,scraper in enumerate(scrapers):
+                t = Thread(target=scrape, args=(scraper,query,results,index))
+                threads.append(t)
+                t.start()
+            # wait for the threads to complete
+            for t in threads:
+                t.join()
+            for result in results:
+                scraped_releases += result
             releases.sort(scraped_releases)
-            print('done - found ' + str(len(scraped_releases)) + ' releases')
-            sys.stdout.flush()
+            ui.print('done - found ' + str(len(scraped_releases)) + ' releases')
             return scraped_releases       
         class rarbg:
             token = 'r05xvbq6ul'
@@ -470,7 +477,7 @@ class releases:
                 headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
                 response = None
                 retries = 0
-                while not hasattr(response, "torrent_results") and retries < 5:
+                while not hasattr(response, "torrent_results") and retries < 4:
                     if regex.search(r'(tt[0-9]+)',query,regex.I):
                         url = 'https://torrentapi.org/pubapi_v2.php?mode=search&search_imdb=' + str(query) + '&ranked=0&category=52;51;50;49;48;45;44;41;17;14&token=' + releases.scrape.rarbg.token + '&limit=100&format=json_extended&app_id=fuckshit'
                     else:
@@ -481,26 +488,22 @@ class releases:
                             response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
                             if hasattr(response, "error"):
                                 if 'Invalid token' in response.error:
-                                    print('[' + str(datetime.datetime.now()) + '] rarbg error: ' + response.error)
-                                    sys.stdout.flush()
-                                    print('[' + str(datetime.datetime.now()) + '] fetching new token ...')
-                                    sys.stdout.flush()
+                                    ui.print('rarbg error: ' + response.error)
+                                    ui.print('fetching new token ...')
                                     url = 'https://torrentapi.org/pubapi_v2.php?get_token=get_token&app_id=fuckshit'
                                     response = releases.scrape.rarbg.session.get(url, headers = headers)
                                     if len(response.content) > 5:
                                         response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
                                         releases.scrape.rarbg.token = response.token 
                                     else:
-                                        print('[' + str(datetime.datetime.now()) + '] rarbg error: could not fetch new token')
-                                        sys.stdout.flush()
+                                        ui.print('rarbg error: could not fetch new token')
                                 elif hasattr(response, "rate_limit"):
                                     retries += -1
                     except:
                         response = None
-                        print('[' + str(datetime.datetime.now()) + '] rarbg error: exception')
-                        sys.stdout.flush()
+                        ui.print('rarbg error: exception')
                     retries += 1
-                    time.sleep(2+random.randint(0, 3))
+                    time.sleep(1+random.randint(0, 2))
                 if hasattr(response, "torrent_results"):
                     for result in response.torrent_results:
                         if regex.match(r'('+ altquery.replace('.','\.') + ')',result.title,regex.I):
@@ -544,8 +547,7 @@ class releases:
                                 scraped_releases += [releases('[1337x]','torrent',title,[],size,[download])]
                 except:
                     response = None
-                    print('[' + str(datetime.datetime.now()) + '] 1337x error: exception')
-                    sys.stdout.flush()
+                    ui.print('1337x error: exception')
                 return scraped_releases
     #Sort Method
     class sort:
@@ -620,64 +622,72 @@ class releases:
                 season_query = title + '.S' + str("{:02d}".format(season.index)) + '.'
                 queries += [[season_query,episode_queries],]
         return queries
-#Script Class
-class download_script:   
-    def run(): 
-        ui.cls()    
-        timeout = 10
-        regular_check = 1800
-        timeout_counter = 0
-        old_watchlist = plex.watchlist()
-        if len(old_watchlist) == 0:
-            print('[' + str(datetime.datetime.now()) + '] checking new content ... done' )
-            sys.stdout.flush()
-        else:
+#Multiprocessing scrape method
+def scrape(cls:releases.scrape,query,result,index):
+    result[index] = cls(query)
+#Multiprocessing download method
+def download(cls:plex.media,library,parentReleases,result,index):
+    result[index] = cls.download(library=library,parentReleases=parentReleases)
+#Multiprocessing watchlist method
+def multi_init(cls,obj,result,index):
+    result[index] = cls(obj)
+#Multiprocessing run method
+def run(stop): 
+    ui.cls()    
+    print("Type 'exit' to return to the main menu.")
+    timeout = 5
+    regular_check = 1800
+    timeout_counter = 0
+    old_watchlist = plex.watchlist()
+    if len(old_watchlist) == 0:
+        ui.print('checking new content ... done' )
+    else:
+        library = plex.library()
+        ui.print('checking new content ...')
+        for element in old_watchlist:
+            element.download(library=library)
+        ui.print('done')
+    while not stop:   
+        watchlist = plex.watchlist(old=old_watchlist)
+        if len(watchlist) > 0:
             library = plex.library()
-            print('[' + str(datetime.datetime.now()) + '] checking new content ...', end=' ')
-            sys.stdout.flush()
-            printed = False
-            for element in old_watchlist:
-                if element.download(library=library):
-                    printed = True
-            if not printed:
-                print('done')
-        while True:   
-            watchlist = plex.watchlist(old=old_watchlist)
-            if len(watchlist) > 0:
-                library = plex.library()
-                print('[' + str(datetime.datetime.now()) + '] checking new content ...', end=' ')
-                sys.stdout.flush()
-                printed = False
-                for element in watchlist:
-                    if element.download(library=library):
-                        printed = True
-                if not printed:
-                    print('done')
-                old_watchlist = plex.watchlist()
-            elif timeout_counter >= regular_check:
-                old_watchlist = plex.watchlist()
-                library = plex.library()
-                timeout_counter = 0
-                if len(old_watchlist) == 0:
-                    print('[' + str(datetime.datetime.now()) + '] checking new content ... done' )
-                    sys.stdout.flush()
-                else:
-                    print('[' + str(datetime.datetime.now()) + '] checking new content ...', end=' ')
-                    sys.stdout.flush()
-                    printed = False
-                    for element in old_watchlist:
-                        if element.download(library=library):
-                            printed = True
-                    if not printed:
-                        print('done')
+            ui.print('checking new content ...')
+            for element in watchlist:
+                element.download(library=library)
+            ui.print('done')
+            old_watchlist = plex.watchlist()
+        elif timeout_counter >= regular_check:
+            old_watchlist = plex.watchlist()
+            library = plex.library()
+            timeout_counter = 0
+            if len(old_watchlist) == 0:
+                ui.print('checking new content ... done' )
             else:
-                timeout_counter += timeout
-            time.sleep(timeout)
+                ui.print('checking new content ...')
+                for element in old_watchlist:
+                    element.download(library=library)
+                ui.print('done')
+        else:
+            timeout_counter += timeout
+        time.sleep(timeout)
+#Multiprocessing run class
+class download_script:   
+    def run():
+        stop = False
+        t = Thread(target=run, args =(lambda : stop, ))
+        t.start()
+        while not stop:
+            text = input("")
+            if text == 'exit':
+                stop = True
+            else:
+                print("Type 'exit' to return to the main menu.")
 #Ui Preference Class:
 class ui_settings:
     run_directly = "true"
 #Ui Class
 class ui:
+    sameline = False
     class option:
         def __init__(self,name,cls,key):
             self.name = name
@@ -832,6 +842,20 @@ class ui:
         print()
         print(path)
         print()
+    def print(string:str):
+        if string == 'done' and ui.sameline:
+            print('done')
+            ui.sameline = False
+        elif ui.sameline and string.startswith('done'):
+            print(string)
+            ui.sameline = False
+        elif string.endswith('...') and __name__ == "__main__":
+            print('[' + str(datetime.datetime.now()) + '] ' + string, end=' ')
+            sys.stdout.flush()
+            ui.sameline = True
+        elif not string.startswith('done'):
+            print('[' + str(datetime.datetime.now()) + '] ' + string)
+            sys.stdout.flush()
     def settings():
         list = ui.settings_list
         ui.cls('Options/Settings/')
@@ -914,7 +938,7 @@ class ui:
             download_script.run()
 
 #TODO
-#multiprocessing for watchlist creation and element download
+#make things even faster? 
 #downloading boolean for element to check if in realdebrid uncached torrents
 
 ui.run()
