@@ -647,7 +647,7 @@ def run(stop):
         for element in old_watchlist:
             element.download(library=library)
         ui.print('done')
-    while not stop:   
+    while not stop():   
         watchlist = plex.watchlist(old=old_watchlist)
         if len(watchlist) > 0:
             library = plex.library()
@@ -673,6 +673,7 @@ def run(stop):
 #Multiprocessing run class
 class download_script:   
     def run():
+        global stop
         stop = False
         t = Thread(target=run, args =(lambda : stop, ))
         t.start()
