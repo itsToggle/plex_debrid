@@ -40,11 +40,13 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 
 - The Plex Watchlist of your specified users will polled for changes every 10 seconds, which is when it will try to find newly added content. 
 - The Plex Watchlist will be updated entirely every 30 minutes, which is when it will try to find newly released episodes from watchlisted series. This is only done every 30 minutes, because building the whole watchlist can take more than a minute, depending on the amount of shows you have in there.
-- Your *entire* Plex Library is checked for any existing seasons/episodes of a watchlisted show and will avoid downloading those.
+- Your *entire* Plex Library (including shares) is checked for any existing seasons/episodes of a watchlisted show and will avoid downloading those.
 - If you dont want to download a specific episode or season of a show, navigate to that show in the discovery feature and mark the episodes/seasons that you want to ignore as 'watched'. The watch status inside the discovery feature is not connected to the watch status inside your libraries.
 - When some content could repeatedly not be downloaded, it will be marked as 'watched' in the Discovery feature of the first specified user. This will cause the scraper to ignore the content, until its marked as 'unwatched' again.
+- You can explore and remove ignored content in the main menu.
 - This script will automatically pick the best release that could be found. To change how the script picks the best release, check out the next section.
 - If you don't want the main menu to show when you start the script and run the download automation right away, you can define this in the 'UI Settings' section of the 'Settings' menu.
+- You can return to the main menu at any time.
 
 ## Sorting the scraped releases:
 
