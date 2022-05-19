@@ -7,6 +7,15 @@ Plex torrent streaming through RealDebrid, using the new Plex Discover feature.
 
 ![Alt Text](https://github.com/itsToggle/plex_rd/blob/main/final_6279217a77f1110078928cf3_366957.gif)
 
+## UI:
+Main Menu             |  Download Automation
+:-------------------------:|:-------------------------:
+![Alt Text](https://i.ibb.co/2sJpQxp/Screenshot-2022-05-19-145135.png)  | ![Alt Text](https://i.ibb.co/Fg2cwkh/Screenshot-2022-05-19-144919.png)
+Settings            |  Ingored Media
+![Alt Text](https://i.ibb.co/X49r7Pn/Screenshot-2022-05-19-145706.png)  | ![Alt Text](https://i.ibb.co/TLRysHD/Screenshot-2022-05-19-145915.png)
+
+
+
 ## Description:
 
 *This python script makes use of my rclone fork, which allows you to mount the RealDebrid /torrent directory as a virtual drive. After creating a plex library of this virtual drive, you can stream torrents that are cached on RealDebrid without the need to download them first.*
