@@ -18,6 +18,7 @@ class plex:
     session = requests.Session()  
     users = []
     headers = {'Content-Type':'application/json','Accept':'application/json'}
+    ignored = []
     def get(url):
         try:
             response = plex.session.get(url,headers=plex.headers)
@@ -46,7 +47,7 @@ class plex:
                     if hasattr(response.MediaContainer,'Metadata'):
                         for entry in response.MediaContainer.Metadata:
                             entry.user = user
-                            if not entry in old:
+                            if not entry in old and not entry in watchlist_entries:
                                 if entry.type == 'show':
                                     watchlist_entries += [plex.show(entry)]
                                 if entry.type == 'movie':
@@ -78,29 +79,47 @@ class plex:
             return str(self.__dict__)
         def query(self):
             if self.type == 'movie':
-                return releases.rename(self.title) + '.' + str(self.year)
+                title = releases.rename(self.title)
+                title = title.replace('.'+str(self.year),'')
+                return title + '.' + str(self.year)
             elif self.type == 'show':
-                return releases.rename(self.title)
+                title = releases.rename(self.title)
+                title = title.replace('.'+str(self.year),'')
+                return title
             elif self.type == 'season':
-                return releases.rename(self.parentTitle) + '.S' + str("{:02d}".format(self.index)) + '.'
-            elif self.type == 'episode':
-                return releases.rename(self.grandparentTitle) + '.S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index))+ '.'
+                title = releases.rename(self.parentTitle) 
+                title = title.replace('.'+str(self.parentYear),'')
+                return title + '.S' + str("{:02d}".format(self.index)) + '.'
+            elif self.type == 'episode': 
+                title = releases.rename(self.grandparentTitle) 
+                title = title.replace('.'+str(self.grandparentYear),'')
+                return title + '.S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index))+ '.'
         def released(self):
             return datetime.datetime.today() > datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
         def watch(self):
             if self.type == 'movie' or self.type == 'show':
                 ui.print('ignoring item: ' + self.title)
             elif self.type == 'season':
-                ui.print('ignoring item: ' + self.title + 'S' + str("{:02d}".format(self.index)))
+                ui.print('ignoring item: ' + self.parentTitle + 'S' + str("{:02d}".format(self.index)))
             elif self.type == 'episode':
-                ui.print('ignoring item: ' + self.title + 'S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index)))
+                ui.print('ignoring item: ' + self.grandparentTitle + 'S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index)))
             url = 'https://metadata.provider.plex.tv/actions/scrobble?identifier=tv.plex.provider.metadata&key='+self.ratingKey+'&X-Plex-Token='+ plex.users[0][1]
             plex.get(url)
+            plex.ignored += [self]
+        def unwatch(self):
+            url = 'https://metadata.provider.plex.tv/actions/unscrobble?identifier=tv.plex.provider.metadata&key='+self.ratingKey+'&X-Plex-Token='+ plex.users[0][1]
+            plex.get(url)
+            plex.ignored.remove(self)
         def watched(self):
             if self.type == 'movie' or self.type == 'episode':
-                return self.viewCount > 0
+                if self.viewCount > 0:
+                    plex.ignored += [self]
+                    return True
             else:
-                return self.viewedLeafCount == self.leafCount
+                if self.viewedLeafCount == self.leafCount:
+                    plex.ignored += [self]
+                    return True
+            return False
         def collected(self,list):
             if self.type == 'show' or self.type == 'season':
                 match = next((x for x in list if x == self),None)
@@ -139,32 +158,39 @@ class plex:
             if self.type == 'movie':
                 if self.released() and not self.watched():
                     if len(self.uncollected(library)) > 0:
+                        tic = time.perf_counter()
                         while len(self.Releases) == 0 and i <= retries:
                             self.Releases += releases.scrape(self.query())
                             i += 1
                         if self.debrid_download():
                             refresh = True
                             plex.watchlist.remove(self)
+                            toc = time.perf_counter()
+                            ui.print('adding movie took ' + str(round(toc-tic,2)) + 's')
                         else:
                             self.watch()
             elif self.type == 'show':
                 if self.released() and not self.watched():
                     Seasons = self.uncollected(library)
-                    if len(Seasons) > 1:
-                        self.Releases += releases.scrape(self.query())
-                    results = [None] * len(Seasons)
-                    threads = []
-                    #start thread for each season
-                    for index,Season in enumerate(Seasons):
-                        t = Thread(target=download, args=(Season,library,self.Releases,results,index))
-                        threads.append(t)
-                        t.start()
-                    # wait for the threads to complete
-                    for t in threads:
-                        t.join()
-                    for result in results:
-                        if result:
-                            refresh = True
+                    if len(Seasons) > 0:
+                        tic = time.perf_counter()
+                        if len(Seasons) > 1:
+                            self.Releases += releases.scrape(self.query())
+                        results = [None] * len(Seasons)
+                        threads = []
+                        #start thread for each season
+                        for index,Season in enumerate(Seasons):
+                            t = Thread(target=download, args=(Season,library,self.Releases,results,index))
+                            threads.append(t)
+                            t.start()
+                        # wait for the threads to complete
+                        for t in threads:
+                            t.join()
+                        for result in results:
+                            if result:
+                                refresh = True
+                        toc = time.perf_counter()
+                        ui.print('adding show took ' + str(round(toc-tic,2)) + 's')
             elif self.type == 'season':
                 altquery = self.query()
                 if regex.search(r'(S[0-9]+)',altquery):
@@ -227,6 +253,7 @@ class plex:
                 url = 'https://metadata.provider.plex.tv/library/metadata/'+self.ratingKey+'/children?includeUserState=1&X-Plex-Container-Size=200&X-Plex-Container-Start='+str(len(self.Episodes))+'&X-Plex-Token='+plex.users[0][1]
                 response = plex.get(url)
                 for episode in response.MediaContainer.Metadata:
+                    episode.grandparentYear = self.parentYear
                     self.Episodes += [plex.episode(episode)]        
     class episode(media):
         def __init__(self,other):
@@ -252,6 +279,7 @@ class plex:
             threads = []
             #start thread for each season
             for index,Season in enumerate(response.MediaContainer.Metadata):
+                Season.parentYear = self.year
                 t = Thread(target=multi_init, args=(plex.season,Season,results,index))
                 threads.append(t)
                 t.start()
@@ -484,7 +512,7 @@ class releases:
                         url = 'https://torrentapi.org/pubapi_v2.php?mode=search&search_string=' + str(query) + '&ranked=0&category=52;51;50;49;48;45;44;41;17;14&token=' + releases.scrape.rarbg.token + '&limit=100&format=json_extended&app_id=fuckshit'
                     try:
                         response = releases.scrape.rarbg.session.get(url, headers = headers)
-                        if len(response.content) > 10:
+                        if not response.status_code == 429:
                             response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
                             if hasattr(response, "error"):
                                 if 'Invalid token' in response.error:
@@ -499,6 +527,8 @@ class releases:
                                         ui.print('rarbg error: could not fetch new token')
                                 elif hasattr(response, "rate_limit"):
                                     retries += -1
+                        else:
+                            retries += -1
                     except:
                         response = None
                         ui.print('rarbg error: exception')
@@ -607,21 +637,6 @@ class releases:
         string.replace('&','and').replace('ü','ue').replace('ä','ae').replace('ö','oe').replace('ß','ss').replace('é','e').replace('è','e')
         string = regex.sub(r'\.+',".",string)
         return string    
-    #Query Method
-    def query(element:plex.media):
-        queries = []
-        if element.type == 'movie':
-            title = releases.rename(element.title)
-            queries = [title + '.' + str(element.year)]
-        if element.type == 'show':
-            title = releases.rename(element.title)
-            for season in element.Seasons:
-                episode_queries = []
-                for episode in season.Episodes:
-                    episode_queries += [title + '.S' + str("{:02d}".format(season.index)) + 'E' + str("{:02d}".format(episode.index))+ '.']
-                season_query = title + '.S' + str("{:02d}".format(season.index)) + '.'
-                queries += [[season_query,episode_queries],]
-        return queries
 #Multiprocessing scrape method
 def scrape(cls:releases.scrape,query,result,index):
     result[index] = cls(query)
@@ -673,6 +688,7 @@ def run(stop):
 #Multiprocessing run class
 class download_script:   
     def run():
+        download_script.hasrun = True
         global stop
         stop = False
         t = Thread(target=run, args =(lambda : stop, ))
@@ -683,6 +699,9 @@ class download_script:
                 stop = True
             else:
                 print("Type 'exit' to return to the main menu.")
+        print("Waiting for the download automation to stop ... ")
+        while t.is_alive():
+            time.sleep(1)
 #Ui Preference Class:
 class ui_settings:
     run_directly = "true"
@@ -857,17 +876,37 @@ class ui:
         elif not string.startswith('done'):
             print('[' + str(datetime.datetime.now()) + '] ' + string)
             sys.stdout.flush()
+    def ignored():
+        ui.cls('Options/Ignored Media/')
+        if len(plex.ignored) == 0:
+            watchlist = plex.watchlist()
+            library = plex.library()
+            for element in watchlist:
+                element.uncollected(library)
+            print()
+        print('0) Back')
+        indices = []
+        for index,element in enumerate(plex.ignored):
+            print(str(index+1) + ') ' + element.query())
+            indices += [str(index+1)]
+        print()
+        choice = input('Choose a media item that you want to remove from the ignored list: ')            
+        if choice in indices:
+            print("Media item: " + plex.ignored[int(choice)-1].query() + 'removed from ignored list.')
+            plex.ignored[int(choice)-1].unwatch()
+            time.sleep(3)
+        ui.options()
     def settings():
         list = ui.settings_list
         ui.cls('Options/Settings/')
         print('0) Back')
+        indices = []
         for index,category in enumerate (list):
             print(str(index+1) + ') ' + category[0])
+            indices += [str(index+1)]
         print()
         choice = input('Choose an action: ')
-        if choice == '0':
-            ui.options()
-        else:
+        if choice in indices:
             ui.cls('Options/Settings/'+list[int(choice)-1][0]+'/')
             print('0) Back')
             for index,setting in enumerate (list[int(choice)-1][1]):
@@ -884,7 +923,7 @@ class ui:
         list = [
             ui.option('Run',download_script,'run'),
             ui.option('Settings',ui,'settings'),
-            ui.option('Save current settings',ui,'save'),
+            ui.option('Ignored Media',ui,'ignored'),
         ]
         ui.cls('Options/')
         for index,option in enumerate(list):
@@ -894,6 +933,8 @@ class ui:
         for index,option in enumerate(list):
             if choice == str(index+1):
                 option.input()
+                if option.key == 'settings':
+                    ui.save()
                 ui.options()
         ui.options()
     def setup():
@@ -941,5 +982,7 @@ class ui:
 #TODO
 #make things even faster? 
 #downloading boolean for element to check if in realdebrid uncached torrents
+#add command line scraper
 
-ui.run()
+if __name__ == "__main__":
+    ui.run()
