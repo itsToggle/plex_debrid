@@ -8,7 +8,7 @@ Plex torrent streaming through RealDebrid, using the new Plex Discover feature.
 ![Alt Text](https://github.com/itsToggle/plex_rd/blob/main/final_6279217a77f1110078928cf3_366957.gif)
 
 ## UI:
-Main Menu             |  Download Automation
+Main Menu             |  Example Run
 :-------------------------:|:-------------------------:
 ![Alt Text](https://i.ibb.co/2sJpQxp/Screenshot-2022-05-19-145135.png)  | ![Alt Text](https://i.ibb.co/Fg2cwkh/Screenshot-2022-05-19-144919.png)
 Settings            |  Ingored Media
