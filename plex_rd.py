@@ -688,7 +688,6 @@ def run(stop):
 #Multiprocessing run class
 class download_script:   
     def run():
-        download_script.hasrun = True
         global stop
         stop = False
         t = Thread(target=run, args =(lambda : stop, ))
