@@ -109,5 +109,5 @@ For this, we will choose the following setup:
 
 
 ## Limitations:
-- The plex discover API only provides a release date, not a release time for new episodes. This makes it hard to determined when to start looking for releases and when to ignore an episode.
+- The plex discover API only provides a release date, not a release time for new episodes. This makes it hard to determined when to start looking for releases and when to ignore an episode. This script will only download episodes when its been a day since the air-date or if plex shows the episode as availabe on streaming services.
 - Since this is more of a proof of concept at the moment, There are only two scrapers implemented - rarbg and 1337x.
