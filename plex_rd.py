@@ -29,16 +29,21 @@ class plex:
     def get(url):
         try:
             response = plex.session.get(url,headers=plex.headers)
+            if not response.status_code == 200:
+                ui.print("Plex Get: " + str(response.content),debug=ui_settings.debug)
             response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
             return response
-        except:
+        except Exception as e:
+            ui.print("Plex Get Error: " + str(e),debug=ui_settings.debug)
             return None
     def post(url,data):
         try:
             response = plex.session.post(url,data=data,headers=plex.headers)
+            ui.print("Plex Post: " + str(response),debug=ui_settings.debug)
             response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
             return response
-        except:
+        except Exception as e:
+            ui.print("Plex Post Error: " + str(e),debug=ui_settings.debug)
             return None
     class watchlist:
         def __init__(self,list) -> None:
@@ -51,15 +56,17 @@ class plex:
                 for user in plex.users:
                     url = 'https://metadata.provider.plex.tv/library/sections/watchlist/all?X-Plex-Token=' + user[1]
                     response = plex.get(url)
-                    if hasattr(response.MediaContainer,'Metadata'):
-                        for entry in response.MediaContainer.Metadata:
-                            entry.user = user
-                            if not entry in old and not entry in watchlist_entries:
-                                if entry.type == 'show':
-                                    watchlist_entries += [plex.show(entry)]
-                                if entry.type == 'movie':
-                                    watchlist_entries += [plex.movie(entry)]
-            except:
+                    if hasattr(response,'MediaContainer'):
+                        if hasattr(response.MediaContainer,'Metadata'):
+                            for entry in response.MediaContainer.Metadata:
+                                entry.user = user
+                                if not entry in old and not entry in watchlist_entries:
+                                    if entry.type == 'show':
+                                        watchlist_entries += [plex.show(entry)]
+                                    if entry.type == 'movie':
+                                        watchlist_entries += [plex.movie(entry)]
+            except Exception as e:
+                ui.print("Plex Watchlist Error: " + str(e),debug=ui_settings.debug)
                 if old == []:
                     ui.print('done') 
                 ui.print('plex error: could not reach plex')
@@ -360,7 +367,8 @@ class debrid:
         try :
             response = debrid.session.get(url, headers = headers)
             response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
-        except :
+        except Exception as e:
+            ui.print("Realdebrid Get Error: " + str(e),debug=ui_settings.debug)
             response = None
         return response
     #Post Function
@@ -373,7 +381,8 @@ class debrid:
             except :
                 response = None
             #time.sleep(1)
-        except :
+        except Exception as e:
+            ui.print("Realdebrid Post Error: " + str(e),debug=ui_settings.debug)
             response = None
         return response
     #Delete Function
@@ -382,7 +391,8 @@ class debrid:
         try :
             requests.delete(url, headers = headers)
             #time.sleep(1)
-        except :
+        except Exception as e:
+            ui.print("Realdebrid Delete Error: " + str(e),debug=ui_settings.debug)
             None
         return None
     #Object classes
@@ -394,7 +404,7 @@ class debrid:
         def __eq__(self, other):
             return self.id == other.id 
     #Check Function
-    def download(element:plex.media,stream=True,query=''):
+    def download(element:plex.media,stream=True,query='',force=False):
         cached = element.Releases
         if query == '':
             query = element.query()
@@ -403,7 +413,7 @@ class debrid:
             query = query[0] + '[0-9]*.*' + query[1] + query[2]
         for release in cached[:]:
             #if release matches query
-            if regex.match(r'('+ query.replace('.','\.') + ')',release.title,regex.I):
+            if regex.match(r'('+ query.replace('.','\.') + ')',release.title,regex.I) or force:
                 if stream:
                     release.size = 0
                     files = []
@@ -750,6 +760,7 @@ class download_script:
 #Ui Preference Class:
 class ui_settings:
     run_directly = "true"
+    debug = "false"
 #Ui Class
 class ui:
     sameline = False
@@ -944,6 +955,10 @@ class ui:
         ['UI Settings',[
             setting('Show Menu on Startup','Please enter "true" or "false": ',ui_settings,'run_directly'),
             ]
+        ],
+        ['Debug',[
+            setting('Debug printing','Please enter "true" or "false": ',ui_settings,'debug'),
+            ]
         ]
 
     ]
@@ -960,20 +975,21 @@ class ui:
         print()
         print(path)
         print()
-    def print(string:str):
-        if string == 'done' and ui.sameline:
-            print('done')
-            ui.sameline = False
-        elif ui.sameline and string.startswith('done'):
-            print(string)
-            ui.sameline = False
-        elif string.endswith('...') and __name__ == "__main__":
-            print('[' + str(datetime.datetime.now()) + '] ' + string, end=' ')
-            sys.stdout.flush()
-            ui.sameline = True
-        elif not string.startswith('done'):
-            print('[' + str(datetime.datetime.now()) + '] ' + string)
-            sys.stdout.flush()
+    def print(string:str,debug="true"):
+        if debug == "true":
+            if string == 'done' and ui.sameline:
+                print('done')
+                ui.sameline = False
+            elif ui.sameline and string.startswith('done'):
+                print(string)
+                ui.sameline = False
+            elif string.endswith('...') and __name__ == "__main__":
+                print('[' + str(datetime.datetime.now()) + '] ' + string, end=' ')
+                sys.stdout.flush()
+                ui.sameline = True
+            elif not string.startswith('done'):
+                print('[' + str(datetime.datetime.now()) + '] ' + string)
+                sys.stdout.flush()
     def ignored():
         ui.cls('Options/Ignored Media/')
         if len(plex.ignored) == 0:
@@ -1012,7 +1028,7 @@ class ui:
                 if choice == 'auto':
                     release = scraped_releases[0]
                     release.Releases = scraped_releases
-                    if debrid.download(release,stream=True,query=query):
+                    if debrid.download(release,stream=True,query=query,force=True):
                         back = True
                         time.sleep(3)
                     else:
@@ -1024,13 +1040,13 @@ class ui:
                         print()
                         choice = input("Choose an action: ")
                         if choice == '1':
-                            debrid.download(release,stream=False,query=query)
+                            debrid.download(release,stream=False,query=query,force=True)
                             back = True
                             time.sleep(3)
                 elif int(choice) <= len(scraped_releases) and not int(choice) <= 0:
                     release = scraped_releases[int(choice)-1]
                     release.Releases = [release,]
-                    if debrid.download(release,stream=True,query=release.title):
+                    if debrid.download(release,stream=True,query=release.title,force=True):
                         back = True
                         time.sleep(3)
                     else:
@@ -1042,7 +1058,7 @@ class ui:
                         print()
                         choice = input("Choose an action: ")
                         if choice == '1':
-                            debrid.download(release,stream=False,query=release.title)
+                            debrid.download(release,stream=False,query=query,force=True)
                             back = True
                             time.sleep(3)
                 elif choice == '0':
@@ -1128,7 +1144,8 @@ class ui:
             settings = json.loads(f.read())
         for category, load_settings in ui.settings_list:
             for setting in load_settings:
-                setting.set(settings[setting.name])
+                if setting.name in settings:
+                    setting.set(settings[setting.name])
     def run():
         if ui.setup():
             ui.options()
