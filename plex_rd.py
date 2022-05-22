@@ -1,18 +1,25 @@
 #Import Modules
-import os
-import requests
-import json
-import time
-import datetime
-from types import SimpleNamespace
-import regex
-regex.DEFAULT_VERSION = regex.VERSION1
-from bs4 import BeautifulSoup
-import sys
-import copy
-import random
-from threading import Thread
-
+try:
+    import os
+    import requests
+    import json
+    import time
+    import datetime
+    from types import SimpleNamespace
+    import regex
+    regex.DEFAULT_VERSION = regex.VERSION1
+    from bs4 import BeautifulSoup
+    import sys
+    import copy
+    import random
+    from threading import Thread
+    import clipboard
+except Exception as e:
+    print("Importing Error:")
+    print(e)
+    print("Make sure you have installed this python module.")
+    print("You need to install 'pip' (https://pip.pypa.io/en/stable/installation/) and run the command 'pip install "+e.name+"'.")
+    input("Press any key to continue")
 #Plex Class
 class plex:
     session = requests.Session()  
@@ -95,17 +102,27 @@ class plex:
                 title = title.replace('.'+str(self.grandparentYear),'')
                 return title + '.S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index))+ '.'
         def released(self):
-            return datetime.datetime.today() > datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
+            released = datetime.datetime.today() - datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
+            if released.days >= 0 and released.days <= 1:
+                if self.available():
+                    return True
+                else:
+                    return False
+            return released.days > 0
+        def available(self):
+            url = 'https://metadata.provider.plex.tv/library/metadata/'+self.ratingKey+'/availabilities?X-Plex-Token='+plex.users[0][1]
+            response = plex.get(url)
+            if not response == None:
+                if hasattr(response,'MediaContainer'):
+                    if response.MediaContainer.size > 0:
+                        return True
+            return False
         def watch(self):
-            if self.type == 'movie' or self.type == 'show':
-                ui.print('ignoring item: ' + self.title)
-            elif self.type == 'season':
-                ui.print('ignoring item: ' + self.parentTitle + 'S' + str("{:02d}".format(self.index)))
-            elif self.type == 'episode':
-                ui.print('ignoring item: ' + self.grandparentTitle + 'S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index)))
+            ui.print('ignoring item: ' + self.query())
             url = 'https://metadata.provider.plex.tv/actions/scrobble?identifier=tv.plex.provider.metadata&key='+self.ratingKey+'&X-Plex-Token='+ plex.users[0][1]
             plex.get(url)
-            plex.ignored += [self]
+            if not self in plex.ignored:
+                plex.ignored += [self]
         def unwatch(self):
             url = 'https://metadata.provider.plex.tv/actions/unscrobble?identifier=tv.plex.provider.metadata&key='+self.ratingKey+'&X-Plex-Token='+ plex.users[0][1]
             plex.get(url)
@@ -166,7 +183,7 @@ class plex:
                             refresh = True
                             plex.watchlist.remove(self)
                             toc = time.perf_counter()
-                            ui.print('adding movie took ' + str(round(toc-tic,2)) + 's')
+                            ui.print('took ' + str(round(toc-tic,2)) + 's')
                         else:
                             self.watch()
             elif self.type == 'show':
@@ -190,7 +207,7 @@ class plex:
                             if result:
                                 refresh = True
                         toc = time.perf_counter()
-                        ui.print('adding show took ' + str(round(toc-tic,2)) + 's')
+                        ui.print('took ' + str(round(toc-tic,2)) + 's')
             elif self.type == 'season':
                 altquery = self.query()
                 if regex.search(r'(S[0-9]+)',altquery):
@@ -252,9 +269,14 @@ class plex:
             while len(self.Episodes) < self.leafCount:
                 url = 'https://metadata.provider.plex.tv/library/metadata/'+self.ratingKey+'/children?includeUserState=1&X-Plex-Container-Size=200&X-Plex-Container-Start='+str(len(self.Episodes))+'&X-Plex-Token='+plex.users[0][1]
                 response = plex.get(url)
-                for episode in response.MediaContainer.Metadata:
-                    episode.grandparentYear = self.parentYear
-                    self.Episodes += [plex.episode(episode)]        
+                if not response == None:
+                    if hasattr(response,'MediaContainer'):
+                        if hasattr(response.MediaContainer,'Metadata'):
+                            for episode in response.MediaContainer.Metadata:
+                                episode.grandparentYear = self.parentYear
+                                self.Episodes += [plex.episode(episode)] 
+                else: 
+                    time.sleep(1)       
     class episode(media):
         def __init__(self,other):
             self.__dict__.update(other.__dict__)
@@ -266,27 +288,38 @@ class plex:
                 token = self.user[1]
             else:
                 token = plex.users[0][1]
-            url = 'https://metadata.provider.plex.tv/library/metadata/'+ratingKey+'?includeUserState=1&X-Plex-Token='+token
-            response = plex.get(url)
-            self.__dict__.update(response.MediaContainer.Metadata[0].__dict__)
-            self.Seasons = []
-            url = 'https://metadata.provider.plex.tv/library/metadata/'+ratingKey+'/children?includeUserState=1&X-Plex-Container-Size=200&X-Plex-Container-Start=0&X-Plex-Token='+token
-            response = plex.get(url)
-            for Season in response.MediaContainer.Metadata[:]:
-                if Season.index == 0:
-                    response.MediaContainer.Metadata.remove(Season)
-            results = [None] * len(response.MediaContainer.Metadata)
-            threads = []
-            #start thread for each season
-            for index,Season in enumerate(response.MediaContainer.Metadata):
-                Season.parentYear = self.year
-                t = Thread(target=multi_init, args=(plex.season,Season,results,index))
-                threads.append(t)
-                t.start()
-            # wait for the threads to complete
-            for t in threads:
-                t.join()
-            self.Seasons = results
+            success = False
+            while not success:
+                url = 'https://metadata.provider.plex.tv/library/metadata/'+ratingKey+'?includeUserState=1&X-Plex-Token='+token
+                response = plex.get(url)
+                if not response == None:
+                    self.__dict__.update(response.MediaContainer.Metadata[0].__dict__)
+                    self.Seasons = []
+                    url = 'https://metadata.provider.plex.tv/library/metadata/'+ratingKey+'/children?includeUserState=1&X-Plex-Container-Size=200&X-Plex-Container-Start=0&X-Plex-Token='+token
+                    response = plex.get(url)
+                    if not response == None:
+                        if hasattr(response,'MediaContainer'):
+                            if hasattr(response.MediaContainer,'Metadata'):
+                                for Season in response.MediaContainer.Metadata[:]:
+                                    if Season.index == 0:
+                                        response.MediaContainer.Metadata.remove(Season)
+                                results = [None] * len(response.MediaContainer.Metadata)
+                                threads = []
+                                #start thread for each season
+                                for index,Season in enumerate(response.MediaContainer.Metadata):
+                                    Season.parentYear = self.year
+                                    t = Thread(target=multi_init, args=(plex.season,Season,results,index))
+                                    threads.append(t)
+                                    t.start()
+                                # wait for the threads to complete
+                                for t in threads:
+                                    t.join()
+                                self.Seasons = results
+                        success = True
+                    else:
+                        time.sleep(1)
+                else:
+                    time.sleep(1)
     class movie(media):
         def __init__(self, ratingKey):
             if not isinstance(ratingKey,str):
@@ -365,10 +398,6 @@ class debrid:
         cached = element.Releases
         if query == '':
             query = element.query()
-        if stream:
-            mode = 'cached'
-        else:
-            mode = 'uncached'
         if regex.search(r'(S[0-9][0-9])',query):
             query = regex.split(r'(S[0-9]+)',query) 
             query = query[0] + '[0-9]*.*' + query[1] + query[2]
@@ -475,7 +504,7 @@ class releases:
     #Scrape Classes
     class scrape: 
         def __new__(cls,query):
-            print ('done')
+            ui.print('done')
             ui.print('scraping sources for query "' + query + '" ...')
             scrapers = [releases.scrape.rarbg,releases.scrape.x1337]
             scraped_releases = []
@@ -608,23 +637,26 @@ class releases:
             ]
         ]
         def __new__(self,scraped_releases:list):
-            for release in scraped_releases:
-                release.rank = []
-                for group,attribute,type,descending in releases.sort.ranking:
-                    search = regex.search(group,str(getattr(release,attribute)),regex.I)
-                    if search:
-                        if type == 'text':
-                            for rank,match in enumerate(search.groups()):
-                                if match:
-                                    release.rank += [{attribute+': '+group:len(search.groups())-rank}]
-                        if type == 'number':
-                            release.rank += [{attribute+': '+group:int(float(search.group()))}]
-                    else:
-                        release.rank += [{attribute+': '+group:0}]
-            index = len(releases.sort.ranking)-1
-            for group,attribute,type,descending in reversed(releases.sort.ranking):
-                scraped_releases.sort(key=lambda s: s.rank[index][attribute+': '+group], reverse=int(descending))
-                index += -1
+            try:
+                for release in scraped_releases:
+                    release.rank = []
+                    for group,attribute,type,descending in releases.sort.ranking:
+                        search = regex.search(group,str(getattr(release,attribute)),regex.I)
+                        if search:
+                            if type == 'text':
+                                for rank,match in enumerate(search.groups()):
+                                    if match:
+                                        release.rank += [{attribute+': '+group:len(search.groups())-rank}]
+                            if type == 'number':
+                                release.rank += [{attribute+': '+group:int(float(search.group()))}]
+                        else:
+                            release.rank += [{attribute+': '+group:0}]
+                index = len(releases.sort.ranking)-1
+                for group,attribute,type,descending in reversed(releases.sort.ranking):
+                    scraped_releases.sort(key=lambda s: s.rank[index][attribute+': '+group], reverse=int(descending))
+                    index += -1
+            except:
+                ui.print("ERROR: Something seems wrong with your sorting rules. Aborted sorting.")
             return scraped_releases
     #Rename Method
     def rename(string):
@@ -637,6 +669,20 @@ class releases:
         string.replace('&','and').replace('ü','ue').replace('ä','ae').replace('ö','oe').replace('ß','ss').replace('é','e').replace('è','e')
         string = regex.sub(r'\.+',".",string)
         return string    
+    #Print Method
+    def print(scraped_releases):
+        longest_title = 0
+        longest_size = 0
+        longest_index = 0
+        for index,release in enumerate(scraped_releases):
+            if len(release.title) > longest_title:
+                longest_title = len(release.title)
+            if len(str(release.size)) > longest_size:
+                longest_size = len(str(release.size))
+            if len(str(index+1)) > longest_index:
+                longest_index = len(str(index+1))
+        for index,release in enumerate(scraped_releases):
+            print(str(index+1)+") "+' ' * (longest_index-len(str(index+1)))+"title: " + release.title + ' ' * (longest_title-len(release.title)) + " | size: " + str(release.size) + ' ' * (longest_size-len(str(release.size)))  + " | source: " + release.source)
 #Multiprocessing scrape method
 def scrape(cls:releases.scrape,query,result,index):
     result[index] = cls(query)
@@ -716,27 +762,36 @@ class ui:
             func = getattr(self.cls,self.key)
             func()
     class setting:
-        def __init__(self,name,prompt,cls,key,required=False):
+        def __init__(self,name,prompt,cls,key,required=False,help="",entry="",test=None):
             self.name = name
             self.prompt = prompt
             self.cls = cls
             self.key = key
             self.required = required
+            self.help = help
+            self.entry = entry
+            self.test = test
         def input(self):
             print('Current ' + self.name + ': "' + str(getattr(self.cls,self.key)) + '"')
             print()
             print('0) Back')
             print('1) Edit')
+            if not self.test == None:
+                print('2) Test')
             print()
             choice = input('Choose an action: ')
             if choice == '1':
-                if isinstance(getattr(self.cls,self.key),list):
+                if not isinstance(getattr(self.cls,self.key),list):
+                    console_input = input(self.prompt)
+                    setattr(self.cls,self.key,console_input)
+                    return True
+                else:
                     lists = getattr(self.cls,self.key)
                     print()
                     print('0) Back')
-                    print('1) Add entry')
+                    print('1) Add '+self.entry)
                     if len(lists) > 0:
-                        print('2) Edit entries')
+                        print('2) Edit '+self.entry+'s')
                     print()
                     choice = input('Choose an action: ')
                     if choice == '1':
@@ -751,10 +806,10 @@ class ui:
                         print('0) Back')
                         indices = []
                         for index,entry in enumerate(lists):
-                            print(str(index+1)+') Edit entry ' + str(index+1) + ': ' + str(entry))
+                            print(str(index+1)+') Edit '+self.entry+' ' + str(index+1) + ': ' + str(entry))
                             indices += [str(index+1)]
                         print()
-                        index = input('Choose an entry: ')
+                        index = input('Choose a '+self.entry+': ')
                         back3 = False
                         while not back3:
                             if index == '0':
@@ -778,7 +833,9 @@ class ui:
                                     if choice == '1':
                                         edit = []
                                         for k,prompt in enumerate(self.prompt):
-                                            edit += [input(prompt + '- currently "'+lists[int(index)-1][k]+'": ')]
+                                            clipboard.copy(lists[int(index)-1][k])
+                                            response = input(prompt + '- current value "'+lists[int(index)-1][k]+'" copied to your clipboard: ')
+                                            edit += [response]
                                         lists[int(index)-1] = edit
                                         setattr(self.cls,self.key,lists)
                                         return True
@@ -792,7 +849,7 @@ class ui:
                                             for i in indices:
                                                 print( i +') Position '+i)
                                             print()
-                                            choice = input('Move entry ' + index + ' to: ')
+                                            choice = input('Move '+self.entry+' ' + index + ' to: ')
                                             if choice == '0':
                                                 back = True
                                             if choice in indices:
@@ -800,13 +857,22 @@ class ui:
                                                 del lists[int(index)-1]
                                                 lists.insert(int(choice)-1,temp)
                                                 setattr(self.cls,self.key,lists)
-                                                return True
-                                
-
-                else:        
-                    console_input = input(self.prompt)
-                    setattr(self.cls,self.key,console_input)
-                    return True
+                                                return True                     
+            elif choice == '2' and not self.test == None:
+                print()
+                print("Sorting test.")
+                print("This is a random collection of typical release titles to try out your sorting rules.")
+                print("The first cached release of the sorted list would be added to realdebrid, so make sure you would be okay with the first few releases.")
+                print("If you want to add a release to try out a rule, look inside the plex_rd.py file.")
+                print()
+                print("before sorting:")
+                releases.print(self.test)
+                self.test = self.cls(self.test)
+                print()
+                print("after sorting:")
+                releases.print(self.test)
+                print()
+                input("Press any key to go back")
         def setup(self):
             if isinstance(getattr(self.cls,self.key),list):
                 edit = []
@@ -832,14 +898,47 @@ class ui:
             ]
         ],
         ['Plex Settings',[
-            setting('Plex users',['Please provide a name for this Plex user: ','Please provide the Plex token for this Plex user: '],plex,'users',required=True),
+            setting('Plex users',['Please provide a name for this Plex user: ','Please provide the Plex token for this Plex user: '],plex,'users',required=True,entry="user"),
             setting('Plex server address','Please enter your Plex server address: ',plex.library,'url',required=True),
             setting('Plex "movies" library','Please enter the section number of the "movies" library, that should be refreshed after a movie download: ',plex.library,'movies',required=True),
             setting('Plex "shows" library','Please enter the section number of the "shows" library, that should be refreshed after a show download: ',plex.library,'shows',required=True)
             ]
         ],
         ['Scraper Settings',[
-            setting('Release sorting',['Please specify what this sorting rule should to look for by providing one or more regex match group(s): ','Please specify in which release attribute ("title","source" or "size") this sorting rule should search: ','Please specify if the match should be interpreted as a number or as text ("number" or "text")','Please specify in which order the releases should be by ranked by this sorting rule ("0" = ascending or "1" = descending): '],releases.sort,'ranking'),
+            setting(
+                'Release sorting',
+                [
+                    'Please specify what this sorting rule should to look for by providing one or more regex match group(s): ',
+                    'Please specify in which release attribute ("title","source" or "size") this sorting rule should search: ',
+                    'Please specify if the match should be interpreted as a number or as text ("number" or "text")',
+                    'Please specify in which order the releases should be by ranked by this sorting rule ("0" = ascending or "1" = descending): ',
+                ],
+                releases.sort,'ranking',
+                entry="rule",
+                test=[
+                    releases("rarbg","torrent","Some.Movie.EXTENDED.REMASTERED.1080p.BluRay.x265-RARBG",[],"3.56",[]),
+                    releases("rarbg","torrent","Some.Movie.2160p.UHD.BluRay.x265.10bit.HDR.TrueHD.7.1.Atmos-BOREDOR",[],"39.59",[]),
+                    releases("rarbg","torrent","Some.Movie.2160p.UHD.BluRay.x265.10bit.HDR.TrueHD.7.1.Atmos-BOREDOR",[],"36.84",[]),
+                    releases("rarbg","torrent","Some.Movie.1080p.BluRay.x265-RARBG",[],"3.67",[]),
+                    releases("rarbg","torrent","Some.Movie.PROPER.1080p.BluRay.H264.AAC-RARBG",[],"4.49",[]),
+                    releases("rarbg","torrent","Some.Movie.EXTENDED.PROPER.1080p.BluRay.H264.AAC-RARBG",[],"5.02",[]),
+                    releases("rarbg","torrent","Some.Movie.1080p.BluRay.x264-SiNNERS",[],"16.46",[]),
+                    releases("1337x","torrent","Some.Movie.3D.REMASTERED.1080p.BluRay.H264.AAC-RARBG",[],"4.35",[]),
+                    releases("1337x","torrent","Some.Movie.DISC2.2160p.BluRay.REMUX.HEVC.DTS-HD.MA.TrueHD.7.1.Atmos-FGT",[],"68.12",[]),
+                    releases("1337x","torrent","Some.Movie.1080p.BluRay.REMUX.AVC.DTS-HD.MA.TrueHD.7.1.Atmos-FGT",[],"71.35",[]),
+                    releases("rarbg","torrent","Some.Movie.2160p.BluRay.REMUX.HEVC.DTS-HD.MA.TrueHD.7.1.Atmos-FGT",[],"71.30",[]),
+                    releases("1337x","torrent","Some.Movie.1080p.BluRay.H264.AAC-RARBG",[],"4.49",[]),
+                    releases("rarbg","torrent","Some.Movie.REMASTERED.1080p.BluRay.REMUX.AVC.DTS-HD.MA.TrueHD.7.1.Atmos-FGT",[],"73.71",[]),
+                    releases("1337x","torrent","Some.Movie.2160p.BluRay.REMUX.HEVC.DTS-HD.MA.TrueHD.7.1.Atmos-FGT",[],"74.47",[]),
+                    releases("rarbg","torrent","Some.Movie.DISC1.2160p.BluRay.REMUX.HEVC.DTS-HD.MA.TrueHD.7.1.Atmos-FGT",[],"62.72",[]),
+                    releases("1337x","torrent","Some.Movie.720p.BluRay.x264-FGT",[],"4.47",[]),
+                    releases("1337x","torrent","Some.Movie.CAM",[],"1.72",[]),
+                    releases("1337x","torrent","Some.Movie.720p.HD-CAM",[],"2.72",[]),
+                    releases("1337x","torrent","Some.Movie.720p.AMZN.WEBRip.DDP5.1.x264-MZABI[rartv]",[],"2.82",[]),
+                    releases("rarbg","torrent","Some.Movie.2160p.AMZN.WEB-DL.x265.10bit.HDR10Plus.DDP5.1-MZABI[rartv]",[],"39.59",[]),
+                    releases("rarbg","torrent","Some.Movie.1080p.AMZN.WEBRip.DDP5.1.x264-MZABI[rartv]",[],"16.84",[]),
+                ]
+            ),
             ]
         ],
         ['UI Settings',[
@@ -891,18 +990,76 @@ class ui:
         print()
         choice = input('Choose a media item that you want to remove from the ignored list: ')            
         if choice in indices:
-            print("Media item: " + plex.ignored[int(choice)-1].query() + 'removed from ignored list.')
+            print("Media item: " + plex.ignored[int(choice)-1].query() + ' removed from ignored list.')
             plex.ignored[int(choice)-1].unwatch()
             time.sleep(3)
         ui.options()
+    def scrape():
+        ui.cls('Options/Scraper/')
+        query = input("Enter a query: ")
+        print()
+        scraped_releases = releases.scrape(query)
+        if len(scraped_releases) > 0:
+            print()
+            print("0) Back")
+            releases.print(scraped_releases)
+            print()
+            print("Type 'auto' to automatically download the first cached release.")
+            back = False
+            while not back:
+                print()
+                choice = input("Choose a release to download: ")
+                if choice == 'auto':
+                    release = scraped_releases[0]
+                    release.Releases = scraped_releases
+                    if debrid.download(release,stream=True,query=query):
+                        back = True
+                        time.sleep(3)
+                    else:
+                        print()
+                        print("These releases do not seem to be cached on realdebrid. Add uncached torrent?")
+                        print()
+                        print("0) Back")
+                        print("1) Add uncached torrent")
+                        print()
+                        choice = input("Choose an action: ")
+                        if choice == '1':
+                            debrid.download(release,stream=False,query=query)
+                            back = True
+                            time.sleep(3)
+                elif int(choice) <= len(scraped_releases) and not int(choice) <= 0:
+                    release = scraped_releases[int(choice)-1]
+                    release.Releases = [release,]
+                    if debrid.download(release,stream=True,query=release.title):
+                        back = True
+                        time.sleep(3)
+                    else:
+                        print()
+                        print("This release does not seem to be cached on realdebrid. Add uncached torrent?")
+                        print()
+                        print("0) Back")
+                        print("1) Add uncached torrent")
+                        print()
+                        choice = input("Choose an action: ")
+                        if choice == '1':
+                            debrid.download(release,stream=False,query=release.title)
+                            back = True
+                            time.sleep(3)
+                elif choice == '0':
+                    back = True
+        else:
+            print("No releases were found!")
+            time.sleep(3)
     def settings():
         list = ui.settings_list
         ui.cls('Options/Settings/')
-        print('0) Back')
+        print('0) Back (save changes)')
         indices = []
         for index,category in enumerate (list):
             print(str(index+1) + ') ' + category[0])
             indices += [str(index+1)]
+        print()
+        print('Press any other key to go back and discard changes.')
         print()
         choice = input('Choose an action: ')
         if choice in indices:
@@ -916,13 +1073,17 @@ class ui:
                 if choice2 == str(index+1):
                     ui.cls('Options/Settings/'+list[int(choice)-1][0]+'/'+setting.name)
                     setting.input()
-                    ui.settings()
             ui.settings()
+        elif choice == '0':
+            ui.save()
+        else:
+            ui.load()
     def options():
         list = [
             ui.option('Run',download_script,'run'),
             ui.option('Settings',ui,'settings'),
             ui.option('Ignored Media',ui,'ignored'),
+            ui.option('Scraper',ui,'scrape'),
         ]
         ui.cls('Options/')
         for index,option in enumerate(list):
@@ -932,9 +1093,6 @@ class ui:
         for index,option in enumerate(list):
             if choice == str(index+1):
                 option.input()
-                if option.key == 'settings':
-                    ui.save()
-                ui.options()
         ui.options()
     def setup():
         if os.path.exists('.\settings.json'):
@@ -981,7 +1139,6 @@ class ui:
 #TODO
 #make things even faster? 
 #downloading boolean for element to check if in realdebrid uncached torrents
-#add command line scraper
 
 if __name__ == "__main__":
     ui.run()
