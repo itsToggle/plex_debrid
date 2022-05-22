@@ -72,6 +72,8 @@ Each rule consist of:
   - "text" : we will give each release a rank accoring to which match group its in.
 - lastly we define wheter to rank the releases in ascending or descending order.
 
+You can now test out your current sorting rules in the scraper settings.
+
 Lets make some rules: 
 ### Example resolution sorting:
 We want to download releases up to our prefered resolution of 1080p.
