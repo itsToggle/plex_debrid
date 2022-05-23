@@ -15,35 +15,41 @@ try:
     from threading import Thread
     import clipboard
 except Exception as e:
-    print("Importing Error:")
+    print("python error: (module import exception): ")
     print(e)
     print("Make sure you have installed this python module.")
     print("You need to install 'pip' (https://pip.pypa.io/en/stable/installation/) and run the command 'pip install "+e.name+"'.")
-    input("Press any key to continue")
+    input("Press any key to exit")
+    exit()
+
 #Plex Class
 class plex:
     session = requests.Session()  
     users = []
     headers = {'Content-Type':'application/json','Accept':'application/json'}
     ignored = []
+    def logerror(response):
+        if not response.status_code == 200:
+            ui.print("Plex error: " + str(response.content),debug=ui_settings.debug)
+        if response.status_code == 401:
+            ui.print("plex error: (401 unauthorized): user token does not seem to work. check your plex user settings.")
     def get(url):
         try:
             response = plex.session.get(url,headers=plex.headers)
-            if not response.status_code == 200:
-                ui.print("Plex Get: " + str(response.content),debug=ui_settings.debug)
+            plex.logerror(response)
             response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
             return response
         except Exception as e:
-            ui.print("Plex Get Error: " + str(e),debug=ui_settings.debug)
+            ui.print("plex error: (json exception): " + str(e),debug=ui_settings.debug)
             return None
     def post(url,data):
         try:
             response = plex.session.post(url,data=data,headers=plex.headers)
-            ui.print("Plex Post: " + str(response),debug=ui_settings.debug)
+            plex.logerror(response)
             response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
             return response
         except Exception as e:
-            ui.print("Plex Post Error: " + str(e),debug=ui_settings.debug)
+            ui.print("plex error: (json exception): " + str(e),debug=ui_settings.debug)
             return None
     class watchlist:
         def __init__(self,list) -> None:
@@ -66,7 +72,7 @@ class plex:
                                     if entry.type == 'movie':
                                         watchlist_entries += [plex.movie(entry)]
             except Exception as e:
-                ui.print("Plex Watchlist Error: " + str(e),debug=ui_settings.debug)
+                ui.print("plex error: (watchlist exception): " + str(e),debug=ui_settings.debug)
                 if old == []:
                     ui.print('done') 
                 ui.print('plex error: could not reach plex')
@@ -348,8 +354,12 @@ class plex:
             url = plex.library.url + '/library/all?X-Plex-Token='+ plex.users[0][1]
             list = []
             response = plex.get(url)
-            for element in response.MediaContainer.Metadata:
-                list += [plex.media(element)]
+            if hasattr(response,'MediaContainer'):
+                if hasattr(response.MediaContainer,'Metadata'):
+                    for element in response.MediaContainer.Metadata:
+                        list += [plex.media(element)]
+            else:
+                ui.print("plex error: couldnt reach local plex server under server address: " + plex.library.url)    
             return list
     def search(query):
         query = query.replace(' ','%20')
@@ -362,37 +372,40 @@ class debrid:
     #Define Variables
     session = requests.Session()
     #Get Function
+    def logerror(response):
+        if not response.status_code == 200:
+            ui.print("realdebrid error: " + str(response.content),debug=ui_settings.debug)
+        if response.status_code == 401:
+            ui.print("realdebrid error: (401 unauthorized): realdebrid api key does not seem to work. check your realdebrid settings.")
     def get(url): 
-        headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'authorization' : 'Bearer ' + debrid.api_key , 'Connection' : 'close'}
+        headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'authorization' : 'Bearer ' + debrid.api_key}
         try :
             response = debrid.session.get(url, headers = headers)
+            debrid.logerror(response)
             response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
         except Exception as e:
-            ui.print("Realdebrid Get Error: " + str(e),debug=ui_settings.debug)
+            ui.print("realdebrid error: (json exception): " + str(e),debug=ui_settings.debug)
             response = None
         return response
     #Post Function
     def post(url, data):
-        headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'authorization' : 'Bearer ' + debrid.api_key , 'Connection' : 'close'}
+        headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'authorization' : 'Bearer ' + debrid.api_key}
         try :
             response = debrid.session.post(url, headers = headers, data = data)
-            try:
-                response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
-            except :
-                response = None
-            #time.sleep(1)
+            debrid.logerror(response)
+            response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
         except Exception as e:
-            ui.print("Realdebrid Post Error: " + str(e),debug=ui_settings.debug)
+            ui.print("realdebrid error: (json exception): " + str(e),debug=ui_settings.debug)
             response = None
         return response
     #Delete Function
     def delete(url):
-        headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'authorization' : 'Bearer ' + debrid.api_key , 'Connection' : 'close'}
+        headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'authorization' : 'Bearer ' + debrid.api_key}
         try :
             requests.delete(url, headers = headers)
             #time.sleep(1)
         except Exception as e:
-            ui.print("Realdebrid Delete Error: " + str(e),debug=ui_settings.debug)
+            ui.print("realdebrid error: (delete exception): " + str(e),debug=ui_settings.debug)
             None
         return None
     #Object classes
@@ -570,7 +583,7 @@ class releases:
                             retries += -1
                     except:
                         response = None
-                        ui.print('rarbg error: exception')
+                        ui.print('rarbg error: (parse exception)')
                     retries += 1
                     time.sleep(1+random.randint(0, 2))
                 if hasattr(response, "torrent_results"):
@@ -665,8 +678,9 @@ class releases:
                 for group,attribute,type,descending in reversed(releases.sort.ranking):
                     scraped_releases.sort(key=lambda s: s.rank[index][attribute+': '+group], reverse=int(descending))
                     index += -1
-            except:
-                ui.print("ERROR: Something seems wrong with your sorting rules. Aborted sorting.")
+            except Exception as e:
+                ui.print("sorting error: (sorting exception): something seems wrong with your sorting rules. Aborted sorting. For details enable debug printing.")
+                ui.print("sorting error: (sorting exception): " + str(e),debug=ui_settings.debug)
             return scraped_releases
     #Rename Method
     def rename(string):
@@ -886,19 +900,48 @@ class ui:
                 input("Press any key to go back")
         def setup(self):
             if isinstance(getattr(self.cls,self.key),list):
-                edit = []
-                print(self.name + ' - current value: ' + str(getattr(self.cls,self.key)))
-                print()
-                lists = getattr(self.cls,self.key)
-                for prompt in self.prompt:
-                    edit += [input(prompt)]
-                lists = [edit,]
-                setattr(self.cls,self.key,lists)
+                working = False
+                while not working:
+                    if self.name == 'Plex users':
+                        print("Please create a plex user by providing a name and a token. To find the plex token for this user, log in to this plex account and visit 'https://plex.tv/devices.xml'. Pick a 'token' from one of the listed devices.")
+                        print()
+                    edit = []
+                    print(self.name + ' - current value: ' + str(getattr(self.cls,self.key)))
+                    print()
+                    lists = getattr(self.cls,self.key)
+                    for prompt in self.prompt:
+                        edit += [input(prompt)]
+                    lists = [edit,]
+                    setattr(self.cls,self.key,lists)
+                    if self.name == 'Plex users':
+                        url = 'https://metadata.provider.plex.tv/library/sections/watchlist/all?X-Plex-Token=' + plex.users[0][1]
+                        response = plex.session.get(url,headers=plex.headers)
+                        if response.status_code == 200:
+                            working = True
+                        else:
+                            print()
+                            print("Looks like this plex token does not work. Please enter a valid token.")
+                            print()
+                    else:
+                        working = True
             else:
-                print(self.name + ' - current value: ' + str(getattr(self.cls,self.key)))
-                print()
-                console_input = input(self.prompt)
-                setattr(self.cls,self.key,console_input)
+                working = False
+                while not working:
+                    print(self.name + ' - current value: ' + str(getattr(self.cls,self.key)))
+                    print()
+                    console_input = input(self.prompt)
+                    setattr(self.cls,self.key,console_input)
+                    if self.name == 'Real Debrid API Key':
+                        url = 'https://api.real-debrid.com/rest/1.0/torrents?limit=2&auth_token=' + console_input
+                        response = debrid.session.get(url)
+                        if response.status_code == 200:
+                            working = True
+                        else:
+                            print()
+                            print("Looks like the api key does not work. Please enter a valid api key.")
+                            print()
+                    else:
+                        working = True
         def set(self,value):
             setattr(self.cls,self.key,value)
         def get(self):
@@ -910,7 +953,7 @@ class ui:
         ],
         ['Plex Settings',[
             setting('Plex users',['Please provide a name for this Plex user: ','Please provide the Plex token for this Plex user: '],plex,'users',required=True,entry="user"),
-            setting('Plex server address','Please enter your Plex server address: ',plex.library,'url',required=True),
+            setting('Plex server address','Please enter your Plex server address: ',plex.library,'url'),
             setting('Plex "movies" library','Please enter the section number of the "movies" library, that should be refreshed after a movie download: ',plex.library,'movies',required=True),
             setting('Plex "shows" library','Please enter the section number of the "shows" library, that should be refreshed after a show download: ',plex.library,'shows',required=True)
             ]
@@ -1067,33 +1110,36 @@ class ui:
             print("No releases were found!")
             time.sleep(3)
     def settings():
-        list = ui.settings_list
-        ui.cls('Options/Settings/')
-        print('0) Back (save changes)')
-        indices = []
-        for index,category in enumerate (list):
-            print(str(index+1) + ') ' + category[0])
-            indices += [str(index+1)]
-        print()
-        print('Press any other key to go back and discard changes.')
-        print()
-        choice = input('Choose an action: ')
-        if choice in indices:
-            ui.cls('Options/Settings/'+list[int(choice)-1][0]+'/')
-            print('0) Back')
-            for index,setting in enumerate (list[int(choice)-1][1]):
-                print(str(index+1) + ') ' + setting.name)
+        back = False
+        while not back:
+            list = ui.settings_list
+            ui.cls('Options/Settings/')
+            print('0) Back (save changes)')
+            indices = []
+            for index,category in enumerate (list):
+                print(str(index+1) + ') ' + category[0])
+                indices += [str(index+1)]
             print()
-            choice2 = input('Choose an action: ')
-            for index,setting in enumerate (list[int(choice)-1][1]):
-                if choice2 == str(index+1):
-                    ui.cls('Options/Settings/'+list[int(choice)-1][0]+'/'+setting.name)
-                    setting.input()
-            ui.settings()
-        elif choice == '0':
-            ui.save()
-        else:
-            ui.load()
+            print('Type "discard" to go back and discard changes.')
+            print()
+            choice = input('Choose an action: ')
+            if choice in indices:
+                ui.cls('Options/Settings/'+list[int(choice)-1][0]+'/')
+                print('0) Back')
+                for index,setting in enumerate (list[int(choice)-1][1]):
+                    print(str(index+1) + ') ' + setting.name)
+                print()
+                choice2 = input('Choose an action: ')
+                for index,setting in enumerate (list[int(choice)-1][1]):
+                    if choice2 == str(index+1):
+                        ui.cls('Options/Settings/'+list[int(choice)-1][0]+'/'+setting.name)
+                        setting.input()
+            elif choice == '0':
+                ui.save()
+                back = True
+            elif choice == 'discard':
+                ui.load(doprint=True)
+                back = True
     def options():
         list = [
             ui.option('Run',download_script,'run'),
@@ -1139,13 +1185,16 @@ class ui:
             json.dump(save_settings, f,indent=4)
         print('Current settings saved!')
         time.sleep(2)
-    def load():
+    def load(doprint=False):
         with open('settings.json', 'r') as f:
             settings = json.loads(f.read())
         for category, load_settings in ui.settings_list:
             for setting in load_settings:
                 if setting.name in settings:
                     setting.set(settings[setting.name])
+        if doprint:
+            print('Last settings loaded!')
+            time.sleep(2)
     def run():
         if ui.setup():
             ui.options()
