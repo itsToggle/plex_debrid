@@ -1157,7 +1157,7 @@ class ui:
                 option.input()
         ui.options()
     def setup():
-        if os.path.exists('.\settings.json'):
+        if os.path.exists('./settings.json'):
             with open('settings.json', 'r') as f:
                 settings = json.loads(f.read())
             if settings['Show Menu on Startup'] == "false":
