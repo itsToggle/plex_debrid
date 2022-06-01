@@ -1,5 +1,5 @@
-# plex_rd
-Plex torrent streaming through RealDebrid, using the new Plex Discover feature.
+# plex_debrid
+Plex torrent streaming through Debrid Services, using the new Plex Discover feature.
 
 **Using the new Plex Discover Feature, your Plex Home users can add movies/shows to their watchlist and they become available to stream in seconds.**
 
@@ -22,10 +22,9 @@ Settings            |  Ingored Media
 *This python script makes use of my rclone fork, which allows you to mount the RealDebrid /torrent directory as a virtual drive. After creating a plex library of this virtual drive, you can stream torrents that are cached on RealDebrid without the need to download them first.*
 
 The plex watchlist of specified users is constantly checked for newly added movies/shows and newly released episodes of watchlisted shows.
-Once new content is found, torrent indexers are scraped for the best, cached release on RealDebrid. The torrent is then added to RealDebrid and a library refresh is performed to make the newly added content available. 
+Once new content is found, torrent indexers are scraped for the best, cached release on selected debrid services. The torrent is then added to a suitable debrid service and a library refresh is performed to make the newly added content available. 
 
 - For a movie or a one-season tv shows this takes about 10-20 seconds.
-- ~~For multi-season tv shows it takes an additional 10 seconds per season.~~
 - Thanks to multithreading, multi-season tv shows will also download entirely in about 10-20 seconds.
 
 This is a pre-alpha release. shits not ready! Feel free to check it out though, I will continously improve the speed, reliability and user-friendlyness.
@@ -54,13 +53,14 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 - If you dont want to download a specific episode or season of a show, navigate to that show in the discovery feature and mark the episodes/seasons that you want to ignore as 'watched'. The watch status inside the discovery feature is not connected to the watch status inside your libraries.
 - When some content could repeatedly not be downloaded, it will be marked as 'watched' in the Discovery feature of the first specified user. This will cause the scraper to ignore the content, until its marked as 'unwatched' again.
 - You can explore and remove ignored content in the main menu.
+- You can connect the script to trakt.tv to get more accurate release dates and times for your content. You can also synchronize your trakt watchlist to your plex watchlist.
 - This script will automatically pick the best release that could be found. To change how the script picks the best release, check out the next section.
 - If you don't want the main menu to show when you start the script and run the download automation right away, you can define this in the 'UI Settings' section of the 'Settings' menu.
 - You can return to the main menu at any time.
 
 ## Sorting the scraped releases:
 
-The scrapers usually provide a whole bunch of releases. Adding them all to realdebrid would clutter your library and slow things down. This is why this script automatically sorts the releases by completely customizable categories and picks the best one.
+The scrapers usually provide a whole bunch of releases. Adding them all to your debrid services would clutter your library and slow things down. This is why this script automatically sorts the releases by completely customizable categories and picks the best one.
 
 The sorting is done by providing an unlimited number of sorting 'rules'. Rules can be added, edited, delted or moved. The first rule has the highest priority, the last one the lowest.
 
@@ -109,5 +109,5 @@ For this, we will choose the following setup:
 
 
 ## Limitations:
-- The plex discover API only provides a release date, not a release time for new episodes. This makes it hard to determined when to start looking for releases and when to ignore an episode. This script will only download episodes when its been a day since the air-date or if plex shows the episode as availabe on streaming services.
+- The plex discover API only provides a release date, not a release time for new episodes. This makes it hard to determined when to start looking for releases and when to ignore an episode. This script will only download episodes when its been a day since the air-date or if plex shows the episode as availabe on streaming services. It is recommended to connect this script to trakt.tv, to allow for more accurate release dates and times.
 - Since this is more of a proof of concept at the moment, There are only two scrapers implemented - rarbg and 1337x.
