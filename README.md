@@ -4,9 +4,8 @@ Plex torrent streaming through Debrid Services, using the new Plex Discover feat
 **Using the new Plex Discover Feature, your Plex Home users can add movies/shows to their watchlist and they become available to stream in seconds.**
 
 ## In Action:
-This is from an older, slower version. Check out the 'Example Run' screenshot, we're down to ~15s for a 7 season series :)
 
-![Alt Text](https://github.com/itsToggle/plex_rd/blob/main/final_6279217a77f1110078928cf3_366957.gif)
+![Alt Text](https://github.com/itsToggle/plex_debrid/blob/main/cool.gif)
 
 ## UI:
 Main Menu             |  Example Run
