@@ -7,15 +7,6 @@ Plex torrent streaming through Debrid Services, using the new Plex Discover feat
 
 ![Alt Text](https://github.com/itsToggle/plex_debrid/blob/main/cool.gif)
 
-## UI:
-Main Menu             |  Example Run
-:-------------------------:|:-------------------------:
-![Alt Text](https://i.ibb.co/2sJpQxp/Screenshot-2022-05-19-145135.png)  | ![Alt Text](https://i.ibb.co/Fg2cwkh/Screenshot-2022-05-19-144919.png)
-Settings            |  Ingored Media
-![Alt Text](https://i.ibb.co/X49r7Pn/Screenshot-2022-05-19-145706.png)  | ![Alt Text](https://i.ibb.co/TLRysHD/Screenshot-2022-05-19-145915.png)
-
-
-
 ## Description:
 
 *For this download automation to work, you need to mount your debrid service as a virtual drive. After creating a plex library of this virtual drive, you can stream torrents that are cached on your debrid service without the need to download them first.* 
@@ -23,8 +14,7 @@ Settings            |  Ingored Media
 The plex watchlist of specified users is constantly checked for newly added movies/shows and newly released episodes of watchlisted shows.
 Once new content is found, torrent indexers are scraped for the best, cached release on selected debrid services. The torrent is then added to a suitable debrid service and a library refresh is performed to make the newly added content available. 
 
-- For a movie or a one-season tv shows this takes about 10-20 seconds.
-- Thanks to multithreading, multi-season tv shows will also download entirely in about 10-20 seconds.
+**For movies, one-season tv shows or multi-season tv shows this takes about 10-20 seconds.**
 
 This is a pre-alpha release. shits not ready! Feel free to check it out though, I will continously improve the speed, reliability and user-friendlyness.
 
