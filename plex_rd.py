@@ -490,7 +490,7 @@ class plex(content.services):
             agent = 'tv.plex.agents.movie'
         elif type == 'show':
             agent = 'tv.plex.agents.series'
-        url = plex.library.url + '/library/metadata/'+some_local_media.ratingKey+'/matches?manual=1&title='+query+'&agent='+agent+'&language=en-US&X-Plex-Token=a6Q55KDSyP9My2N1rGWv'
+        url = plex.library.url + '/library/metadata/'+some_local_media.ratingKey+'/matches?manual=1&title='+query+'&agent='+agent+'&language=en-US&X-Plex-Token='+plex.users[0][1]
         response = plex.get(url)
         try:
             match = response.MediaContainer.SearchResult[0]
