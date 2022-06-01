@@ -19,7 +19,7 @@ Settings            |  Ingored Media
 
 ## Description:
 
-*This python script makes use of my rclone fork, which allows you to mount the RealDebrid /torrent directory as a virtual drive. After creating a plex library of this virtual drive, you can stream torrents that are cached on RealDebrid without the need to download them first.*
+*For this download automation to work, you need to mount your debrid service as a virtual drive. After creating a plex library of this virtual drive, you can stream torrents that are cached on your debrid service without the need to download them first.* 
 
 The plex watchlist of specified users is constantly checked for newly added movies/shows and newly released episodes of watchlisted shows.
 Once new content is found, torrent indexers are scraped for the best, cached release on selected debrid services. The torrent is then added to a suitable debrid service and a library refresh is performed to make the newly added content available. 
@@ -30,6 +30,10 @@ Once new content is found, torrent indexers are scraped for the best, cached rel
 This is a pre-alpha release. shits not ready! Feel free to check it out though, I will continously improve the speed, reliability and user-friendlyness.
 
 ## Setup:
+
+*Debrid services like premiumize can be mounted with the official rclone software. Other debrid services, like Debrid-Link or All-Debrid can be mounted through their WebDav implementation.*
+
+**The only service currently available for this download automation is Real-Debrid. I have written an rclone fork, which allows you to mount the RealDebrid /torrent directory as a virtual drive.**
 
 **Pre-Setup:**
 
