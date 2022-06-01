@@ -802,7 +802,7 @@ class debrid:
                                                 files.append(debrid_file)
                                     #remove unwanted files from selection
                                     for file in files[:]:
-                                        if file.name.endswith('.rar') or file.name.endswith('.exe') or file.name.endswith('.txt'):
+                                        if file.name.endswith('.rar') or file.name.endswith('.exe') or file.name.endswith('.txt') or regex.search(r'(sample)',file.name,regex.I):
                                             files.remove(file)
                                         if file.name.endswith('.srt'):
                                             subtitles += [file.id]
@@ -863,10 +863,14 @@ class debrid:
                                 ui.print('adding cached release: ' + release.title)
                                 return True
                     else:
-                        ui.print('adding uncached release: '+ release.title)
-                        response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/addMagnet',{'magnet':release.download[0]})
-                        debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/selectFiles/' + str(response.id), {'files':'all'})
-                        return True
+                        try:
+                            response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/addMagnet',{'magnet':release.download[0]})
+                            time.sleep(0.1)
+                            debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/selectFiles/' + str(response.id), {'files':'all'})
+                            ui.print('adding uncached release: '+ release.title)
+                            return True
+                        except:
+                            continue
             return False
     #AllDebrid class
     class alldebrid(services):
