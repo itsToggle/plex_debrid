@@ -14,6 +14,7 @@ try:
     import random
     from threading import Thread
     import clipboard
+    from collections.abc import Sequence
 except Exception as e:
     print("python error: (module import exception): ")
     print(e)
@@ -21,9 +22,64 @@ except Exception as e:
     print("You need to install 'pip' (https://pip.pypa.io/en/stable/installation/) and run the command 'pip install "+e.name+"'.")
     input("Press any key to exit")
     exit()
-
+#Watchlist Class
+class watchlist(Sequence):
+    def __init__(self,other):
+        self.data = other
+    def __getitem__(self, index):
+        return self.data[index]
+    def __len__(self):
+        return len(self.data)
+    def __eq__(self, other):
+        return len(self) == len(other)
+    def remove(self,item):
+        self.data.remove(item)
+    def add(self,item,user):
+        self.data.append(item)
+#Provider Class
+class content:
+    class services:
+        active = ['Plex','Trakt']
+        def setup(cls,new=False):
+            settings = []
+            for category, allsettings in ui.settings_list:
+                for setting in allsettings:
+                    if setting.cls == cls or setting.name.startswith(cls.name):
+                        settings += [setting]
+            back = False
+            if not new:
+                while not back:
+                    print("0) Back")
+                    indices = []
+                    for index, setting in enumerate(settings):
+                        print(str(index+1) + ') ' + setting.name)
+                        indices += [str(index+1)]
+                    print()
+                    choice = input("Choose an action: ")
+                    if choice in indices:
+                        settings[int(choice)-1].input()
+                        if not cls.name in content.services.active:
+                            content.services.active += [cls.name]
+                        back = True
+                    elif choice == '0':
+                        back = True
+            else:
+                print()
+                indices = []
+                for setting in settings:
+                    setting.input()
+                    if not cls.name in content.services.active:
+                        content.services.active += [cls.name]      
+        def __new__(cls):
+            activeservices = []
+            for servicename in content.services.active:
+                for service in cls.__subclasses__():
+                    if service.name == servicename:
+                        activeservices += [service]
+            return activeservices
 #Plex Class
-class plex:
+class plex(content.services):
+    name = 'Plex'
     session = requests.Session()  
     users = []
     headers = {'Content-Type':'application/json','Accept':'application/json'}
@@ -51,13 +107,10 @@ class plex:
         except Exception as e:
             ui.print("plex error: (json exception): " + str(e),debug=ui_settings.debug)
             return None
-    class watchlist:
-        def __init__(self,list) -> None:
-            pass
-        def __new__(self,old=[]):
-            if old == []:
-                ui.print('updating entire plex watchlist ...')
-            watchlist_entries = []
+    class watchlist(watchlist):
+        def __init__(self) -> None:
+            ui.print('updating entire plex watchlist ...')
+            self.data = []
             try:
                 for user in plex.users:
                     url = 'https://metadata.provider.plex.tv/library/sections/watchlist/all?X-Plex-Token=' + user[1]
@@ -66,23 +119,53 @@ class plex:
                         if hasattr(response.MediaContainer,'Metadata'):
                             for entry in response.MediaContainer.Metadata:
                                 entry.user = user
-                                if not entry in old and not entry in watchlist_entries:
+                                if not entry in self.data:
                                     if entry.type == 'show':
-                                        watchlist_entries += [plex.show(entry)]
+                                        self.data += [plex.show(entry)]
                                     if entry.type == 'movie':
-                                        watchlist_entries += [plex.movie(entry)]
+                                        self.data += [plex.movie(entry)]
             except Exception as e:
+                ui.print('done') 
                 ui.print("plex error: (watchlist exception): " + str(e),debug=ui_settings.debug)
-                if old == []:
-                    ui.print('done') 
                 ui.print('plex error: could not reach plex')
-            if old == []:
-                ui.print('done')
-            return watchlist_entries
-        def remove(item):
+            ui.print('done')        
+        def remove(self,item):
             ui.print('item: "' + item.title + '" removed from '+ item.user[0] +'`s plex watchlist')
             url = 'https://metadata.provider.plex.tv/actions/removeFromWatchlist?ratingKey=' + item.ratingKey + '&X-Plex-Token=' + item.user[1]
             response = plex.session.put(url,data={'ratingKey':item.ratingKey})
+            if not self == []:
+                self.data.remove(item)
+        def add(self,item,user):
+            ui.print('item: "' + item.title + '" added to '+ user[0] +'`s plex watchlist')
+            url = 'https://metadata.provider.plex.tv/actions/addToWatchlist?ratingKey=' + item.ratingKey + '&X-Plex-Token=' + user[1]
+            response = plex.session.put(url,data={'ratingKey':item.ratingKey})
+            if item.type == 'show':
+                self.data.append(plex.show(item.ratingKey))
+            elif item.type == 'movie':
+                self.data.append(plex.movie(item.ratingKey))
+        def update(self):
+            ui.print("updating plex watchlist ...",debug=ui_settings.debug)
+            update = False
+            try:
+                for user in plex.users:
+                    url = 'https://metadata.provider.plex.tv/library/sections/watchlist/all?X-Plex-Token=' + user[1]
+                    response = plex.get(url)
+                    if hasattr(response,'MediaContainer'):
+                        if hasattr(response.MediaContainer,'Metadata'):
+                            for entry in response.MediaContainer.Metadata:
+                                entry.user = user
+                                if not entry in self.data:
+                                    update = True
+                                    if entry.type == 'show':
+                                        self.data += [plex.show(entry)]
+                                    if entry.type == 'movie':
+                                        self.data += [plex.movie(entry)]
+            except Exception as e:
+                ui.print('done') 
+                ui.print("plex error: (watchlist exception): " + str(e),debug=ui_settings.debug)
+                ui.print('plex error: could not reach plex')
+            ui.print('done') 
+            return update       
     class media:
         def __init__(self,other):
             self.__dict__.update(other.__dict__)
@@ -116,13 +199,34 @@ class plex:
                 return title + '.S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index))+ '.'
         def released(self):
             released = datetime.datetime.today() - datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
-            if released.days >= 0 and released.days <= 1:
-                if self.available():
-                    return True
-                else:
-                    return False
-            return released.days > 0
+            if self.type == 'movie':
+                if released.days >= 0 and released.days <= 60:
+                    if self.available():
+                        return True
+                    else:
+                        return False
+                return released.days > 0
+            else:
+                if released.days >= 0 and released.days <= 1:
+                    if self.available():
+                        return True
+                    else:
+                        return False
+                return released.days > 0
         def available(self):
+            if len(trakt.users) > 0:
+                for guid in self.Guid:
+                    service,guid = guid.id.split('://')
+                    trakt_match = trakt.match(guid,service,self.type)
+                    if not trakt_match == None:
+                        break
+                if not trakt_match == None:
+                    if self.type == 'movie':
+                        return trakt.media.available(trakt_match)
+                    elif self.type == 'episode':
+                        trakt_match.next_season = self.parentIndex
+                        trakt_match.next_episode = self.index
+                        return trakt.media.available(trakt_match)
             url = 'https://metadata.provider.plex.tv/library/metadata/'+self.ratingKey+'/availabilities?X-Plex-Token='+plex.users[0][1]
             response = plex.get(url)
             if not response == None:
@@ -143,11 +247,13 @@ class plex:
         def watched(self):
             if self.type == 'movie' or self.type == 'episode':
                 if self.viewCount > 0:
-                    plex.ignored += [self]
+                    if not self in plex.ignored:
+                        plex.ignored += [self]
                     return True
             else:
                 if self.viewedLeafCount == self.leafCount:
-                    plex.ignored += [self]
+                    if not self in plex.ignored:
+                        plex.ignored += [self]
                     return True
             return False
         def collected(self,list):
@@ -190,11 +296,11 @@ class plex:
                     if len(self.uncollected(library)) > 0:
                         tic = time.perf_counter()
                         while len(self.Releases) == 0 and i <= retries:
-                            self.Releases += releases.scrape(self.query())
+                            self.Releases += scraper(self.query())
                             i += 1
                         if self.debrid_download():
                             refresh = True
-                            plex.watchlist.remove(self)
+                            plex.watchlist.remove([],self)
                             toc = time.perf_counter()
                             ui.print('took ' + str(round(toc-tic,2)) + 's')
                         else:
@@ -205,7 +311,7 @@ class plex:
                     if len(Seasons) > 0:
                         tic = time.perf_counter()
                         if len(Seasons) > 1:
-                            self.Releases += releases.scrape(self.query())
+                            self.Releases += scraper(self.query())
                         results = [None] * len(Seasons)
                         threads = []
                         #start thread for each season
@@ -236,10 +342,10 @@ class plex:
                         else:
                             self.Releases = []
                         while len(self.Releases) == 0 and i <= retries:
-                            self.Releases += releases.scrape(self.query())
+                            self.Releases += scraper(self.query())
                             i += 1
                     if not self.debrid_download():
-                        self.Releases += releases.scrape(self.query()[:-1])
+                        self.Releases += scraper(self.query()[:-1])
                         for episode in self.Episodes:
                             if episode.download(library=library,parentReleases=self.Releases):
                                 refresh = True
@@ -261,7 +367,7 @@ class plex:
                     if self.debrid_download():
                         return True
                     else:
-                        self.Releases = releases.scrape(self.query())
+                        self.Releases = scraper(self.query())
                     i += 1
                 return self.debrid_download()
             if refresh:
@@ -300,6 +406,8 @@ class plex:
                 ratingKey = ratingKey.ratingKey
                 token = self.user[1]
             else:
+                if ratingKey.startswith('plex://'):
+                    ratingKey = ratingKey.split('/')[-1]
                 token = plex.users[0][1]
             success = False
             while not success:
@@ -338,6 +446,8 @@ class plex:
             if not isinstance(ratingKey,str):
                 self.__dict__.update(ratingKey.__dict__)
                 ratingKey = ratingKey.ratingKey
+            elif ratingKey.startswith('plex://'):
+                ratingKey = ratingKey.split('/')[-1]
             url = 'https://metadata.provider.plex.tv/library/metadata/'+ratingKey+'?includeUserState=1&X-Plex-Token='+plex.users[0][1]
             response = plex.get(url)
             self.__dict__.update(response.MediaContainer.Metadata[0].__dict__)            
@@ -359,158 +469,594 @@ class plex:
                     for element in response.MediaContainer.Metadata:
                         list += [plex.media(element)]
             else:
-                ui.print("plex error: couldnt reach local plex server under server address: " + plex.library.url)    
+                ui.print("plex error: couldnt reach local plex server at server address: " + plex.library.url + " - or your library really is empty.")    
+                ui.print("to prevent unwanted behaviour, no further downloads will be started." + plex.library.url) 
             return list
-    def search(query):
+    def search(query,library=[]):
         query = query.replace(' ','%20')
-        url = 'https://metadata.provider.plex.tv/library/search?query='+query+'&limit=30&searchTypes=movies%2Ctv&includeMetadata=1&X-Plex-Token='+plex.users[0][1]
+        url = 'https://metadata.provider.plex.tv/library/search?query='+query+'&limit=20&searchTypes=movies%2Ctv&includeMetadata=1&X-Plex-Token='+plex.users[0][1]
         response = plex.get(url)
-        return response.MediaContainer.SearchResult    
+        try:
+            return response.MediaContainer.SearchResult    
+        except:
+            return []
+    def match(query,type,library=[]):
+        if not library == []:
+            for element in library:
+                if element.type == type:
+                    some_local_media = element
+                    break
+        if type == 'movie':
+            agent = 'tv.plex.agents.movie'
+        elif type == 'show':
+            agent = 'tv.plex.agents.series'
+        url = plex.library.url + '/library/metadata/'+some_local_media.ratingKey+'/matches?manual=1&title='+query+'&agent='+agent+'&language=en-US&X-Plex-Token=a6Q55KDSyP9My2N1rGWv'
+        response = plex.get(url)
+        try:
+            match = response.MediaContainer.SearchResult[0]
+            if match.type == 'show':
+                return [plex.show(match.guid)]
+            elif match.type == 'movie':
+                return [plex.movie(match.guid)] 
+        except:
+            return [] 
+#Trakt Class
+class trakt(content.services):
+    name = 'Trakt'
+    client_id = "0183a05ad97098d87287fe46da4ae286f434f32e8e951caad4cc147c947d79a3"
+    client_secret = "87109ed53fe1b4d6b0239e671f36cd2f17378384fa1ae09888a32643f83b7e6c"
+    sync_with_plex = "false"
+    users = []
+    current_token = ""
+    session = requests.Session()
+    def get(url): 
+        try :
+            response = trakt.session.get(url, headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'Content-type' : "application/json", "trakt-api-key" : trakt.client_id, "trakt-api-version" : "2", "Authorization" : "Bearer " + trakt.current_token})
+            header = response.headers
+            response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
+        except :
+            response = None
+            header = None
+        return response, header
+    def post(url, data):
+        try :
+            response = trakt.session.post(url, headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'Content-type' : "application/json", "trakt-api-key" : trakt.client_id, "trakt-api-version" : "2", "Authorization" : "Bearer " + trakt.current_token}, data = data)
+            response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
+            time.sleep(1)
+        except :
+            response = None
+        return response
+    def oauth(code=""):
+        if code == "":
+            response = trakt.post('https://api.trakt.tv/oauth/device/code',json.dumps({'client_id':trakt.client_id}))
+            return response.device_code, response.user_code
+        else:
+            response = None
+            while response == None:
+                response = trakt.post('https://api.trakt.tv/oauth/device/token',json.dumps({'code': code, 'client_id':trakt.client_id, 'client_secret':trakt.client_secret}))
+                time.sleep(1)
+            return response.access_token       
+    class watchlist(watchlist):
+        def __init__(self):
+            self.data = []
+            for user in trakt.users:
+                trakt.current_token = user[1]
+                watchlist_shows, header = trakt.get('https://api.trakt.tv/users/me/watchlist/shows')
+                watchlist_movies, header = trakt.get('https://api.trakt.tv/users/me/watchlist/movies')
+                for element in watchlist_shows:
+                    if not element.show in self.data:
+                        element.show.type = 'show'
+                        element.show.user = user
+                        self.data.append(element.show)
+                for element in watchlist_movies:
+                    if not element.movie in self.data:
+                        element.movie.type = 'movie'
+                        element.movie.user = user
+                        self.data.append(element.movie)
+        def sync(self,other:plex.watchlist,library):
+            add = []
+            for element in self.data:
+                try:
+                    result = plex.match(element.ids.imdb,element.type,library=library)
+                    result[0].trakt = element
+                except:
+                    result = []
+                if not result == []:
+                    add += result
+            for element in add:
+                if not element in other:
+                    other.add(element,plex.users[0])
+                if element.type == 'movie':
+                    self.remove(element.trakt)
+        def remove(element):
+            user = copy.deepcopy(element.user)
+            data = []
+            shows = []
+            movies = []
+            if element.type == 'tv':
+                for ids in element.ids.__dict__.copy():
+                    value = getattr(element.ids,ids)
+                    if not value:
+                        delattr(element.ids,ids)
+                for attribute in element.__dict__.copy():
+                    if not (attribute == 'ids' or attribute == 'seasons' or attribute == 'title' or attribute == 'year'):
+                        delattr(element,attribute)
+                ui.print('item: "' + element.title + '" removed from '+user[0]+'`s trakt watchlist')
+                shows += [element]
+            elif element.type == 'movie':
+                for ids in element.ids.__dict__.copy():
+                    value = getattr(element.ids,ids)
+                    if not value:
+                        delattr(element.ids,ids)
+                for attribute in element.__dict__.copy():
+                    if not (attribute == 'ids' or attribute == 'title' or attribute == 'year'):
+                        delattr(element,attribute)
+                ui.print('item: "' + element.title + '" removed from '+user[0]+'`s trakt watchlist')
+                movies += [element]
+            data = {'movies':movies,'shows':shows}
+            trakt.current_token = user[1]
+            trakt.post('https://api.trakt.tv/sync/watchlist/remove',json.dumps(data, default=lambda o: o.__dict__))
+    class media:
+        def available(self):
+            trakt.current_token = trakt.users[0][1]
+            if self.type == 'show':
+                #Determine air-date of next episode
+                next_episode, header = trakt.get('https://api.trakt.tv/shows/' + str(self.ids.trakt) + '/seasons/' + str(self.next_season) + '/episodes/' + str(self.next_episode) + '?extended=full')
+                #If next episode air-date and delay have passed
+                return datetime.datetime.utcnow() > datetime.datetime.strptime(next_episode.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')
+            elif self.type == 'movie':
+                release_date = None
+                releases, header = trakt.get('https://api.trakt.tv/movies/'+ str(self.ids.trakt) +'/releases/')
+                for release in releases:
+                    if release.release_type == 'digital' or release.release_type == 'physical' or release.release_type == 'tv':
+                        if release_date == None:
+                            release_date = release.release_date
+                        elif datetime.datetime.strptime(release_date,'%Y-%m-%d') > datetime.datetime.strptime(release.release_date,'%Y-%m-%d'):
+                            release_date = release.release_date
+                #If no release date was found, select the theatrical release date + 2 Month delay
+                if release_date == None:
+                    for release in releases:
+                        if release_date == None:
+                            release_date = release.release_date
+                        elif datetime.datetime.strptime(release_date,'%Y-%m-%d') > datetime.datetime.strptime(release.release_date,'%Y-%m-%d'):
+                            release_date = release.release_date
+                    release_date = datetime.datetime.strptime(release_date,'%Y-%m-%d') + datetime.timedelta(days=60)
+                    release_date = release_date.strftime("%Y-%m-%d")
+                #Get trakt 'Latest HD/4k Releases' Lists to accept early releases
+                trakt_lists, header = trakt.get('https://api.trakt.tv/movies/'+ str(self.ids.trakt) +'/lists/personal/popular')
+                match = False
+                for trakt_list in trakt_lists:
+                    if regex.search(r'(latest|new).*?(releases)',trakt_list.name,regex.I):
+                        match = True
+                #if release_date and delay have passed or the movie was released early
+                return datetime.datetime.utcnow() > datetime.datetime.strptime(release_date,'%Y-%m-%d') or match
+    def search(query,type):
+        trakt.current_token = trakt.users[0][1]
+        if type == 'all':
+            response, header = trakt.get('https://api.trakt.tv/search/movie,show?query=' + str(query))
+        elif type == 'movie':
+            response, header = trakt.get('https://api.trakt.tv/search/movie?query=' + str(query))
+        elif type == 'tv':
+            response, header = trakt.get('https://api.trakt.tv/search/show?query=' + str(query))
+        elif type == 'imdb':
+            response, header = trakt.get('https://api.trakt.tv/search/imdb?query=' + str(query))
+        elif type == 'tmdb':
+            response, header = trakt.get('https://api.trakt.tv/search/tmdb?query=' + str(query))
+        elif type == 'tvdb':
+            response, header = trakt.get('https://api.trakt.tv/search/tvdb?query=' + str(query))
+        return response
+    def match(query,service,type):
+        trakt.current_token = trakt.users[0][1]
+        if service == 'imdb':
+            response, header = trakt.get('https://api.trakt.tv/search/imdb/' + str(query) + '?type=' + type + '&extended=full')
+        elif service == 'tmdb':
+            response, header = trakt.get('https://api.trakt.tv/search/tmdb/' + str(query) + '?type=' + type + '&extended=full')
+        elif service == 'tvdb':
+            response, header = trakt.get('https://api.trakt.tv/search/tvdb/' + str(query) + '?type=' + type + '&extended=full')
+        try:
+            if type == 'movie':
+                response[0].movie.type = 'movie'
+                return response[0].movie
+            else:
+                response[0].show.type = 'show'
+                return response[0].show
+        except:
+            return None
 #Debrid Class 
 class debrid:
-    api_key = ""
-    #Define Variables
-    session = requests.Session()
-    #Get Function
-    def logerror(response):
-        if not response.status_code == 200:
-            ui.print("realdebrid error: " + str(response.content),debug=ui_settings.debug)
-        if response.status_code == 401:
-            ui.print("realdebrid error: (401 unauthorized): realdebrid api key does not seem to work. check your realdebrid settings.")
-    def get(url): 
-        headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'authorization' : 'Bearer ' + debrid.api_key}
-        try :
-            response = debrid.session.get(url, headers = headers)
-            debrid.logerror(response)
-            response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
-        except Exception as e:
-            ui.print("realdebrid error: (json exception): " + str(e),debug=ui_settings.debug)
-            response = None
-        return response
-    #Post Function
-    def post(url, data):
-        headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'authorization' : 'Bearer ' + debrid.api_key}
-        try :
-            response = debrid.session.post(url, headers = headers, data = data)
-            debrid.logerror(response)
-            response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
-        except Exception as e:
-            ui.print("realdebrid error: (json exception): " + str(e),debug=ui_settings.debug)
-            response = None
-        return response
-    #Delete Function
-    def delete(url):
-        headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'authorization' : 'Bearer ' + debrid.api_key}
-        try :
-            requests.delete(url, headers = headers)
-            #time.sleep(1)
-        except Exception as e:
-            ui.print("realdebrid error: (delete exception): " + str(e),debug=ui_settings.debug)
-            None
-        return None
-    #Object classes
-    class file:
-        def __init__(self,id,name,size):
-            self.id = id
-            self.name = name
-            self.size = size
-        def __eq__(self, other):
-            return self.id == other.id 
-    #Check Function
+    #Service Class:
+    class services:
+        active = ['Real Debrid']
+        def setup(cls,new=False):
+            settings = []
+            for category, allsettings in ui.settings_list:
+                for setting in allsettings:
+                    if setting.cls == cls:
+                        settings += [setting]
+            back = False
+            if not new:
+                while not back:
+                    print()
+                    print("0) Back")
+                    indices = []
+                    for index, setting in enumerate(settings):
+                        print(str(index+1) + ') ' + setting.name)
+                        indices += [str(index+1)]
+                    print()
+                    choice = input("Choose an action: ")
+                    if choice in indices:
+                        settings[int(choice)-1].setup()
+                        if not cls.name in debrid.services.active:
+                            debrid.services.active += [cls.name]
+                        back = True
+                    elif choice == '0':
+                        back = True
+            else:
+                print()
+                indices = []
+                for setting in settings:
+                    setting.setup()
+                    if not cls.name in debrid.services.active:
+                        debrid.services.active += [cls.name]      
+        def __new__(cls):
+            activeservices = []
+            for servicename in debrid.services.active:
+                for service in cls.__subclasses__():
+                    if service.name == servicename:
+                        activeservices += [service]
+            return activeservices
+    #Download Method:
     def download(element:plex.media,stream=True,query='',force=False):
-        cached = element.Releases
-        if query == '':
-            query = element.query()
-        if regex.search(r'(S[0-9][0-9])',query):
-            query = regex.split(r'(S[0-9]+)',query) 
-            query = query[0] + '[0-9]*.*' + query[1] + query[2]
-        for release in cached[:]:
-            #if release matches query
-            if regex.match(r'('+ query.replace('.','\.') + ')',release.title,regex.I) or force:
-                if stream:
-                    release.size = 0
-                    files = []
-                    cached_ids = []
-                    subtitles = []
-                    if regex.search(r'(?<=btih:).*?(?=&)',str(release.download[0]),regex.I):
-                        hashstring = regex.findall(r'(?<=btih:).*?(?=&)',str(release.download[0]),regex.I)[0]
-                        #get cached file ids
-                        response = debrid.get('https://api.real-debrid.com/rest/1.0/torrents/instantAvailability/' + hashstring)
-                        if hasattr(response, hashstring.lower()):
-                            if hasattr(getattr(response, hashstring.lower()),'rd'):
-                                for cashed_version in getattr(response, hashstring.lower()).rd:
-                                    for file in cashed_version.__dict__:
-                                        debrid_file = debrid.file(file,getattr(cashed_version,file).filename,getattr(cashed_version,file).filesize)
-                                        if not debrid_file in files:
-                                            files.append(debrid_file)
-                                #remove unwanted files from selection
-                                for file in files[:]:
-                                    if file.name.endswith('.rar') or file.name.endswith('.exe') or file.name.endswith('.txt'):
-                                        files.remove(file)
-                                    if file.name.endswith('.srt'):
-                                        subtitles += [file.id]
-                                #check if there are cached files available
-                                if not files == []:
-                                    for file in files:
-                                        cached_ids += [file.id]
-                                #post magnet to real debrid
-                                try:
-                                    response = debrid.post('https://api.real-debrid.com/rest/1.0/torrents/addMagnet',{'magnet' : str(release.download[0])})
-                                    torrent_id = str(response.id)
-                                except:
-                                    continue
-                                #If cached files are available, post the file selection to get the download links
-                                if len(cached_ids) > 0:
-                                    response = debrid.post('https://api.real-debrid.com/rest/1.0/torrents/selectFiles/' + torrent_id , {'files' : str(','.join(cached_ids))})    
-                                    response = debrid.get('https://api.real-debrid.com/rest/1.0/torrents/info/' + torrent_id)
-                                    if len(response.links) == len(cached_ids):
-                                        release.download = response.links
-                                    elif not len(response.links) == len(cached_ids) and len(subtitles) > 0:
-                                        for subtitle in subtitles:
-                                            cached_ids.remove(subtitle)
-                                        debrid.delete('https://api.real-debrid.com/rest/1.0/torrents/delete/' + torrent_id)
-                                        try:
-                                            response = debrid.post('https://api.real-debrid.com/rest/1.0/torrents/addMagnet',{'magnet' : str(release.download[0])})
-                                            torrent_id = str(response.id)
-                                        except:
-                                            continue
-                                        response = debrid.post('https://api.real-debrid.com/rest/1.0/torrents/selectFiles/' + torrent_id , {'files' : str(','.join(cached_ids))})    
-                                        response = debrid.get('https://api.real-debrid.com/rest/1.0/torrents/info/' + torrent_id)
-                                        if len(response.links) == len(cached_ids):
-                                            release.download = response.links
-                                        else:
-                                            debrid.delete('https://api.real-debrid.com/rest/1.0/torrents/delete/' + torrent_id)
-                                            continue
-                                    else:
-                                        debrid.delete('https://api.real-debrid.com/rest/1.0/torrents/delete/' + torrent_id)
-                                        continue
-                                    if len(release.download) > 0:
-                                        for link in release.download:
-                                            try:
-                                                response = debrid.post('https://api.real-debrid.com/rest/1.0/unrestrict/link', {'link' : link})
-                                            except:
-                                                break
-                                        ui.print('adding cached release: ' + release.title)
-                                        return True
-                                else:
-                                    debrid.delete('https://api.real-debrid.com/rest/1.0/torrents/delete/' + torrent_id)
-                        ui.print('done')
-                        return False
-                    else:
-                        if len(release.download) > 0:
-                            for link in release.download:
-                                try:
-                                    response = debrid.post('https://api.real-debrid.com/rest/1.0/unrestrict/link', {'link' : link})
-                                except:
-                                    break
-                            ui.print('adding cached release: ' + release.title)
-                            return True
-                else:
-                    ui.print('adding uncached release: '+ release.title)
-                    response = debrid.post('https://api.real-debrid.com/rest/1.0/torrents/addMagnet',{'magnet':release.download[0]})
-                    debrid.post('https://api.real-debrid.com/rest/1.0/torrents/selectFiles/' + str(response.id), {'files':'all'})
+        scraped_releases = copy.deepcopy(element.Releases)
+        for release in scraped_releases:
+            element.Releases = [release,]
+            for service in debrid.services():
+                if service.download(element,stream=stream,query=query,force=force):
                     return True
         return False
+    #RealDebrid class
+    class realdebrid(services):
+        #(required) Name of the Debrid service
+        name = "Real Debrid"
+        #(required) Authentification of the Debrid service, can be oauth aswell. Create a setting for the required variables in the ui.settings_list. For an oauth example check the trakt authentification.
+        api_key = ""
+        #(required) Method to determine if the service has been setup (for compatability reasons)
+        def active(self):
+            if not self.api_key == "":
+                return True
+            return False
+        #Define Variables
+        session = requests.Session()
+        #Error Log
+        def logerror(response):
+            if not response.status_code == 200:
+                ui.print("realdebrid error: " + str(response.content),debug=ui_settings.debug)
+            if response.status_code == 401:
+                ui.print("realdebrid error: (401 unauthorized): realdebrid api key does not seem to work. check your realdebrid settings.")
+        #Get Function
+        def get(url): 
+            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'authorization' : 'Bearer ' + debrid.realdebrid.api_key}
+            try :
+                response = debrid.realdebrid.session.get(url, headers = headers)
+                debrid.realdebrid.logerror(response)
+                response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
+            except Exception as e:
+                ui.print("realdebrid error: (json exception): " + str(e),debug=ui_settings.debug)
+                response = None
+            return response
+        #Post Function
+        def post(url, data):
+            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'authorization' : 'Bearer ' + debrid.realdebrid.api_key}
+            try :
+                response = debrid.realdebrid.session.post(url, headers = headers, data = data)
+                debrid.realdebrid.logerror(response)
+                response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
+            except Exception as e:
+                ui.print("realdebrid error: (json exception): " + str(e),debug=ui_settings.debug)
+                response = None
+            return response
+        #Delete Function
+        def delete(url):
+            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'authorization' : 'Bearer ' + debrid.realdebrid.api_key}
+            try :
+                requests.delete(url, headers = headers)
+                #time.sleep(1)
+            except Exception as e:
+                ui.print("realdebrid error: (delete exception): " + str(e),debug=ui_settings.debug)
+                None
+            return None
+        #Object classes
+        class file:
+            def __init__(self,id,name,size):
+                self.id = id
+                self.name = name
+                self.size = size
+            def __eq__(self, other):
+                return self.id == other.id 
+        #(required) Download Function. 
+        def download(element:plex.media,stream=True,query='',force=False):
+            cached = element.Releases
+            if query == '':
+                query = element.query()
+            if regex.search(r'(S[0-9][0-9])',query):
+                query = regex.split(r'(S[0-9]+)',query) 
+                query = query[0] + '[0-9]*.*' + query[1] + query[2]
+            for release in cached[:]:
+                #if release matches query
+                if regex.match(r'('+ query.replace('.','\.') + ')',release.title,regex.I) or force:
+                    if stream:
+                        release.size = 0
+                        files = []
+                        cached_ids = []
+                        subtitles = []
+                        if regex.search(r'(?<=btih:).*?(?=&)',str(release.download[0]),regex.I):
+                            hashstring = regex.findall(r'(?<=btih:).*?(?=&)',str(release.download[0]),regex.I)[0]
+                            #get cached file ids
+                            response = debrid.realdebrid.get('https://api.real-debrid.com/rest/1.0/torrents/instantAvailability/' + hashstring)
+                            if hasattr(response, hashstring.lower()):
+                                if hasattr(getattr(response, hashstring.lower()),'rd'):
+                                    for cashed_version in getattr(response, hashstring.lower()).rd:
+                                        for file in cashed_version.__dict__:
+                                            debrid_file = debrid.realdebrid.file(file,getattr(cashed_version,file).filename,getattr(cashed_version,file).filesize)
+                                            if not debrid_file in files:
+                                                files.append(debrid_file)
+                                    #remove unwanted files from selection
+                                    for file in files[:]:
+                                        if file.name.endswith('.rar') or file.name.endswith('.exe') or file.name.endswith('.txt'):
+                                            files.remove(file)
+                                        if file.name.endswith('.srt'):
+                                            subtitles += [file.id]
+                                    #check if there are cached files available
+                                    if not files == []:
+                                        for file in files:
+                                            cached_ids += [file.id]
+                                    #post magnet to real debrid
+                                    try:
+                                        response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/addMagnet',{'magnet' : str(release.download[0])})
+                                        torrent_id = str(response.id)
+                                    except:
+                                        continue
+                                    #If cached files are available, post the file selection to get the download links
+                                    if len(cached_ids) > 0:
+                                        response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/selectFiles/' + torrent_id , {'files' : str(','.join(cached_ids))})    
+                                        response = debrid.realdebrid.get('https://api.real-debrid.com/rest/1.0/torrents/info/' + torrent_id)
+                                        if len(response.links) == len(cached_ids):
+                                            release.download = response.links
+                                        elif not len(response.links) == len(cached_ids) and len(subtitles) > 0:
+                                            for subtitle in subtitles:
+                                                cached_ids.remove(subtitle)
+                                            debrid.realdebrid.delete('https://api.real-debrid.com/rest/1.0/torrents/delete/' + torrent_id)
+                                            try:
+                                                response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/addMagnet',{'magnet' : str(release.download[0])})
+                                                torrent_id = str(response.id)
+                                            except:
+                                                continue
+                                            response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/selectFiles/' + torrent_id , {'files' : str(','.join(cached_ids))})    
+                                            response = debrid.realdebrid.get('https://api.real-debrid.com/rest/1.0/torrents/info/' + torrent_id)
+                                            if len(response.links) == len(cached_ids):
+                                                release.download = response.links
+                                            else:
+                                                debrid.realdebrid.delete('https://api.real-debrid.com/rest/1.0/torrents/delete/' + torrent_id)
+                                                continue
+                                        else:
+                                            debrid.realdebrid.delete('https://api.real-debrid.com/rest/1.0/torrents/delete/' + torrent_id)
+                                            continue
+                                        if len(release.download) > 0:
+                                            for link in release.download:
+                                                try:
+                                                    response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/unrestrict/link', {'link' : link})
+                                                except:
+                                                    break
+                                            ui.print('adding cached release: ' + release.title)
+                                            return True
+                                    else:
+                                        debrid.realdebrid.delete('https://api.real-debrid.com/rest/1.0/torrents/delete/' + torrent_id)
+                            ui.print('done')
+                            return False
+                        else:
+                            if len(release.download) > 0:
+                                for link in release.download:
+                                    try:
+                                        response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/unrestrict/link', {'link' : link})
+                                    except:
+                                        break
+                                ui.print('adding cached release: ' + release.title)
+                                return True
+                    else:
+                        ui.print('adding uncached release: '+ release.title)
+                        response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/addMagnet',{'magnet':release.download[0]})
+                        debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/selectFiles/' + str(response.id), {'files':'all'})
+                        return True
+            return False
+    #AllDebrid class
+    class alldebrid(services):
+        #(required) Name of the Debrid service
+        name = "All Debrid (NOT FUNCTIONAL)"
+        #(required) Authentification of the Debrid service, can be oauth aswell. Create a setting for the required variables in the ui.settings_list. For an oauth example check the trakt authentification.
+        api_key = ""
+        #(required) Method to determine if the service has been setup (for compatability reasons)
+        def active(self):
+            if not self.api_key == "":
+                return True
+            return False
+        #Define Variables
+        session = requests.Session()
+        #Error Log
+        def logerror(response):
+            if not response.status_code == 200:
+                ui.print("alldebrid error: " + str(response.content),debug=ui_settings.debug)
+            if response.status_code == 401:
+                ui.print("alldebrid error: (401 unauthorized): alldebrid api key does not seem to work. check your alldebrid settings.")
+        #Get Function
+        def get(url): 
+            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'authorization' : 'Bearer ' + debrid.alldebrid.api_key}
+            try :
+                response = debrid.alldebrid.session.get(url, headers = headers)
+                debrid.alldebrid.logerror(response)
+                response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
+            except Exception as e:
+                ui.print("alldebrid error: (json exception): " + str(e),debug=ui_settings.debug)
+                response = None
+            return response
+        #Post Function
+        def post(url, data):
+            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'authorization' : 'Bearer ' + debrid.alldebrid.api_key}
+            try :
+                response = debrid.alldebrid.session.post(url, headers = headers, data = data)
+                debrid.alldebrid.logerror(response)
+                response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
+            except Exception as e:
+                ui.print("alldebrid error: (json exception): " + str(e),debug=ui_settings.debug)
+                response = None
+            return response
+        #(required) Download Function. 
+        def download(element:plex.media,stream=True,query='',force=False):
+            cached = element.Releases
+            if query == '':
+                query = element.query()
+            if regex.search(r'(S[0-9][0-9])',query):
+                query = regex.split(r'(S[0-9]+)',query) 
+                query = query[0] + '[0-9]*.*' + query[1] + query[2]
+            for release in cached[:]:
+                #if release matches query
+                if regex.match(r'('+ query.replace('.','\.') + ')',release.title,regex.I) or force:
+                    if stream:
+                        #Cached Download Method for AllDebrid
+                        #...
+                        ui.print('adding cached release: ' + release.title)
+                        return True
+                    else:
+                        #Uncached Download Method for AllDebrid
+                        #...
+                        ui.print('adding uncached release: '+ release.title)
+                        return True
+            return False  
+    #Premiumize class
+    class premiumize(services):
+        #(required) Name of the Debrid service
+        name = "Premiumize (NOT FUNCTIONAL)"
+        #(required) Authentification of the Debrid service, can be oauth aswell. Create a setting for the required variables in the ui.settings_list. For an oauth example check the trakt authentification.
+        api_key = ""
+        #(required) Method to determine if the service has been setup (for compatability reasons)
+        def active(self):
+            if not self.api_key == "":
+                return True
+            return False
+        #Define Variables
+        session = requests.Session()
+        #Error Log
+        def logerror(response):
+            if not response.status_code == 200:
+                ui.print("premiumize error: " + str(response.content),debug=ui_settings.debug)
+            if response.status_code == 401:
+                ui.print("premiumize error: (401 unauthorized): premiumize api key does not seem to work. check your premiumize settings.")
+        #Get Function
+        def get(url): 
+            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'authorization' : 'Bearer ' + debrid.premiumize.api_key}
+            try :
+                response = debrid.premiumize.session.get(url, headers = headers)
+                debrid.premiumize.logerror(response)
+                response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
+            except Exception as e:
+                ui.print("premiumize error: (json exception): " + str(e),debug=ui_settings.debug)
+                response = None
+            return response
+        #Post Function
+        def post(url, data):
+            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'authorization' : 'Bearer ' + debrid.premiumize.api_key}
+            try :
+                response = debrid.premiumize.session.post(url, headers = headers, data = data)
+                debrid.premiumize.logerror(response)
+                response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
+            except Exception as e:
+                ui.print("premiumize error: (json exception): " + str(e),debug=ui_settings.debug)
+                response = None
+            return response
+        #(required) Download Function. 
+        def download(element:plex.media,stream=True,query='',force=False):
+            cached = element.Releases
+            if query == '':
+                query = element.query()
+            if regex.search(r'(S[0-9][0-9])',query):
+                query = regex.split(r'(S[0-9]+)',query) 
+                query = query[0] + '[0-9]*.*' + query[1] + query[2]
+            for release in cached[:]:
+                #if release matches query
+                if regex.match(r'('+ query.replace('.','\.') + ')',release.title,regex.I) or force:
+                    if stream:
+                        #Cached Download Method for premiumize
+                        #...
+                        ui.print('adding cached release: ' + release.title)
+                        return True
+                    else:
+                        #Uncached Download Method for premiumize
+                        #...
+                        ui.print('adding uncached release: '+ release.title)
+                        return True
+            return False      
+    #DebridLink class
+    class debridlink(services):
+        #(required) Name of the Debrid service
+        name = "Debrid Link (NOT FUNCTIONAL)"
+        #(required) Authentification of the Debrid service, can be oauth aswell. Create a setting for the required variables in the ui.settings_list. For an oauth example check the trakt authentification.
+        api_key = ""
+        #(required) Method to determine if the service has been setup (for compatability reasons)
+        def active(self):
+            if not self.api_key == "":
+                return True
+            return False
+        #Define Variables
+        session = requests.Session()
+        #Error Log
+        def logerror(response):
+            if not response.status_code == 200:
+                ui.print("debridlink error: " + str(response.content),debug=ui_settings.debug)
+            if response.status_code == 401:
+                ui.print("debridlink error: (401 unauthorized): debridlink api key does not seem to work. check your debridlink settings.")
+        #Get Function
+        def get(url): 
+            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'authorization' : 'Bearer ' + debrid.debridlink.api_key}
+            try :
+                response = debrid.debridlink.session.get(url, headers = headers)
+                debrid.debridlink.logerror(response)
+                response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
+            except Exception as e:
+                ui.print("debridlink error: (json exception): " + str(e),debug=ui_settings.debug)
+                response = None
+            return response
+        #Post Function
+        def post(url, data):
+            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'authorization' : 'Bearer ' + debrid.debridlink.api_key}
+            try :
+                response = debrid.debridlink.session.post(url, headers = headers, data = data)
+                debrid.debridlink.logerror(response)
+                response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
+            except Exception as e:
+                ui.print("debridlink error: (json exception): " + str(e),debug=ui_settings.debug)
+                response = None
+            return response
+        #(required) Download Function. 
+        def download(element:plex.media,stream=True,query='',force=False):
+            cached = element.Releases
+            if query == '':
+                query = element.query()
+            if regex.search(r'(S[0-9][0-9])',query):
+                query = regex.split(r'(S[0-9]+)',query) 
+                query = query[0] + '[0-9]*.*' + query[1] + query[2]
+            for release in cached[:]:
+                #if release matches query
+                if regex.match(r'('+ query.replace('.','\.') + ')',release.title,regex.I) or force:
+                    if stream:
+                        #Cached Download Method for debridlink
+                        #...
+                        ui.print('adding cached release: ' + release.title)
+                        return True
+                    else:
+                        #Uncached Download Method for debridlink
+                        #...
+                        ui.print('adding uncached release: '+ release.title)
+                        return True
+            return False  
 #Release Class
 class releases:
     #Define release attributes
@@ -524,113 +1070,6 @@ class releases:
     #Define when releases are Equal 
     def __eq__(self, other):
         return self.title == other.title
-    #Scrape Classes
-    class scrape: 
-        def __new__(cls,query):
-            ui.print('done')
-            ui.print('scraping sources for query "' + query + '" ...')
-            scrapers = [releases.scrape.rarbg,releases.scrape.x1337]
-            scraped_releases = []
-            results = [[],[],]
-            threads = []
-            for index,scraper in enumerate(scrapers):
-                t = Thread(target=scrape, args=(scraper,query,results,index))
-                threads.append(t)
-                t.start()
-            # wait for the threads to complete
-            for t in threads:
-                t.join()
-            for result in results:
-                scraped_releases += result
-            releases.sort(scraped_releases)
-            ui.print('done - found ' + str(len(scraped_releases)) + ' releases')
-            return scraped_releases       
-        class rarbg:
-            token = 'r05xvbq6ul'
-            session = requests.Session()
-            def __new__(cls,query):
-                altquery = copy.deepcopy(query)
-                if regex.search(r'(S[0-9]+)',altquery):
-                    altquery = regex.split(r'(S[0-9]+)',altquery) 
-                    altquery = altquery[0] + '[0-9]*.*' + altquery[1] + altquery[2]
-                scraped_releases = []
-                headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
-                response = None
-                retries = 0
-                while not hasattr(response, "torrent_results") and retries < 4:
-                    if regex.search(r'(tt[0-9]+)',query,regex.I):
-                        url = 'https://torrentapi.org/pubapi_v2.php?mode=search&search_imdb=' + str(query) + '&ranked=0&category=52;51;50;49;48;45;44;41;17;14&token=' + releases.scrape.rarbg.token + '&limit=100&format=json_extended&app_id=fuckshit'
-                    else:
-                        url = 'https://torrentapi.org/pubapi_v2.php?mode=search&search_string=' + str(query) + '&ranked=0&category=52;51;50;49;48;45;44;41;17;14&token=' + releases.scrape.rarbg.token + '&limit=100&format=json_extended&app_id=fuckshit'
-                    try:
-                        response = releases.scrape.rarbg.session.get(url, headers = headers)
-                        if not response.status_code == 429:
-                            response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
-                            if hasattr(response, "error"):
-                                if 'Invalid token' in response.error:
-                                    ui.print('rarbg error: ' + response.error)
-                                    ui.print('fetching new token ...')
-                                    url = 'https://torrentapi.org/pubapi_v2.php?get_token=get_token&app_id=fuckshit'
-                                    response = releases.scrape.rarbg.session.get(url, headers = headers)
-                                    if len(response.content) > 5:
-                                        response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
-                                        releases.scrape.rarbg.token = response.token 
-                                    else:
-                                        ui.print('rarbg error: could not fetch new token')
-                                elif hasattr(response, "rate_limit"):
-                                    retries += -1
-                        else:
-                            retries += -1
-                    except:
-                        response = None
-                        ui.print('rarbg error: (parse exception)')
-                    retries += 1
-                    time.sleep(1+random.randint(0, 2))
-                if hasattr(response, "torrent_results"):
-                    for result in response.torrent_results:
-                        if regex.match(r'('+ altquery.replace('.','\.') + ')',result.title,regex.I):
-                            release = releases('[rarbg]','torrent',result.title,[],float(result.size)/1000000000,[result.download])
-                            scraped_releases += [release]   
-                return scraped_releases 
-        class x1337:
-            session = requests.Session()
-            def __new__(cls,query):
-                altquery = copy.deepcopy(query)
-                if regex.search(r'(S[0-9]+)',altquery):
-                    altquery = regex.split(r'(S[0-9]+)',altquery) 
-                    altquery = altquery[0] + '[0-9]*.*' + altquery[1] + altquery[2]
-                scraped_releases = []
-                headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
-                url = 'https://1337x.to/search/' + str(query) + '/1/'
-                try:
-                    response = releases.scrape.x1337.session.get(url, headers = headers)
-                    soup = BeautifulSoup(response.content, 'html.parser')
-                    torrentList = soup.select('a[href*="/torrent/"]')
-                    sizeList = soup.select('td.coll-4')
-                    if torrentList:
-                        for count,torrent in enumerate(torrentList):
-                            title = torrent.getText().strip()
-                            title = title.replace(" ",'.')
-                            title = regex.sub(r'\.+',".",title)
-                            if regex.match(r'('+ altquery.replace('.','\.') + ')',title,regex.I):
-                                link = torrent['href']
-                                response = releases.scrape.x1337.session.get( 'https://1337x.to'+link, headers = headers)
-                                soup = BeautifulSoup(response.content, 'html.parser')
-                                download = soup.select('a[href^="magnet"]')[0]['href']
-                                size = sizeList[count].contents[0]
-                                if regex.search(r'([0-9]*?\.[0-9])(?= MB)',size,regex.I):
-                                    size = regex.search(r'([0-9]*?\.[0-9])(?= MB)',size,regex.I).group()
-                                    size = float(float(size) / 1000)
-                                elif regex.search(r'([0-9]*?\.[0-9])(?= GB)',size,regex.I):
-                                    size = regex.search(r'([0-9]*?\.[0-9])(?= GB)',size,regex.I).group()
-                                    size = float(size)
-                                else:
-                                    size = float(size)
-                                scraped_releases += [releases('[1337x]','torrent',title,[],size,[download])]
-                except:
-                    response = None
-                    ui.print('1337x error: exception')
-                return scraped_releases
     #Sort Method
     class sort:
         ranking= [
@@ -707,8 +1146,167 @@ class releases:
                 longest_index = len(str(index+1))
         for index,release in enumerate(scraped_releases):
             print(str(index+1)+") "+' ' * (longest_index-len(str(index+1)))+"title: " + release.title + ' ' * (longest_title-len(release.title)) + " | size: " + str(release.size) + ' ' * (longest_size-len(str(release.size)))  + " | source: " + release.source)
+#Scraper Class
+class scraper: 
+    #Service Class:
+    class services:
+        active = ['rarbg', '1337x']
+        def setup(cls,new=False):
+            settings = []
+            for category, allsettings in ui.settings_list:
+                for setting in allsettings:
+                    if setting.cls == cls:
+                        settings += [setting]
+            if settings == []:
+                if not cls.name in scraper.services.active:
+                    scraper.services.active += [cls.name]
+            back = False
+            if not new:
+                while not back:
+                    print("0) Back")
+                    indices = []
+                    for index, setting in enumerate(settings):
+                        print(str(index+1) + ') ' + setting.name)
+                        indices += [str(index+1)]
+                    print()
+                    if settings == []:
+                        print("Nothing to edit!")
+                        print()
+                        time.sleep(3)
+                        return
+                    choice = input("Choose an action: ")
+                    if choice in indices:
+                        settings[int(choice)-1].setup()
+                        if not cls.name in scraper.services.active:
+                            scraper.services.active += [cls.name]
+                        back = True
+                    elif choice == '0':
+                        back = True
+            else:
+                print()
+                indices = []
+                for setting in settings:
+                    setting.setup()
+                    if not cls.name in scraper.services.active:
+                        scraper.services.active += [cls.name]      
+        def __new__(cls):
+            activeservices = []
+            for servicename in scraper.services.active:
+                for service in cls.__subclasses__():
+                    if service.name == servicename:
+                        activeservices += [service]
+            return activeservices
+    def __new__(cls,query):
+        ui.print('done')
+        ui.print('scraping sources for query "' + query + '" ...')
+        scrapers = scraper.services()
+        scraped_releases = []
+        results = [[],[],]
+        threads = []
+        for index,scraper_ in enumerate(scrapers):
+            t = Thread(target=scrape, args=(scraper_,query,results,index))
+            threads.append(t)
+            t.start()
+        # wait for the threads to complete
+        for t in threads:
+            t.join()
+        for result in results:
+            scraped_releases += result
+        releases.sort(scraped_releases)
+        ui.print('done - found ' + str(len(scraped_releases)) + ' releases')
+        return scraped_releases       
+    class rarbg(services):
+        name = "rarbg"
+        token = 'r05xvbq6ul'
+        session = requests.Session()
+        def __new__(cls,query):
+            scraped_releases = []
+            if 'rarbg' in scraper.services.active:
+                altquery = copy.deepcopy(query)
+                if regex.search(r'(S[0-9]+)',altquery):
+                    altquery = regex.split(r'(S[0-9]+)',altquery) 
+                    altquery = altquery[0] + '[0-9]*.*' + altquery[1] + altquery[2]
+                headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
+                response = None
+                retries = 0
+                while not hasattr(response, "torrent_results") and retries < 4:
+                    if regex.search(r'(tt[0-9]+)',query,regex.I):
+                        url = 'https://torrentapi.org/pubapi_v2.php?mode=search&search_imdb=' + str(query) + '&ranked=0&category=52;51;50;49;48;45;44;41;17;14&token=' + scraper.rarbg.token + '&limit=100&format=json_extended&app_id=fuckshit'
+                    else:
+                        url = 'https://torrentapi.org/pubapi_v2.php?mode=search&search_string=' + str(query) + '&ranked=0&category=52;51;50;49;48;45;44;41;17;14&token=' + scraper.rarbg.token + '&limit=100&format=json_extended&app_id=fuckshit'
+                    try:
+                        response = scraper.rarbg.session.get(url, headers = headers)
+                        if not response.status_code == 429:
+                            response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
+                            if hasattr(response, "error"):
+                                if 'Invalid token' in response.error:
+                                    ui.print('rarbg error: ' + response.error)
+                                    ui.print('fetching new token ...')
+                                    url = 'https://torrentapi.org/pubapi_v2.php?get_token=get_token&app_id=fuckshit'
+                                    response = scraper.rarbg.session.get(url, headers = headers)
+                                    if len(response.content) > 5:
+                                        response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
+                                        scraper.rarbg.token = response.token 
+                                    else:
+                                        ui.print('rarbg error: could not fetch new token')
+                                elif hasattr(response, "rate_limit"):
+                                    retries += -1
+                        else:
+                            retries += -1
+                    except:
+                        response = None
+                        ui.print('rarbg error: (parse exception)')
+                    retries += 1
+                    time.sleep(1+random.randint(0, 2))
+                if hasattr(response, "torrent_results"):
+                    for result in response.torrent_results:
+                        if regex.match(r'('+ altquery.replace('.','\.') + ')',result.title,regex.I):
+                            release = releases('[rarbg]','torrent',result.title,[],float(result.size)/1000000000,[result.download])
+                            scraped_releases += [release]   
+            return scraped_releases 
+    class x1337(services):
+        name = "1337x"
+        session = requests.Session()
+        def __new__(cls,query):
+            scraped_releases = []
+            if '1337x' in scraper.services.active:
+                altquery = copy.deepcopy(query)
+                if regex.search(r'(S[0-9]+)',altquery):
+                    altquery = regex.split(r'(S[0-9]+)',altquery) 
+                    altquery = altquery[0] + '[0-9]*.*' + altquery[1] + altquery[2]
+                headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
+                url = 'https://1337x.to/search/' + str(query) + '/1/'
+                try:
+                    response = scraper.x1337.session.get(url, headers = headers)
+                    soup = BeautifulSoup(response.content, 'html.parser')
+                    torrentList = soup.select('a[href*="/torrent/"]')
+                    sizeList = soup.select('td.coll-4')
+                    if torrentList:
+                        for count,torrent in enumerate(torrentList):
+                            title = torrent.getText().strip()
+                            title = title.replace(" ",'.')
+                            title = regex.sub(r'\.+',".",title)
+                            if regex.match(r'('+ altquery.replace('.','\.') + ')',title,regex.I):
+                                link = torrent['href']
+                                response = scraper.x1337.session.get( 'https://1337x.to'+link, headers = headers)
+                                soup = BeautifulSoup(response.content, 'html.parser')
+                                download = soup.select('a[href^="magnet"]')[0]['href']
+                                size = sizeList[count].contents[0]
+                                if regex.search(r'([0-9]*?\.[0-9])(?= MB)',size,regex.I):
+                                    size = regex.search(r'([0-9]*?\.[0-9])(?= MB)',size,regex.I).group()
+                                    size = float(float(size) / 1000)
+                                elif regex.search(r'([0-9]*?\.[0-9])(?= GB)',size,regex.I):
+                                    size = regex.search(r'([0-9]*?\.[0-9])(?= GB)',size,regex.I).group()
+                                    size = float(size)
+                                else:
+                                    size = float(size)
+                                scraped_releases += [releases('[1337x]','torrent',title,[],size,[download])]
+                except:
+                    response = None
+                    ui.print('1337x error: exception')
+            return scraped_releases
 #Multiprocessing scrape method
-def scrape(cls:releases.scrape,query,result,index):
+def scrape(cls:scraper,query,result,index):
     result[index] = cls(query)
 #Multiprocessing download method
 def download(cls:plex.media,library,parentReleases,result,index):
@@ -723,38 +1321,48 @@ def run(stop):
     timeout = 5
     regular_check = 1800
     timeout_counter = 0
-    old_watchlist = plex.watchlist()
-    if len(old_watchlist) == 0:
-        ui.print('checking new content ... done' )
-    else:
-        library = plex.library()
-        ui.print('checking new content ...')
-        for element in old_watchlist:
-            element.download(library=library)
-        ui.print('done')
-    while not stop():   
-        watchlist = plex.watchlist(old=old_watchlist)
-        if len(watchlist) > 0:
-            library = plex.library()
+    library = plex.library()
+    if len(library) > 0:
+        plex_watchlist = plex.watchlist()
+        if trakt.sync_with_plex == "true":
+            trakt_watchlist = trakt.watchlist()
+            trakt_watchlist.sync(plex_watchlist,library)
+            plex_watchlist.update()
+        if len(plex_watchlist) == 0:
+            ui.print('checking new content ... done' )
+        else:
             ui.print('checking new content ...')
-            for element in watchlist:
+            for element in plex_watchlist:
                 element.download(library=library)
             ui.print('done')
-            old_watchlist = plex.watchlist()
-        elif timeout_counter >= regular_check:
-            old_watchlist = plex.watchlist()
-            library = plex.library()
-            timeout_counter = 0
-            if len(old_watchlist) == 0:
-                ui.print('checking new content ... done' )
-            else:
+        while not stop():   
+            if plex_watchlist.update():
+                library = plex.library()
+                if len(library) == 0:
+                    break
                 ui.print('checking new content ...')
-                for element in old_watchlist:
+                for element in plex_watchlist:
                     element.download(library=library)
                 ui.print('done')
-        else:
-            timeout_counter += timeout
-        time.sleep(timeout)
+            elif timeout_counter >= regular_check:
+                if trakt.sync_with_plex == "true":
+                    trakt_watchlist = trakt.watchlist()
+                    trakt_watchlist.sync(plex_watchlist,library)
+                plex_watchlist = plex.watchlist()
+                library = plex.library()
+                if len(library) == 0:
+                    break
+                timeout_counter = 0
+                if len(plex_watchlist) == 0:
+                    ui.print('checking new content ... done' )
+                else:
+                    ui.print('checking new content ...')
+                    for element in plex_watchlist:
+                        element.download(library=library)
+                    ui.print('done')
+            else:
+                timeout_counter += timeout
+            time.sleep(timeout)
 #Multiprocessing run class
 class download_script:   
     def run():
@@ -787,51 +1395,98 @@ class ui:
             func = getattr(self.cls,self.key)
             func()
     class setting:
-        def __init__(self,name,prompt,cls,key,required=False,help="",entry="",test=None):
+        def __init__(self,name,prompt,cls,key,required=False,entry="",test=None,help="",hidden=False,subclass=False,oauth=False,moveable=True):
             self.name = name
             self.prompt = prompt
             self.cls = cls
             self.key = key
             self.required = required
-            self.help = help
             self.entry = entry
             self.test = test
+            self.hidden = hidden
+            self.subclass = subclass
+            self.oauth = oauth
+            self.help = help
+            self.moveable = moveable
         def input(self):
-            print('Current ' + self.name + ': "' + str(getattr(self.cls,self.key)) + '"')
-            print()
-            print('0) Back')
-            print('1) Edit')
-            if not self.test == None:
-                print('2) Test')
-            print()
-            choice = input('Choose an action: ')
+            if self.moveable:
+                print('Current ' + self.name + ': "' + str(getattr(self.cls,self.key)) + '"')
+                print()
+                print('0) Back')
+                print('1) Edit')
+                print()
+                choice = input('Choose an action: ')
+            else:
+                choice = '1'
             if choice == '1':
                 if not isinstance(getattr(self.cls,self.key),list):
-                    console_input = input(self.prompt)
+                    clipboard.copy(getattr(self.cls,self.key))
+                    console_input = input(self.prompt + '- current value "'+str(getattr(self.cls,self.key))+'" copied to your clipboard: ')
                     setattr(self.cls,self.key,console_input)
                     return True
                 else:
                     lists = getattr(self.cls,self.key)
-                    print()
-                    print('0) Back')
-                    print('1) Add '+self.entry)
-                    if len(lists) > 0:
-                        print('2) Edit '+self.entry+'s')
-                    print()
-                    choice = input('Choose an action: ')
+                    if self.moveable:
+                        print()
+                        print('0) Back')
+                        print('1) Add '+self.entry)
+                        if len(lists) > 0:
+                            print('2) Edit '+self.entry+'s')
+                        print()
+                        choice = input('Choose an action: ')
+                    else:
+                        choice = '2'
                     if choice == '1':
-                        edit = []
-                        for prompt in self.prompt:
-                            edit += [input(prompt)]
-                        lists += [edit]
-                        setattr(self.cls,self.key,lists)
-                        return True
-                    if choice == '2':
+                        if self.subclass:
+                            back = False
+                            while not back:
+                                print()
+                                print('0) Back')
+                                services = []
+                                indices = []
+                                index = 0
+                                for service in self.cls.__subclasses__():
+                                    if not service.name in getattr(self.cls,self.key) and not '(NOT FUNCTIONAL)' in service.name:
+                                        print(str(index+1)+') ' + service.name)
+                                        indices += [str(index+1)]
+                                        services += [service]
+                                        index += 1
+                                print()
+                                choice = input('Choose a '+self.entry+': ')
+                                if choice in indices:
+                                    service = services[int(choice)-1]
+                                    service.setup(service,new=True)
+                                    back = True
+                                elif choice == '0':
+                                    back = True
+                        elif self.oauth:
+                            edit = []
+                            lists = getattr(self.cls,self.key)
+                            for prompt in self.prompt:
+                                if "code" in prompt:
+                                    device_code, user_code = self.cls.oauth()
+                                    print(prompt + str(user_code))
+                                    edit += [self.cls.oauth(device_code)]
+                                else:
+                                    edit += [input(prompt)]
+                            lists += [edit]
+                            setattr(self.cls,self.key,lists)
+                        else:
+                            edit = []
+                            for prompt in self.prompt:
+                                edit += [input(prompt)]
+                            lists += [edit]
+                            setattr(self.cls,self.key,lists)
+                            return True
+                    elif choice == '2':
                         print()
                         print('0) Back')
                         indices = []
                         for index,entry in enumerate(lists):
-                            print(str(index+1)+') Edit '+self.entry+' ' + str(index+1) + ': ' + str(entry))
+                            if self.moveable:
+                                print(str(index+1)+') Edit '+self.entry+' ' + str(index+1) + ': ' + str(entry))
+                            else:
+                                print(str(index+1)+') ' + str(entry))
                             indices += [str(index+1)]
                         print()
                         index = input('Choose a '+self.entry+': ')
@@ -840,30 +1495,52 @@ class ui:
                             if index == '0':
                                 back3 = True
                             if index in indices:
-                                print()
-                                print('Entry '+index+': ' + str(lists[int(index)-1]))
-                                print()
-                                print('0) Back')
-                                print('1) Edit')
-                                if len(lists) > 1:
+                                if self.moveable:
+                                    print()
+                                    print(self.entry.capitalize()+' '+index+': ' + str(lists[int(index)-1]))
+                                    print()
+                                    print('0) Back')
+                                    print('1) Edit')
                                     print('2) Delete')
-                                    print('3) Move')
-                                print()
-                                choice = input('Choose an action: ')
+                                    if len(lists) > 1:
+                                        print('3) Move')
+                                    print()
+                                    choice = input('Choose an action: ')
+                                else:
+                                    choice = '1'
                                 back2 = False
                                 while not back2:
                                     print()
                                     if choice == '0':
                                         back2 = True
+                                        back3 = True
                                     if choice == '1':
-                                        edit = []
-                                        for k,prompt in enumerate(self.prompt):
-                                            clipboard.copy(lists[int(index)-1][k])
-                                            response = input(prompt + '- current value "'+lists[int(index)-1][k]+'" copied to your clipboard: ')
-                                            edit += [response]
-                                        lists[int(index)-1] = edit
-                                        setattr(self.cls,self.key,lists)
-                                        return True
+                                        if self.subclass:
+                                            for service in self.cls.__subclasses__():
+                                                if str(lists[int(index)-1]) == service.name:
+                                                    service.setup(service)
+                                                    return True
+                                        elif self.oauth:
+                                            edit = []
+                                            for prompt in self.prompt:
+                                                if "code" in prompt:
+                                                    device_code, user_code = self.cls.oauth()
+                                                    print(prompt + str(user_code))
+                                                    edit += [self.cls.oauth(device_code)]
+                                                else:
+                                                    edit += [input(prompt)]
+                                            lists[int(index)-1] = edit
+                                            setattr(self.cls,self.key,lists)
+                                            return True
+                                        else:
+                                            edit = []
+                                            for k,prompt in enumerate(self.prompt):
+                                                clipboard.copy(lists[int(index)-1][k])
+                                                response = input(prompt + '- current value "'+lists[int(index)-1][k]+'" copied to your clipboard: ')
+                                                edit += [response]
+                                            lists[int(index)-1] = edit
+                                            setattr(self.cls,self.key,lists)
+                                            return True
                                     if choice == '2':
                                         del lists[int(index)-1]
                                         return True
@@ -883,47 +1560,51 @@ class ui:
                                                 lists.insert(int(choice)-1,temp)
                                                 setattr(self.cls,self.key,lists)
                                                 return True                     
-            elif choice == '2' and not self.test == None:
-                print()
-                print("Sorting test.")
-                print("This is a random collection of typical release titles to try out your sorting rules.")
-                print("The first cached release of the sorted list would be added to realdebrid, so make sure you would be okay with the first few releases.")
-                print("If you want to add a release to try out a rule, look inside the plex_rd.py file.")
-                print()
-                print("before sorting:")
-                releases.print(self.test)
-                self.test = self.cls(self.test)
-                print()
-                print("after sorting:")
-                releases.print(self.test)
-                print()
-                input("Press any key to go back")
         def setup(self):
             if isinstance(getattr(self.cls,self.key),list):
                 working = False
                 while not working:
                     if self.name == 'Plex users':
-                        print("Please create a plex user by providing a name and a token. To find the plex token for this user, log in to this plex account and visit 'https://plex.tv/devices.xml'. Pick a 'token' from one of the listed devices.")
+                        print(self.help)
                         print()
-                    edit = []
-                    print(self.name + ' - current value: ' + str(getattr(self.cls,self.key)))
-                    print()
-                    lists = getattr(self.cls,self.key)
-                    for prompt in self.prompt:
-                        edit += [input(prompt)]
-                    lists = [edit,]
-                    setattr(self.cls,self.key,lists)
-                    if self.name == 'Plex users':
-                        url = 'https://metadata.provider.plex.tv/library/sections/watchlist/all?X-Plex-Token=' + plex.users[0][1]
-                        response = plex.session.get(url,headers=plex.headers)
-                        if response.status_code == 200:
+                    if self.subclass:
+                        print(self.help)
+                        print()
+                        services = []
+                        indices = []
+                        index = 0
+                        for service in self.cls.__subclasses__():
+                            if not '(NOT FUNCTIONAL)' in service.name:
+                                print(str(index+1)+') ' + service.name)
+                                indices += [str(index+1)]
+                                services += [service]
+                                index += 1
+                        print()
+                        choice = input('Choose a '+self.entry+': ')
+                        if choice in indices:
+                            service = services[int(choice)-1]
+                            service.setup(service,new=True)
                             working = True
-                        else:
-                            print()
-                            print("Looks like this plex token does not work. Please enter a valid token.")
-                            print()
                     else:
-                        working = True
+                        edit = []
+                        print(self.name + ' - current value: ' + str(getattr(self.cls,self.key)))
+                        print()
+                        lists = getattr(self.cls,self.key)
+                        for prompt in self.prompt:
+                            edit += [input(prompt)]
+                        lists = [edit,]
+                        setattr(self.cls,self.key,lists)
+                        if self.name == 'Plex users':
+                            url = 'https://metadata.provider.plex.tv/library/sections/watchlist/all?X-Plex-Token=' + plex.users[0][1]
+                            response = plex.session.get(url,headers=plex.headers)
+                            if response.status_code == 200:
+                                working = True
+                            else:
+                                print()
+                                print("Looks like this plex token does not work. Please enter a valid token.")
+                                print()
+                        else:
+                            working = True
             else:
                 working = False
                 while not working:
@@ -933,7 +1614,7 @@ class ui:
                     setattr(self.cls,self.key,console_input)
                     if self.name == 'Real Debrid API Key':
                         url = 'https://api.real-debrid.com/rest/1.0/torrents?limit=2&auth_token=' + console_input
-                        response = debrid.session.get(url)
+                        response = debrid.realdebrid.session.get(url)
                         if response.status_code == 200:
                             working = True
                         else:
@@ -947,18 +1628,18 @@ class ui:
         def get(self):
             return getattr(self.cls,self.key)
     settings_list = [
-        ['Real Debrid Settings', [
-            setting('Real Debrid API Key','Please enter your Real Debrid API Key: ',debrid,'api_key',required=True),
+        ['Content Services',[
+            setting('Content Services',[''],content.services,'active',entry="content service",subclass=True,moveable=False),
+            setting('Plex users',['Please provide a name for this Plex user: ','Please provide the Plex token for this Plex user: '],plex,'users',required=True,entry="user",help="Please create a plex user by providing a name and a token. To find the plex token for this user, open your favorite browser, log in to this plex account and visit 'https://plex.tv/devices.xml'. Pick a 'token' from one of the listed devices.",hidden=True),
+            setting('Trakt users',['Please provide a name for this Trakt user: ','Please open your favorite browser, log into this Trakt user and open "https://trakt.tv/activate". Enter this code: '],trakt,'users',entry="user",oauth=True,hidden=True),
+            setting('Trakt-to-Plex synchronization','Please enter "true" or "false": ',trakt,'sync_with_plex',hidden=True),
+            setting('Plex server address','Please enter your Plex server address: ',plex.library,'url',hidden=True),
+            setting('Plex "movies" library','Please enter the section number of the "movies" library, that should be refreshed after a movie download: ',plex.library,'movies',required=True,hidden=True),
+            setting('Plex "shows" library','Please enter the section number of the "shows" library, that should be refreshed after a show download: ',plex.library,'shows',required=True,hidden=True)
             ]
         ],
-        ['Plex Settings',[
-            setting('Plex users',['Please provide a name for this Plex user: ','Please provide the Plex token for this Plex user: '],plex,'users',required=True,entry="user"),
-            setting('Plex server address','Please enter your Plex server address: ',plex.library,'url'),
-            setting('Plex "movies" library','Please enter the section number of the "movies" library, that should be refreshed after a movie download: ',plex.library,'movies',required=True),
-            setting('Plex "shows" library','Please enter the section number of the "shows" library, that should be refreshed after a show download: ',plex.library,'shows',required=True)
-            ]
-        ],
-        ['Scraper Settings',[
+        ['Scraper',[
+            setting('Sources',[''],scraper.services,'active',entry="source",subclass=True),
             setting(
                 'Release sorting',
                 [
@@ -969,52 +1650,35 @@ class ui:
                 ],
                 releases.sort,'ranking',
                 entry="rule",
-                test=[
-                    releases("rarbg","torrent","Some.Movie.EXTENDED.REMASTERED.1080p.BluRay.x265-RARBG",[],"3.56",[]),
-                    releases("rarbg","torrent","Some.Movie.2160p.UHD.BluRay.x265.10bit.HDR.TrueHD.7.1.Atmos-BOREDOR",[],"39.59",[]),
-                    releases("rarbg","torrent","Some.Movie.2160p.UHD.BluRay.x265.10bit.HDR.TrueHD.7.1.Atmos-BOREDOR",[],"36.84",[]),
-                    releases("rarbg","torrent","Some.Movie.1080p.BluRay.x265-RARBG",[],"3.67",[]),
-                    releases("rarbg","torrent","Some.Movie.PROPER.1080p.BluRay.H264.AAC-RARBG",[],"4.49",[]),
-                    releases("rarbg","torrent","Some.Movie.EXTENDED.PROPER.1080p.BluRay.H264.AAC-RARBG",[],"5.02",[]),
-                    releases("rarbg","torrent","Some.Movie.1080p.BluRay.x264-SiNNERS",[],"16.46",[]),
-                    releases("1337x","torrent","Some.Movie.3D.REMASTERED.1080p.BluRay.H264.AAC-RARBG",[],"4.35",[]),
-                    releases("1337x","torrent","Some.Movie.DISC2.2160p.BluRay.REMUX.HEVC.DTS-HD.MA.TrueHD.7.1.Atmos-FGT",[],"68.12",[]),
-                    releases("1337x","torrent","Some.Movie.1080p.BluRay.REMUX.AVC.DTS-HD.MA.TrueHD.7.1.Atmos-FGT",[],"71.35",[]),
-                    releases("rarbg","torrent","Some.Movie.2160p.BluRay.REMUX.HEVC.DTS-HD.MA.TrueHD.7.1.Atmos-FGT",[],"71.30",[]),
-                    releases("1337x","torrent","Some.Movie.1080p.BluRay.H264.AAC-RARBG",[],"4.49",[]),
-                    releases("rarbg","torrent","Some.Movie.REMASTERED.1080p.BluRay.REMUX.AVC.DTS-HD.MA.TrueHD.7.1.Atmos-FGT",[],"73.71",[]),
-                    releases("1337x","torrent","Some.Movie.2160p.BluRay.REMUX.HEVC.DTS-HD.MA.TrueHD.7.1.Atmos-FGT",[],"74.47",[]),
-                    releases("rarbg","torrent","Some.Movie.DISC1.2160p.BluRay.REMUX.HEVC.DTS-HD.MA.TrueHD.7.1.Atmos-FGT",[],"62.72",[]),
-                    releases("1337x","torrent","Some.Movie.720p.BluRay.x264-FGT",[],"4.47",[]),
-                    releases("1337x","torrent","Some.Movie.CAM",[],"1.72",[]),
-                    releases("1337x","torrent","Some.Movie.720p.HD-CAM",[],"2.72",[]),
-                    releases("1337x","torrent","Some.Movie.720p.AMZN.WEBRip.DDP5.1.x264-MZABI[rartv]",[],"2.82",[]),
-                    releases("rarbg","torrent","Some.Movie.2160p.AMZN.WEB-DL.x265.10bit.HDR10Plus.DDP5.1-MZABI[rartv]",[],"39.59",[]),
-                    releases("rarbg","torrent","Some.Movie.1080p.AMZN.WEBRip.DDP5.1.x264-MZABI[rartv]",[],"16.84",[]),
-                ]
             ),
+            setting('Rarbg API Key','The Rarbg API Key gets refreshed automatically, enter the default value: ',scraper.rarbg,'token',hidden=True),
+            ]
+        ],
+        ['Debrid Services', [
+            setting('Debrid Services',[''],debrid.services,'active',required=True,entry="service",subclass=True,help='Please setup at least one debrid service (Currently only RealDebrid): '),
+            setting('Real Debrid API Key','Please enter your Real Debrid API Key: ',debrid.realdebrid,'api_key',hidden=True),
+            setting('All Debrid API Key','Please enter your All Debrid API Key: ',debrid.alldebrid,'api_key',hidden=True),
+            setting('Premiumize API Key','Please enter your Premiumize API Key: ',debrid.premiumize,'api_key',hidden=True),
+            setting('Debrid Link API Key','Please enter your Debrid Link API Key: ',debrid.debridlink,'api_key',hidden=True),
             ]
         ],
         ['UI Settings',[
             setting('Show Menu on Startup','Please enter "true" or "false": ',ui_settings,'run_directly'),
-            ]
-        ],
-        ['Debug',[
             setting('Debug printing','Please enter "true" or "false": ',ui_settings,'debug'),
             ]
-        ]
-
+        ],
     ]
     def cls(path=''):
         os.system('cls' if os.name=='nt' else 'clear')
         ui.logo(path=path)
     def logo(path=''):
-        print('           __                        __')
-        print('    ____  / /__  _  __     _________/ /')
-        print('   / __ \/ / _ \| |/_/    / ___/ __  / ')
-        print('  / /_/ / /  __/>  <     / /  / /_/ /  ')
-        print(' / .___/_/\___/_/|_|____/_/   \__,_/   ')
-        print('/_/               /_____/              ')
+        print('                                                         ')
+        print('           __                  __     __         _     __')
+        print('    ____  / /__  _  __    ____/ /__  / /_  _____(_)___/ /')
+        print('   / __ \/ / _ \| |/_/   / __  / _ \/ __ \/ ___/ / __  / ')
+        print('  / /_/ / /  __/>  <    / /_/ /  __/ /_/ / /  / / /_/ /  ')
+        print(' / .___/_/\___/_/|_|____\__,_/\___/_.___/_/  /_/\__,_/   ')
+        print('/_/               /_____/                                ')
         print()
         print(path)
         print()
@@ -1057,7 +1721,7 @@ class ui:
         ui.cls('Options/Scraper/')
         query = input("Enter a query: ")
         print()
-        scraped_releases = releases.scrape(query)
+        scraped_releases = scraper(query.replace(' ','.'))
         if len(scraped_releases) > 0:
             print()
             print("0) Back")
@@ -1114,7 +1778,7 @@ class ui:
         while not back:
             list = ui.settings_list
             ui.cls('Options/Settings/')
-            print('0) Back (save changes)')
+            print('0) Back')
             indices = []
             for index,category in enumerate (list):
                 print(str(index+1) + ') ' + category[0])
@@ -1125,13 +1789,21 @@ class ui:
             choice = input('Choose an action: ')
             if choice in indices:
                 ui.cls('Options/Settings/'+list[int(choice)-1][0]+'/')
-                print('0) Back')
+                settings = []
+                for index,setting in enumerate(list[int(choice)-1][1]):
+                    if not setting.hidden:
+                        settings += [setting]
+                if len(settings) > 1:
+                    print('0) Back')
+                    for index,setting in enumerate(settings):
+                        if not setting.hidden:
+                            print(str(index+1) + ') ' + setting.name)
+                    print()
+                    choice2 = input('Choose an action: ')
+                else:
+                    choice2 = '1'
                 for index,setting in enumerate (list[int(choice)-1][1]):
-                    print(str(index+1) + ') ' + setting.name)
-                print()
-                choice2 = input('Choose an action: ')
-                for index,setting in enumerate (list[int(choice)-1][1]):
-                    if choice2 == str(index+1):
+                    if choice2 == str(index+1) and not setting.hidden:
                         ui.cls('Options/Settings/'+list[int(choice)-1][0]+'/'+setting.name)
                         setting.input()
             elif choice == '0':
@@ -1203,8 +1875,11 @@ class ui:
             download_script.run()
 
 #TODO
-#make things even faster? 
-#downloading boolean for element to check if in realdebrid uncached torrents
+#clean up the messy code
+#make things even faster?
+#downloading boolean for element to check if in debrid uncached torrents
+#Barebones structure for other debrid services added, work on integration
+#Add Google Watchlist, IMDB Watchlist, etc
 
 if __name__ == "__main__":
     ui.run()
