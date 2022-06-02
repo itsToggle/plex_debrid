@@ -381,6 +381,20 @@ class plex(content.services):
                 if not debrid.download(self,stream=False):
                     return False
             return True             
+        def files(self):
+            files = []
+            if self.type == 'movie':
+                files = [self.query()]
+            elif self.type == 'show':
+                for season in self.Seasons:
+                    for episode in season.Episodes:
+                        files += episode.files()
+            elif self.type == 'season':
+                for episode in self.Episodes:
+                    files += episode.files()
+            elif self.type == 'episode':
+                files += ['S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index))+ '']
+            return files
     class season(media):
         def __init__(self,other):
             self.__dict__.update(other.__dict__)
@@ -767,12 +781,34 @@ class debrid:
             return None
         #Object classes
         class file:
-            def __init__(self,id,name,size):
+            def __init__(self,id,name,size,wanted_list,unwanted_list):
                 self.id = id
                 self.name = name
                 self.size = size
+                wanted = False
+                for key in wanted_list:
+                    if regex.search(r'('+key+')',self.name,regex.I):
+                        wanted = True
+                        break
+                unwanted = False
+                for key in unwanted_list:
+                    if regex.search(r'('+key+')',self.name,regex.I) or self.name.endswith('.exe') or self.name.endswith('.txt'):
+                        unwanted = True
+                        break
+                self.wanted = wanted
+                self.unwanted = unwanted
             def __eq__(self, other):
                 return self.id == other.id 
+        class version:
+            def __init__(self,files):
+                self.files = files
+                self.wanted = 0
+                self.unwanted = 0
+                for file in self.files:
+                    if file.wanted:
+                        self.wanted += 1
+                    if file.unwanted:
+                        self.unwanted += 1
         #(required) Download Function. 
         def download(element:plex.media,stream=True,query='',force=False):
             cached = element.Releases
@@ -781,13 +817,16 @@ class debrid:
             if regex.search(r'(S[0-9][0-9])',query):
                 query = regex.split(r'(S[0-9]+)',query) 
                 query = query[0] + '[0-9]*.*' + query[1] + query[2]
+            unwanted = ['sample']
+            wanted = [query]
+            if not isinstance(element,releases):
+                wanted = element.files()
             for release in cached[:]:
                 #if release matches query
                 if regex.match(r'('+ query.replace('.','\.') + ')',release.title,regex.I) or force:
                     if stream:
                         release.size = 0
                         files = []
-                        cached_ids = []
                         subtitles = []
                         if regex.search(r'(?<=btih:).*?(?=&)',str(release.download[0]),regex.I):
                             hashstring = regex.findall(r'(?<=btih:).*?(?=&)',str(release.download[0]),regex.I)[0]
@@ -796,61 +835,43 @@ class debrid:
                             if hasattr(response, hashstring.lower()):
                                 if hasattr(getattr(response, hashstring.lower()),'rd'):
                                     for cashed_version in getattr(response, hashstring.lower()).rd:
+                                        version_files = []
                                         for file in cashed_version.__dict__:
-                                            debrid_file = debrid.realdebrid.file(file,getattr(cashed_version,file).filename,getattr(cashed_version,file).filesize)
-                                            if not debrid_file in files:
-                                                files.append(debrid_file)
-                                    #remove unwanted files from selection
-                                    for file in files[:]:
-                                        if file.name.endswith('.rar') or file.name.endswith('.exe') or file.name.endswith('.txt') or regex.search(r'(sample)',file.name,regex.I):
-                                            files.remove(file)
-                                        if file.name.endswith('.srt'):
-                                            subtitles += [file.id]
+                                            debrid_file = debrid.realdebrid.file(file,getattr(cashed_version,file).filename,getattr(cashed_version,file).filesize,wanted,unwanted)
+                                            version_files.append(debrid_file)
+                                        files += [debrid.realdebrid.version(version_files),]
+                                    #select cached version that has the most wanted, least unwanted files and least files overall
+                                    files.sort(key=lambda x: len(x.files), reverse=False)
+                                    files.sort(key=lambda x: x.wanted, reverse=True)
+                                    files.sort(key=lambda x: x.unwanted, reverse=False)
                                     #check if there are cached files available
-                                    if not files == []:
-                                        for file in files:
-                                            cached_ids += [file.id]
-                                        #post magnet to real debrid
-                                        try:
-                                            response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/addMagnet',{'magnet' : str(release.download[0])})
-                                            torrent_id = str(response.id)
-                                        except:
-                                            continue
-                                    #If cached files are available, post the file selection to get the download links
-                                    if len(cached_ids) > 0:
-                                        response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/selectFiles/' + torrent_id , {'files' : str(','.join(cached_ids))})    
-                                        response = debrid.realdebrid.get('https://api.real-debrid.com/rest/1.0/torrents/info/' + torrent_id)
-                                        if len(response.links) == len(cached_ids):
-                                            release.download = response.links
-                                        elif not len(response.links) == len(cached_ids) and len(subtitles) > 0:
-                                            for subtitle in subtitles:
-                                                cached_ids.remove(subtitle)
-                                            debrid.realdebrid.delete('https://api.real-debrid.com/rest/1.0/torrents/delete/' + torrent_id)
-                                            try:
-                                                response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/addMagnet',{'magnet' : str(release.download[0])})
-                                                torrent_id = str(response.id)
-                                            except:
-                                                continue
-                                            response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/selectFiles/' + torrent_id , {'files' : str(','.join(cached_ids))})    
-                                            response = debrid.realdebrid.get('https://api.real-debrid.com/rest/1.0/torrents/info/' + torrent_id)
-                                            if len(response.links) == len(cached_ids):
-                                                release.download = response.links
-                                            else:
-                                                debrid.realdebrid.delete('https://api.real-debrid.com/rest/1.0/torrents/delete/' + torrent_id)
-                                                continue
-                                        else:
-                                            debrid.realdebrid.delete('https://api.real-debrid.com/rest/1.0/torrents/delete/' + torrent_id)
-                                            continue
-                                        if len(release.download) > 0:
-                                            for link in release.download:
+                                    if len(files) > 0:
+                                        for version in files:
+                                            if len(version.files) > 0 and version.wanted > len(wanted)/2 or force:
+                                                cached_ids = []
+                                                for file in version.files:
+                                                    cached_ids += [file.id]
+                                                #post magnet to real debrid
                                                 try:
-                                                    response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/unrestrict/link', {'link' : link})
+                                                    response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/addMagnet',{'magnet' : str(release.download[0])})
+                                                    torrent_id = str(response.id)
                                                 except:
-                                                    break
-                                            ui.print('adding cached release: ' + release.title)
-                                            return True
-                                    else:
-                                        debrid.realdebrid.delete('https://api.real-debrid.com/rest/1.0/torrents/delete/' + torrent_id)
+                                                    continue
+                                                response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/selectFiles/' + torrent_id , {'files' : str(','.join(cached_ids))})    
+                                                response = debrid.realdebrid.get('https://api.real-debrid.com/rest/1.0/torrents/info/' + torrent_id)
+                                                if len(response.links) == len(cached_ids):
+                                                    release.download = response.links
+                                                else:
+                                                    debrid.realdebrid.delete('https://api.real-debrid.com/rest/1.0/torrents/delete/' + torrent_id)
+                                                    continue
+                                                if len(release.download) > 0:
+                                                    for link in release.download:
+                                                        try:
+                                                            response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/unrestrict/link', {'link' : link})
+                                                        except:
+                                                            break
+                                                    ui.print('adding cached release: ' + release.title)
+                                                    return True
                             ui.print('done')
                             return False
                         else:
@@ -1649,7 +1670,7 @@ class ui:
                 [
                     'Please specify what this sorting rule should to look for by providing one or more regex match group(s): ',
                     'Please specify in which release attribute ("title","source" or "size") this sorting rule should search: ',
-                    'Please specify if the match should be interpreted as a number or as text ("number" or "text")',
+                    'Please specify if the match should be interpreted as a number or as text ("number" or "text"): ',
                     'Please specify in which order the releases should be by ranked by this sorting rule ("0" = ascending or "1" = descending): ',
                 ],
                 releases.sort,'ranking',
