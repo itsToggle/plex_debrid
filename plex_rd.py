@@ -810,12 +810,12 @@ class debrid:
                                     if not files == []:
                                         for file in files:
                                             cached_ids += [file.id]
-                                    #post magnet to real debrid
-                                    try:
-                                        response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/addMagnet',{'magnet' : str(release.download[0])})
-                                        torrent_id = str(response.id)
-                                    except:
-                                        continue
+                                        #post magnet to real debrid
+                                        try:
+                                            response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/addMagnet',{'magnet' : str(release.download[0])})
+                                            torrent_id = str(response.id)
+                                        except:
+                                            continue
                                     #If cached files are available, post the file selection to get the download links
                                     if len(cached_ids) > 0:
                                         response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/selectFiles/' + torrent_id , {'files' : str(','.join(cached_ids))})    
