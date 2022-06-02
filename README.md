@@ -38,18 +38,32 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 3. You're done!
 5. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
 
-## Usage and Tips:
+## Managing your Plex Content:
 
-- The Plex Watchlist of your specified users will polled for changes every 10 seconds, which is when it will try to find newly added content. 
+- The Plex Watchlist and the Discover feature are only available for accounts that are linked to an email address - so no managed accounts.
+- You've already added one user in the initial setup. To allow content download by other users that youve invited to your Plex Home, create a new user by navigation to '/Settings/Content Services/Plex/Plex users/Edit/Add user'.
+- You and the users you've added can now browse the Discover part of Plex and download content by adding it to the Plex Watchlist.
+- Your *entire* Plex Library (including shares) is checked before downloading anything and the script will avoid duplicate downloads.
+- If you want to delete something from your Plex server, make sure that you've removed it from your Watchlist first. Otherwise the script will see that its in your watchlist and not on your server and will simply download it again.
+- Movies that you add to your Plex Watchlist are removed automatically once they are downloaded. Shows stay in the Watchlist, because only shows that are in the Watchlist are monitored for newly released episodes.
+- The Plex Watchlist of your specified users will polled for changes every 5 seconds, which is when it will try to find newly added content. 
 - The Plex Watchlist will be updated entirely every 30 minutes, which is when it will try to find newly released episodes from watchlisted series. This is only done every 30 minutes, because building the whole watchlist can take more than a minute, depending on the amount of shows you have in there.
-- Your *entire* Plex Library (including shares) is checked for any existing seasons/episodes of a watchlisted show and will avoid downloading those.
 - If you dont want to download a specific episode or season of a show, navigate to that show in the discovery feature and mark the episodes/seasons that you want to ignore as 'watched'. The watch status inside the discovery feature is not connected to the watch status inside your libraries.
 - When some content could repeatedly not be downloaded, it will be marked as 'watched' in the Discovery feature of the first specified user. This will cause the scraper to ignore the content, until its marked as 'unwatched' again.
 - You can explore and remove ignored content in the main menu.
-- You can connect the script to trakt.tv to get more accurate release dates and times for your content. You can also synchronize your trakt watchlist to your plex watchlist.
+
+## Integrating Trakt:
+
+- You can connect the script to trakt.tv to get more accurate release dates and times for your content. You can also synchronize your trakt watchlist and the trakt watchlist of other users to your plex watchlist.
+- To connect the script to trakt, navigate to '/Settings/Content Services/Trakt/Trakt users/Edit/Add user'. You can add an unlimited amount of users.
+- To enable one-way Watchlist synchronization from Trakt to Plex for your specified users, navigate to '/Settings/Content Services/Trakt/Trakt-to-Plex synchronization'. Your Trakt Watchlist will be synchronized to Plex every 30 minutes.
+
+## Download Automation Settings:
+
+- The only scrapers currently integrated are for rarbg.to and 1337x.to - you can disable or add them back by navigating to '/Settings/Scraper/Sources'
+- The only debrid service currently integrated is RealDebrid. In the future you will be able to select your favorite debrid services and change the order in which they should be checked for cached releases, aswell as the service that should download uncached releases.
 - This script will automatically pick the best release that could be found. To change how the script picks the best release, check out the next section.
-- If you don't want the main menu to show when you start the script and run the download automation right away, you can define this in the 'UI Settings' section of the 'Settings' menu.
-- You can return to the main menu at any time.
+- If you don't want the main menu to show when you start the script and run the download automation right away, you can define this in the 'UI Settings' section of the 'Settings' menu. You can return to the main menu at any time by typing 'exit'.
 
 ## Sorting the scraped releases:
 
