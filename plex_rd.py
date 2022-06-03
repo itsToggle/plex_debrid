@@ -582,7 +582,7 @@ class trakt(content.services):
                     other.add(element,plex.users[0])
                 if element.type == 'movie':
                     self.remove(element.trakt)
-        def remove(element):
+        def remove(self,element):
             user = copy.deepcopy(element.user)
             data = []
             shows = []
