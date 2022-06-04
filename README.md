@@ -81,7 +81,7 @@ Each rule consist of:
   - "text" : we will give each release a rank accoring to which match group its in.
 - lastly we define wheter to rank the releases in ascending or descending order.
 
-You can now test out your current sorting rules in the scraper settings.
+You can test out your current sorting rules by manually scraping for releases from the main menu. The returned releases are sorted by your current rules.
 
 Lets make some rules: 
 ### Example resolution sorting:
