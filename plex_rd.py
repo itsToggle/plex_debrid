@@ -1163,6 +1163,7 @@ class releases:
         longest_size = 0
         longest_index = 0
         for index,release in enumerate(scraped_releases):
+            release.size = str(round(release.size, 2))
             if len(release.title) > longest_title:
                 longest_title = len(release.title)
             if len(str(release.size)) > longest_size:
@@ -1175,7 +1176,7 @@ class releases:
 class scraper: 
     #Service Class:
     class services:
-        active = ['rarbg', '1337x']
+        active = ['rarbg', '1337x',]
         def setup(cls,new=False):
             settings = []
             for category, allsettings in ui.settings_list:
@@ -1226,7 +1227,7 @@ class scraper:
         ui.print('scraping sources for query "' + query + '" ...')
         scrapers = scraper.services()
         scraped_releases = []
-        results = [[],[],]
+        results = [None] * len(scrapers)
         threads = []
         for index,scraper_ in enumerate(scrapers):
             t = Thread(target=scrape, args=(scraper_,query,results,index))
@@ -1236,7 +1237,8 @@ class scraper:
         for t in threads:
             t.join()
         for result in results:
-            scraped_releases += result
+            if not result == []:
+                scraped_releases += result
         releases.sort(scraped_releases)
         ui.print('done - found ' + str(len(scraped_releases)) + ' releases')
         return scraped_releases       
@@ -1330,6 +1332,61 @@ class scraper:
                     response = None
                     ui.print('1337x error: exception')
             return scraped_releases
+    class jackett(services):
+        base_url = "http://127.0.0.1:9117"
+        api_key = ""
+        name = "jackett"
+        session = requests.Session()
+        def __new__(cls,query):
+            scraped_releases = []
+            if 'jackett' in scraper.services.active:
+                altquery = copy.deepcopy(query)
+                if regex.search(r'(S[0-9]+)',altquery):
+                    altquery = regex.split(r'(S[0-9]+)',altquery) 
+                    altquery = altquery[0] + '[0-9]*.*' + altquery[1] + altquery[2]
+                url = scraper.jackett.base_url + '/api/v2.0/indexers/all/results?apikey='+scraper.jackett.api_key+'&Query='+query
+                response = scraper.jackett.session.get(url)
+                if response.status_code == 200:
+                    response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
+                    for result in response.Results[:]:
+                        result.Title = result.Title.replace(' ','.')
+                        if regex.match(r'('+ altquery.replace('.','\.') + ')',result.Title,regex.I):
+                            if not result.MagnetUri == None:
+                                if not result.Tracker == None and not result.Size == None:
+                                    scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],float(result.Size)/1000000000,[result.MagnetUri])]
+                                elif not result.Tracker == None:
+                                    scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],1,[result.MagnetUri])]
+                                elif not result.Size == None:
+                                    scraped_releases += [releases('[jackett: unnamed]','torrent',result.Title,[],float(result.Size)/1000000000,[result.MagnetUri])]
+                                response.Results.remove(result)
+                        else:
+                            response.Results.remove(result)
+                    #Multiprocess resolving of result.Link for remaining releases
+                    results = [None] * len(response.Results)
+                    threads = []
+                    #start thread for each remaining release
+                    for index,result in enumerate(response.Results):
+                        t = Thread(target=multi_init, args=(scraper.jackett.resolve,result,results,index))
+                        threads.append(t)
+                        t.start()
+                    # wait for the threads to complete
+                    for t in threads:
+                        t.join()
+                    for result in results:
+                        if not result == []:
+                            scraped_releases += result
+                return scraped_releases
+        def resolve(result):
+            scraped_releases = []
+            link = scraper.jackett.session.get(result.Link,allow_redirects=False)
+            if regex.search(r'(?<=btih:).*?(?=&)',str(link.headers['Location']),regex.I):
+                if not result.Tracker == None and not result.Size == None:
+                    scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],float(result.Size)/1000000000,[link.headers['Location']])]
+                elif not result.Tracker == None:
+                    scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],1,[link.headers['Location']])]
+                elif not result.Size == None:
+                    scraped_releases += [releases('[jackett: unnamed]','torrent',result.Title,[],float(result.Size)/1000000000,[link.headers['Location']])]
+            return scraped_releases 
 #Multiprocessing scrape method
 def scrape(cls:scraper,query,result,index):
     result[index] = cls(query)
@@ -1677,6 +1734,8 @@ class ui:
                 entry="rule",
             ),
             setting('Rarbg API Key','The Rarbg API Key gets refreshed automatically, enter the default value: ',scraper.rarbg,'token',hidden=True),
+            setting('Jackett Base URL','Please specify your Jackett base URL: ',scraper.jackett,'base_url',hidden=True),
+            setting('Jackett API Key','Please specify your Jackett API Key: ',scraper.jackett,'api_key',hidden=True),
             ]
         ],
         ['Debrid Services', [
