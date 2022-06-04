@@ -36,7 +36,8 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 1. Run the script! (google "how to run a python script" ;) )
 2. The script will guide you through the initial setup.
 3. You're done!
-5. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
+4. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
+5. Read the rest of the README!
 
 ## Managing your Plex Content:
 
