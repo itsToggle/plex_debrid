@@ -59,10 +59,13 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 - To connect the script to trakt, navigate to '/Settings/Content Services/Trakt/Trakt users/Edit/Add user'. You can add an unlimited amount of users.
 - To enable one-way Watchlist synchronization from Trakt to Plex for your specified users, navigate to '/Settings/Content Services/Trakt/Trakt-to-Plex synchronization'. Your Trakt Watchlist will be synchronized to Plex every 30 minutes.
 
-## Download Automation Settings:
+## Integrating your favorite torrent indexers:
 
 - The only legacy scrapers currently integrated are for rarbg.to and 1337x.to 
 - Its recommended to install "jackett", a program that wraps a huge amount of torrent indexers (https://github.com/Jackett/Jackett). Once installed and setup, you can enable jackett by navigating to '/Settings/Scraper/Sources/Edit/Add source/jackett'. Once enabled, you can delete the legacy scrapers, since jackett can handle both 1337x and rarbg.
+
+## Download Automation Settings:
+
 - The only debrid service currently integrated is RealDebrid. In the future you will be able to select your favorite debrid services and change the order in which they should be checked for cached releases, aswell as the service that should download uncached releases.
 - This script will automatically pick the best release that could be found. To change how the script picks the best release, check out the next section.
 - If you don't want the main menu to show when you start the script and run the download automation right away, you can define this in the 'UI Settings' section of the 'Settings' menu. You can return to the main menu at any time by typing 'exit'.
