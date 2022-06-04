@@ -14,7 +14,7 @@ Plex torrent streaming through Debrid Services, using the new Plex Discover feat
 The plex watchlist of specified users is constantly checked for newly added movies/shows and newly released episodes of watchlisted shows.
 Once new content is found, torrent indexers are scraped for the best, cached release on selected debrid services. The torrent is then added to a suitable debrid service and a library refresh is performed to make the newly added content available. 
 
-**For movies, one-season tv shows or multi-season tv shows this takes about 10-20 seconds.**
+**For any debrid-cached content (movies, one-season tv shows or even multi-season tv shows) the entire process from watchlisting content to watching it takes about 10-20 seconds.**
 
 This is a pre-alpha release. shits not ready! Feel free to check it out though, I will continously improve the speed, reliability and user-friendlyness.
 
