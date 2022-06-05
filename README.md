@@ -85,7 +85,7 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 
 ## Download Automation Settings:
 
-- The only debrid service currently integrated is RealDebrid. In the future you will be able to select your favorite debrid services and change the order in which they should be checked for cached releases, aswell as the service that should download uncached releases.
+- You can add more than one debrid service and change the order in which they should be checked for cached releases by navigating to '/Settings/Debrid Services/Edit'.
 - This script will automatically pick the best release that could be found. To change how the script picks the best release, check out the next section.
 - If you don't want the main menu to show when you start the script and run the download automation right away, you can define this in the 'UI Settings' section of the 'Settings' menu. You can return to the main menu at any time by typing 'exit'.
 
@@ -141,4 +141,3 @@ For this, we will choose the following setup:
 
 ## Limitations:
 - The plex discover API only provides a release date, not a release time for new episodes. This makes it hard to determined when to start looking for releases and when to ignore an episode. This script will only download episodes when its been a day since the air-date or if plex shows the episode as availabe on streaming services. It is recommended to connect this script to trakt.tv, to allow for more accurate release dates and times.
-- Since this is more of a proof of concept at the moment, There are only two scrapers implemented - rarbg and 1337x.
