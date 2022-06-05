@@ -734,19 +734,14 @@ class debrid:
         name = "Real Debrid"
         #(required) Authentification of the Debrid service, can be oauth aswell. Create a setting for the required variables in the ui.settings_list. For an oauth example check the trakt authentification.
         api_key = ""
-        #(required) Method to determine if the service has been setup (for compatability reasons)
-        def active(self):
-            if not self.api_key == "":
-                return True
-            return False
         #Define Variables
         session = requests.Session()
         #Error Log
         def logerror(response):
             if not response.status_code == 200:
-                ui.print("realdebrid error: " + str(response.content),debug=ui_settings.debug)
+                ui.print("[realdebrid] error: " + str(response.content),debug=ui_settings.debug)
             if response.status_code == 401:
-                ui.print("realdebrid error: (401 unauthorized): realdebrid api key does not seem to work. check your realdebrid settings.")
+                ui.print("[realdebrid] error: (401 unauthorized): realdebrid api key does not seem to work. check your realdebrid settings.")
         #Get Function
         def get(url): 
             headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'authorization' : 'Bearer ' + debrid.realdebrid.api_key}
@@ -755,7 +750,7 @@ class debrid:
                 debrid.realdebrid.logerror(response)
                 response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
             except Exception as e:
-                ui.print("realdebrid error: (json exception): " + str(e),debug=ui_settings.debug)
+                ui.print("[realdebrid] error: (json exception): " + str(e),debug=ui_settings.debug)
                 response = None
             return response
         #Post Function
@@ -766,7 +761,7 @@ class debrid:
                 debrid.realdebrid.logerror(response)
                 response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
             except Exception as e:
-                ui.print("realdebrid error: (json exception): " + str(e),debug=ui_settings.debug)
+                ui.print("[realdebrid] error: (json exception): " + str(e),debug=ui_settings.debug)
                 response = None
             return response
         #Delete Function
@@ -776,7 +771,7 @@ class debrid:
                 requests.delete(url, headers = headers)
                 #time.sleep(1)
             except Exception as e:
-                ui.print("realdebrid error: (delete exception): " + str(e),debug=ui_settings.debug)
+                ui.print("[realdebrid] error: (delete exception): " + str(e),debug=ui_settings.debug)
                 None
             return None
         #Object classes
@@ -827,7 +822,6 @@ class debrid:
                     if stream:
                         release.size = 0
                         files = []
-                        subtitles = []
                         if regex.search(r'(?<=btih:).*?(?=&)',str(release.download[0]),regex.I):
                             hashstring = regex.findall(r'(?<=btih:).*?(?=&)',str(release.download[0]),regex.I)[0]
                             #get cached file ids
@@ -870,7 +864,7 @@ class debrid:
                                                             response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/unrestrict/link', {'link' : link})
                                                         except:
                                                             break
-                                                    ui.print('adding cached release: ' + release.title)
+                                                    ui.print('[realdebrid] adding cached release: ' + release.title)
                                                     return True
                             ui.print('done')
                             return False
@@ -881,14 +875,14 @@ class debrid:
                                         response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/unrestrict/link', {'link' : link})
                                     except:
                                         break
-                                ui.print('adding cached release: ' + release.title)
+                                ui.print('[realdebrid] adding cached release: ' + release.title)
                                 return True
                     else:
                         try:
                             response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/addMagnet',{'magnet':release.download[0]})
                             time.sleep(0.1)
                             debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/selectFiles/' + str(response.id), {'files':'all'})
-                            ui.print('adding uncached release: '+ release.title)
+                            ui.print('[realdebrid] adding uncached release: '+ release.title)
                             return True
                         except:
                             continue
@@ -899,19 +893,14 @@ class debrid:
         name = "All Debrid (NOT FUNCTIONAL)"
         #(required) Authentification of the Debrid service, can be oauth aswell. Create a setting for the required variables in the ui.settings_list. For an oauth example check the trakt authentification.
         api_key = ""
-        #(required) Method to determine if the service has been setup (for compatability reasons)
-        def active(self):
-            if not self.api_key == "":
-                return True
-            return False
         #Define Variables
         session = requests.Session()
         #Error Log
         def logerror(response):
             if not response.status_code == 200:
-                ui.print("alldebrid error: " + str(response.content),debug=ui_settings.debug)
+                ui.print("[alldebrid] error: " + str(response.content),debug=ui_settings.debug)
             if response.status_code == 401:
-                ui.print("alldebrid error: (401 unauthorized): alldebrid api key does not seem to work. check your alldebrid settings.")
+                ui.print("[alldebrid] error: (401 unauthorized): alldebrid api key does not seem to work. check your alldebrid settings.")
         #Get Function
         def get(url): 
             headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'authorization' : 'Bearer ' + debrid.alldebrid.api_key}
@@ -920,7 +909,7 @@ class debrid:
                 debrid.alldebrid.logerror(response)
                 response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
             except Exception as e:
-                ui.print("alldebrid error: (json exception): " + str(e),debug=ui_settings.debug)
+                ui.print("[alldebrid] error: (json exception): " + str(e),debug=ui_settings.debug)
                 response = None
             return response
         #Post Function
@@ -931,7 +920,7 @@ class debrid:
                 debrid.alldebrid.logerror(response)
                 response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
             except Exception as e:
-                ui.print("alldebrid error: (json exception): " + str(e),debug=ui_settings.debug)
+                ui.print("[alldebrid] error: (json exception): " + str(e),debug=ui_settings.debug)
                 response = None
             return response
         #(required) Download Function. 
@@ -948,53 +937,51 @@ class debrid:
                     if stream:
                         #Cached Download Method for AllDebrid
                         #...
-                        ui.print('adding cached release: ' + release.title)
+                        ui.print('[alldebrid] adding cached release: ' + release.title)
                         return True
                     else:
                         #Uncached Download Method for AllDebrid
                         #...
-                        ui.print('adding uncached release: '+ release.title)
+                        ui.print('[alldebrid] adding uncached release: '+ release.title)
                         return True
             return False  
     #Premiumize class
     class premiumize(services):
         #(required) Name of the Debrid service
-        name = "Premiumize (NOT FUNCTIONAL)"
+        name = "Premiumize"
         #(required) Authentification of the Debrid service, can be oauth aswell. Create a setting for the required variables in the ui.settings_list. For an oauth example check the trakt authentification.
         api_key = ""
-        #(required) Method to determine if the service has been setup (for compatability reasons)
-        def active(self):
-            if not self.api_key == "":
-                return True
-            return False
         #Define Variables
         session = requests.Session()
         #Error Log
         def logerror(response):
             if not response.status_code == 200:
-                ui.print("premiumize error: " + str(response.content),debug=ui_settings.debug)
+                ui.print("[premiumize] error: " + str(response.content),debug=ui_settings.debug)
+            if 'error' in str(response.content):
+                response2 = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
+                ui.print("[premiumize] error: " + response2.message)
             if response.status_code == 401:
-                ui.print("premiumize error: (401 unauthorized): premiumize api key does not seem to work. check your premiumize settings.")
+                ui.print("[premiumize] error: (401 unauthorized): premiumize api key does not seem to work. check your premiumize settings.")
         #Get Function
         def get(url): 
-            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'authorization' : 'Bearer ' + debrid.premiumize.api_key}
+            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36','accept': 'application/json'}
             try :
-                response = debrid.premiumize.session.get(url, headers = headers)
+                response = debrid.premiumize.session.get(url + '&apikey='+ debrid.premiumize.api_key, headers = headers)
                 debrid.premiumize.logerror(response)
                 response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
             except Exception as e:
-                ui.print("premiumize error: (json exception): " + str(e),debug=ui_settings.debug)
+                ui.print("[premiumize] error: (json exception): " + str(e),debug=ui_settings.debug)
                 response = None
             return response
         #Post Function
         def post(url, data):
-            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'authorization' : 'Bearer ' + debrid.premiumize.api_key}
+            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36','accept': 'application/json','Content-Type': 'multipart/form-data'}
             try :
-                response = debrid.premiumize.session.post(url, headers = headers, data = data)
+                response = debrid.premiumize.session.post(url + '?apikey='+ debrid.premiumize.api_key, headers = headers, data = data)
                 debrid.premiumize.logerror(response)
                 response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
             except Exception as e:
-                ui.print("premiumize error: (json exception): " + str(e),debug=ui_settings.debug)
+                ui.print("[premiumize] error: (json exception): " + str(e),debug=ui_settings.debug)
                 response = None
             return response
         #(required) Download Function. 
@@ -1010,14 +997,26 @@ class debrid:
                 if regex.match(r'('+ query.replace('.','\.') + ')',release.title,regex.I) or force:
                     if stream:
                         #Cached Download Method for premiumize
-                        #...
-                        ui.print('adding cached release: ' + release.title)
-                        return True
+                        url = "https://www.premiumize.me/api/cache/check?items[]=" + release.download[0]
+                        response = debrid.premiumize.get(url)
+                        if not response.response[0]:
+                            return False
+                        url = "https://www.premiumize.me/api/transfer/create"
+                        data = 'src=' + release.download[0]
+                        response = debrid.premiumize.post(url,data)
+                        if response.status == 'success':
+                            ui.print('[premiumize] adding cached release: ' + release.title)
+                            return True
+                        return False
                     else:
                         #Uncached Download Method for premiumize
-                        #...
-                        ui.print('adding uncached release: '+ release.title)
-                        return True
+                        url = "https://www.premiumize.me/api/transfer/create"
+                        data = 'src=' + release.download[0]
+                        response = debrid.premiumize.post(url,data)
+                        if response.status == 'success':
+                            ui.print('[premiumize] adding uncached release: '+ release.title)
+                            return True
+                        return False
             return False      
     #DebridLink class
     class debridlink(services):
@@ -1025,11 +1024,6 @@ class debrid:
         name = "Debrid Link (NOT FUNCTIONAL)"
         #(required) Authentification of the Debrid service, can be oauth aswell. Create a setting for the required variables in the ui.settings_list. For an oauth example check the trakt authentification.
         api_key = ""
-        #(required) Method to determine if the service has been setup (for compatability reasons)
-        def active(self):
-            if not self.api_key == "":
-                return True
-            return False
         #Define Variables
         session = requests.Session()
         #Error Log
@@ -1097,6 +1091,7 @@ class releases:
         return self.title == other.title
     #Sort Method
     class sort:
+        multiple_versions_trigger = ""
         ranking= [
             [
                 "(1080|720|480)(?=p)",
@@ -1336,15 +1331,31 @@ class scraper:
         base_url = "http://127.0.0.1:9117"
         api_key = ""
         name = "jackett"
+        indexers = []
+        categories = []
+        filters = []
         session = requests.Session()
         def __new__(cls,query):
             scraped_releases = []
             if 'jackett' in scraper.services.active:
+                filter = ""
+                tags = ""
+                for indexer in scraper.jackett.indexers:
+                    tags += "&Tracker[]=" + indexer[0]
+                for category in scraper.jackett.categories:
+                    tags += "&Category[]=" + category[0]
+                if not scraper.jackett.filters == []:
+                    filters = []
+                    for fil in scraper.jackett.filters:
+                        filters += fil[0]
+                    filter = (",").join(filters)
+                else:
+                    filter = "all"
                 altquery = copy.deepcopy(query)
                 if regex.search(r'(S[0-9]+)',altquery):
                     altquery = regex.split(r'(S[0-9]+)',altquery) 
                     altquery = altquery[0] + '[0-9]*.*' + altquery[1] + altquery[2]
-                url = scraper.jackett.base_url + '/api/v2.0/indexers/all/results?apikey='+scraper.jackett.api_key+'&Query='+query
+                url = scraper.jackett.base_url + '/api/v2.0/indexers/' + filter + '/results?apikey=' + scraper.jackett.api_key + '&Query=' + query + tags
                 response = scraper.jackett.session.get(url)
                 if response.status_code == 200:
                     response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
@@ -1375,7 +1386,7 @@ class scraper:
                     for result in results:
                         if not result == []:
                             scraped_releases += result
-                return scraped_releases
+            return scraped_releases
         def resolve(result):
             scraped_releases = []
             link = scraper.jackett.session.get(result.Link,allow_redirects=False)
@@ -1492,6 +1503,9 @@ class ui:
             self.moveable = moveable
         def input(self):
             if self.moveable:
+                if not self.help == "":
+                    print(self.help)
+                    print()
                 print('Current ' + self.name + ': "' + str(getattr(self.cls,self.key)) + '"')
                 print()
                 print('0) Back')
@@ -1733,9 +1747,13 @@ class ui:
                 releases.sort,'ranking',
                 entry="rule",
             ),
+            setting('Multiple versions trigger','Please specify your multiple versions trigger: ',releases.sort,'multiple_versions_trigger',help='This setting allows you to download more than one release every time you add a movie or show. If the selected release regex-matches the specified trigger, the next, best release that doesnt match this trigger will be downloaded aswell. Example: You want to download both HDR and non-HDR versions of your content - type "(HDR)."'),
             setting('Rarbg API Key','The Rarbg API Key gets refreshed automatically, enter the default value: ',scraper.rarbg,'token',hidden=True),
             setting('Jackett Base URL','Please specify your Jackett base URL: ',scraper.jackett,'base_url',hidden=True),
             setting('Jackett API Key','Please specify your Jackett API Key: ',scraper.jackett,'api_key',hidden=True),
+            #setting('Jackett Indexers',['Please specify a Jackett indexer: '],scraper.jackett,'indexers',hidden=True,entry="indexer"),
+            #setting('Jackett Categories',['Please specify a Jackett category: '],scraper.jackett,'categories',hidden=True,entry="category"),
+            #setting('Jackett Filters',['Please specify a Jackett filter: '],scraper.jackett,'categories',hidden=True,entry="filter"),
             ]
         ],
         ['Debrid Services', [
@@ -1962,7 +1980,7 @@ class ui:
 #clean up the messy code
 #make things even faster?
 #downloading boolean for element to check if in debrid uncached torrents
-#Barebones structure for other debrid services added, work on integration
+#Added Premiumize, work on other debrid services
 #Add Google Watchlist, IMDB Watchlist, etc
 
 if __name__ == "__main__":
