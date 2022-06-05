@@ -680,7 +680,7 @@ class trakt(content.services):
 class debrid:
     #Service Class:
     class services:
-        active = ['Real Debrid']
+        active = []
         def setup(cls,new=False):
             settings = []
             for category, allsettings in ui.settings_list:
@@ -890,7 +890,7 @@ class debrid:
     #AllDebrid class
     class alldebrid(services):
         #(required) Name of the Debrid service
-        name = "All Debrid (NOT FUNCTIONAL)"
+        name = "All Debrid"
         #(required) Authentification of the Debrid service, can be oauth aswell. Create a setting for the required variables in the ui.settings_list. For an oauth example check the trakt authentification.
         api_key = ""
         #Define Variables
@@ -899,13 +899,23 @@ class debrid:
         def logerror(response):
             if not response.status_code == 200:
                 ui.print("[alldebrid] error: " + str(response.content),debug=ui_settings.debug)
+            if 'error' in str(response.content):
+                try:
+                    response2 = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
+                    ui.print("[alldebrid] error: " + response2.data[0].error.message)
+                except:
+                    try:
+                        response2 = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
+                        ui.print("[alldebrid] error: " + response2.error.message)
+                    except:
+                        ui.print("[alldebrid] error: unknown error")
             if response.status_code == 401:
                 ui.print("[alldebrid] error: (401 unauthorized): alldebrid api key does not seem to work. check your alldebrid settings.")
         #Get Function
         def get(url): 
             headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'authorization' : 'Bearer ' + debrid.alldebrid.api_key}
             try :
-                response = debrid.alldebrid.session.get(url, headers = headers)
+                response = debrid.alldebrid.session.get(url + '&agent=plex_debrid', headers = headers)
                 debrid.alldebrid.logerror(response)
                 response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
             except Exception as e:
@@ -936,12 +946,23 @@ class debrid:
                 if regex.match(r'('+ query.replace('.','\.') + ')',release.title,regex.I) or force:
                     if stream:
                         #Cached Download Method for AllDebrid
-                        #...
-                        ui.print('[alldebrid] adding cached release: ' + release.title)
-                        return True
+                        url = 'https://api.alldebrid.com/v4/magnet/instant?magnets[]=' + release.download[0]
+                        response = debrid.alldebrid.get(url)
+                        instant = False
+                        try:
+                            instant = response.data.magnets[0].instant
+                        except:
+                            return False
+                        if instant:
+                            url = 'https://api.alldebrid.com/v4/magnet/upload?magnets[]='+ release.download[0]
+                            response = debrid.alldebrid.get(url)
+                            ui.print('[alldebrid] adding cached release: ' + release.title)
+                            return True
+                        return False
                     else:
                         #Uncached Download Method for AllDebrid
-                        #...
+                        url = 'https://api.alldebrid.com/v4/magnet/upload?magnets[]='+ release.download[0]
+                        response = debrid.alldebrid.get(url)
                         ui.print('[alldebrid] adding uncached release: '+ release.title)
                         return True
             return False  
@@ -1747,7 +1768,7 @@ class ui:
                 releases.sort,'ranking',
                 entry="rule",
             ),
-            setting('Multiple versions trigger','Please specify your multiple versions trigger: ',releases.sort,'multiple_versions_trigger',help='This setting allows you to download more than one release every time you add a movie or show. If the selected release regex-matches the specified trigger, the next, best release that doesnt match this trigger will be downloaded aswell. Example: You want to download both HDR and non-HDR versions of your content - type "(HDR)."'),
+            #setting('Multiple versions trigger','Please specify your multiple versions trigger: ',releases.sort,'multiple_versions_trigger',help='This setting allows you to download more than one release every time you add a movie or show. If the selected release regex-matches the specified trigger, the next, best release that doesnt match this trigger will be downloaded aswell. Example: You want to download both HDR and non-HDR versions of your content - type "(HDR)."'),
             setting('Rarbg API Key','The Rarbg API Key gets refreshed automatically, enter the default value: ',scraper.rarbg,'token',hidden=True),
             setting('Jackett Base URL','Please specify your Jackett base URL: ',scraper.jackett,'base_url',hidden=True),
             setting('Jackett API Key','Please specify your Jackett API Key: ',scraper.jackett,'api_key',hidden=True),
@@ -1980,7 +2001,6 @@ class ui:
 #clean up the messy code
 #make things even faster?
 #downloading boolean for element to check if in debrid uncached torrents
-#Added Premiumize, work on other debrid services
 #Add Google Watchlist, IMDB Watchlist, etc
 
 if __name__ == "__main__":
