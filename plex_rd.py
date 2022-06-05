@@ -1757,7 +1757,7 @@ class ui:
             ]
         ],
         ['Debrid Services', [
-            setting('Debrid Services',[''],debrid.services,'active',required=True,entry="service",subclass=True,help='Please setup at least one debrid service (Currently only RealDebrid): '),
+            setting('Debrid Services',[''],debrid.services,'active',required=True,entry="service",subclass=True,help='Please setup at least one debrid service: '),
             setting('Real Debrid API Key','Please enter your Real Debrid API Key: ',debrid.realdebrid,'api_key',hidden=True),
             setting('All Debrid API Key','Please enter your All Debrid API Key: ',debrid.alldebrid,'api_key',hidden=True),
             setting('Premiumize API Key','Please enter your Premiumize API Key: ',debrid.premiumize,'api_key',hidden=True),
