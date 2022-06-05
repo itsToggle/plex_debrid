@@ -20,9 +20,9 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 
 ## Setup:
 
-**1) Mount your debrid services**
+### 1) Mount your debrid services:
 
-Realdebrid:
+**Realdebrid:**
 
 1. Install my rclone fork: https://github.com/itsToggle/rclone_RD
 2. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
@@ -33,7 +33,7 @@ Realdebrid:
 7. You can mount your newly created remote by running the command 'rclone cmount your-remote: X: --dir-cache-time=10s --vfs-cache-mode=full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
 8. You've successfuly created a virtual drive of your debrid service!
 
-Premiumize:
+**Premiumize:**
 
 1. Install either the official rclone software or my fork: https://github.com/itsToggle/rclone_RD
 2. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
@@ -44,14 +44,14 @@ Premiumize:
 7. You can mount your newly created remote by running the command 'rclone cmount your-remote: X: --dir-cache-time=10s --vfs-cache-mode=full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
 8. You've successfuly created a virtual drive of your debrid service!
 
-**2) Setup Plex**
+### 2) Setup Plex:
 
-2. Create a plex 'movie' library of the mounted virtual drive or add the mounted virtual drive to an existing 'movie' library.
-3. Create a plex 'shows' library of the mounted virtual drive or add the mounted virtual drive to an existing 'shows' library.
-4. *Recommendation: disable 'video preview thumbnails', disable 'intro detection', disable the scheduled task 'perfom extensive media analysis' to reduce the download traffic
-5. You and your home users can now stream cached torrents from RealDebrid!
+1. Create a plex 'movie' library of the mounted virtual drive or add the mounted virtual drive to an existing 'movie' library.
+2. Create a plex 'shows' library of the mounted virtual drive or add the mounted virtual drive to an existing 'shows' library.
+3. *Recommendation: disable 'video preview thumbnails', disable 'intro detection', disable the scheduled task 'perfom extensive media analysis' to reduce the download traffic
+4. You and your home users can now stream cached torrents from RealDebrid!
 
-**3) Setup plex_debrid**
+### 3) Setup plex_debrid:
 1. Run the script! (google "how to run a python script" ;) )
 2. The script will guide you through the initial setup.
 3. You're done!
