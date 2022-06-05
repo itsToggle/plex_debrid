@@ -53,8 +53,6 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 <details>
   <summary><b><u>AllDebrid</u></b></summary>
   
-  **I cant seem to get this to work just yet, Im getting http error 416 when opening files, which should be fixable by adding a fitting '--vfs-read-chunk-size' tag**
-  
   1. Install either the official rclone software or my fork: https://github.com/itsToggle/rclone_RD
   2. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
   3. create a new remote by typing 'n'
@@ -67,6 +65,7 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
   10. enter 'eeeee' as the password
   11. You can mount your newly created remote by running the command 'rclone cmount your-remote: X: --dir-cache-time=10s --vfs-cache-mode=full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
   12. You've successfuly created a virtual drive of your debrid service!
+  13. You will only be able to watch content from the "history" folder, not the magnet folder. (As far as I can tell)
 
 </details>
 
