@@ -20,19 +20,38 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 
 ## Setup:
 
-*Debrid services like premiumize can be mounted with the official rclone software. Other debrid services, like Debrid-Link or All-Debrid can be mounted through their WebDav implementation.*
+**1) Mount your debrid services**
 
-**The only service currently available for this download automation is Real-Debrid. I have written an rclone fork, which allows you to mount the RealDebrid /torrent directory as a virtual drive.**
+Realdebrid:
 
-**Pre-Setup:**
+1. Install my rclone fork: https://github.com/itsToggle/rclone_RD
+2. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
+3. create a new remote by typing 'n'
+4. give your remote a name (e.g. 'your-remote')
+5. choose '47) realdebrid' as your remote type
+6. follow the rest of the prompted instructions, choose 'no advaced configuration'
+7. You can mount your newly created remote by running the command 'rclone cmount your-remote: X: --dir-cache-time=10s --vfs-cache-mode=full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
+8. You've successfuly created a virtual drive of your debrid service!
 
-1. Install my rclone fork, follow the instructions: https://github.com/itsToggle/rclone_RD
+Premiumize:
+
+1. Install either the official rclone software or my fork: https://github.com/itsToggle/rclone_RD
+2. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
+3. create a new remote by typing 'n'
+4. give your remote a name (e.g. 'your-remote')
+5. choose '46) premiumize' as your remote type
+6. follow the rest of the prompted instructions, choose 'no advaced configuration'
+7. You can mount your newly created remote by running the command 'rclone cmount your-remote: X: --dir-cache-time=10s --vfs-cache-mode=full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
+8. You've successfuly created a virtual drive of your debrid service!
+
+**2) Setup Plex**
+
 2. Create a plex 'movie' library of the mounted virtual drive or add the mounted virtual drive to an existing 'movie' library.
 3. Create a plex 'shows' library of the mounted virtual drive or add the mounted virtual drive to an existing 'shows' library.
 4. *Recommendation: disable 'video preview thumbnails', disable 'intro detection', disable the scheduled task 'perfom extensive media analysis' to reduce the download traffic
 5. You and your home users can now stream cached torrents from RealDebrid!
 
-**Setup:**
+**3) Setup plex_debrid**
 1. Run the script! (google "how to run a python script" ;) )
 2. The script will guide you through the initial setup.
 3. You're done!
