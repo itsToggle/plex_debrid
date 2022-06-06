@@ -22,8 +22,10 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 
 ### 1) Mount your debrid services:
 
+*For this download automation to work, you need to mount at least one debrid service as a virtual drive.*
+
 <details>
-  <summary><b><u>RealDebrid</u></b></summary>
+  <summary><b><u>Mounting RealDebrid</u></b></summary>
   
   1. Install my rclone fork: https://github.com/itsToggle/rclone_RD
   2. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
@@ -37,7 +39,7 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 </details>
 
 <details>
-  <summary><b><u>Premiumize</u></b></summary>
+  <summary><b><u>Mounting Premiumize</u></b></summary>
   
   1. Install either the official rclone software or my fork: https://github.com/itsToggle/rclone_RD
   2. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
@@ -51,7 +53,7 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 </details>
 
 <details>
-  <summary><b><u>AllDebrid</u></b></summary>
+  <summary><b><u>Mounting AllDebrid</u></b></summary>
   
   1. Install either the official rclone software or my fork: https://github.com/itsToggle/rclone_RD
   2. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
@@ -66,6 +68,24 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
   11. You can mount your newly created remote by running the command 'rclone cmount your-remote:history X: --dir-cache-time=10s --vfs-cache-mode=full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
   12. You've successfuly created a virtual drive of your debrid service!
   13. You will only be able to watch content from the "history" folder, not the magnet folder. (As far as I can tell)
+
+</details>
+
+<details>
+  <summary><b><u>Mounting DebridLink</u></b></summary>
+  
+  1. Install either the official rclone software or my fork: https://github.com/itsToggle/rclone_RD
+  2. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
+  3. create a new remote by typing 'n'
+  4. give your remote a name (e.g. 'your-remote')
+  5. choose '42) WebDav' as your remote type
+  6. enter 'https://webdav.debrid.link' as the server url
+  7. choose option '5) (other)'
+  8. enter your debrid-link user name as your user name
+  9. choose option 'y) yes, enter in my own password'
+  10. enter your "passkey" (Available in your account) as the password
+  11. You can mount your newly created remote by running the command 'rclone cmount your-remote X: --dir-cache-time=10s --vfs-cache-mode=full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
+  12. You've successfuly created a virtual drive of your debrid service!
 
 </details>
 
@@ -132,38 +152,54 @@ Each rule consist of:
 You can test out your current sorting rules by manually scraping for releases from the main menu. The returned releases are sorted by your current rules.
 
 Lets make some rules: 
-### Example resolution sorting:
-We want to download releases up to our prefered resolution of 1080p.
+
+<details>
+  <summary><b><u>Example resolution sorting:</u></b></summary>
+  
+  We want to download releases up to our prefered resolution of 1080p.
 For this, we will choose the following setup:
 - regex definition: "(1080|720|480)(?=p)" - This is one match group, that matches either "1080", "720" or "480", followed by the letter "p". This is a typical Resolution definition of releases.
 - attribute definition: "title" - we want to look for this inside the release title
 - interpretation method: "number" - we want to sort the releases by the highest number to the lowest number
 - ascending/descending: "1" - 1 means descending. We want to sort the releases in decending order to get the highest resolution release.
 
-### Example codec sorting:
+</details>
+
+<details>
+  <summary><b><u>Example codec sorting:</u></b></summary>
+  
 We want to download releases that use the x265 Codec, rather then the x264 codec. 
 For this, we will choose the following setup:
 - regex definition: "(h.?265|x.?265)|(h.?264|x.?264)" - These are two match groups, that match typical codec descriptions in the release titles
 - attribute definition: "title" - we want to look for this inside the release title
 - interpretation method: "text" - by choosing this, we define that the releases should be sorted by the match group they are in.
 - ascending/descending: "1" - 1 means descending. Descending in this context means, that the First matchgroup is preffered over the second matchgroup, and both are prefered over a release that doesnt match.
+  
+</details>
 
-### Example release exclusion:
+<details>
+  <summary><b><u>Example release exclusion:</u></b></summary>
+  
 We don't want to download releases that are HDR or 3D. For this rule to ne effective, we need to make it our first rule.
 For this, we will choose the following setup:
 - regex definition: "(\\.HDR\\.|\\.3D\\.)"
 - attribute definition: "title" - we want to look for this inside the release title
 - interpretation method: "text" - by choosing this, we define that the releases should be sorted by the match group they are in.
 - ascending/descending: "0" - 0 means ascending. Ascending in this context means, that releases that don't match are prefered over releases that do.
+  
+</details>
 
-### Example size sorting:
+<details>
+  <summary><b><u>Example size sorting:</u></b></summary>
+  
 We want to sort or releases by size - this should be implemented as one of the last rules.
 For this, we will choose the following setup:
 - regex definition: "(.*)" - This is one match group that simply matches everything.
 - attribute definition: "size" - we want to look for this inside the release size
 - interpretation method: "number" - by choosing number, we define that the release size should be interpreted as a number.
 - ascending/descending: "0" - 0 means ascending. We want to select the smallest release.
-
+  
+</details>
 
 ## Limitations:
 - The plex discover API only provides a release date, not a release time for new episodes. This makes it hard to determined when to start looking for releases and when to ignore an episode. This script will only download episodes when its been a day since the air-date or if plex shows the episode as availabe on streaming services. It is recommended to connect this script to trakt.tv, to allow for more accurate release dates and times.
