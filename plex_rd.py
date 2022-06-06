@@ -952,13 +952,12 @@ class debrid:
                         try:
                             instant = response.data.magnets[0].instant
                         except:
-                            return False
+                            continue
                         if instant:
                             url = 'https://api.alldebrid.com/v4/magnet/upload?magnets[]='+ release.download[0]
                             response = debrid.alldebrid.get(url)
                             ui.print('[alldebrid] adding cached release: ' + release.title)
                             return True
-                        return False
                     else:
                         #Uncached Download Method for AllDebrid
                         url = 'https://api.alldebrid.com/v4/magnet/upload?magnets[]='+ release.download[0]
@@ -1021,14 +1020,13 @@ class debrid:
                         url = "https://www.premiumize.me/api/cache/check?items[]=" + release.download[0]
                         response = debrid.premiumize.get(url)
                         if not response.response[0]:
-                            return False
+                            continue
                         url = "https://www.premiumize.me/api/transfer/create"
                         data = 'src=' + release.download[0]
                         response = debrid.premiumize.post(url,data)
                         if response.status == 'success':
                             ui.print('[premiumize] adding cached release: ' + release.title)
                             return True
-                        return False
                     else:
                         #Uncached Download Method for premiumize
                         url = "https://www.premiumize.me/api/transfer/create"
@@ -1037,25 +1035,32 @@ class debrid:
                         if response.status == 'success':
                             ui.print('[premiumize] adding uncached release: '+ release.title)
                             return True
-                        return False
             return False      
     #DebridLink class
     class debridlink(services):
         #(required) Name of the Debrid service
-        name = "Debrid Link (NOT FUNCTIONAL)"
+        name = "Debrid Link"
         #(required) Authentification of the Debrid service, can be oauth aswell. Create a setting for the required variables in the ui.settings_list. For an oauth example check the trakt authentification.
         api_key = ""
+        client_id = "0KLCzpbPTCsWZtQ9Ad0aZA"
         #Define Variables
         session = requests.Session()
         #Error Log
         def logerror(response):
             if not response.status_code == 200:
-                ui.print("debridlink error: " + str(response.content),debug=ui_settings.debug)
+                ui.print("[debridlink] error: " + str(response.content),debug=ui_settings.debug)
+            if 'error' in str(response.content):
+                try:
+                    response2 = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
+                    if not response2.error == 'authorization_pending':
+                        ui.print("[debridlink] error: " + response2.error)
+                except:
+                    ui.print("[debridlink] error: unknown error")
             if response.status_code == 401:
-                ui.print("debridlink error: (401 unauthorized): debridlink api key does not seem to work. check your debridlink settings.")
+                ui.print("[debridlink] error: (401 unauthorized): debridlink api key does not seem to work. check your debridlink settings.")
         #Get Function
         def get(url): 
-            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'authorization' : 'Bearer ' + debrid.debridlink.api_key}
+            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36','Content-Type': 'application/x-www-form-urlencoded', 'Authorization' : 'Bearer ' + debrid.debridlink.api_key}
             try :
                 response = debrid.debridlink.session.get(url, headers = headers)
                 debrid.debridlink.logerror(response)
@@ -1066,7 +1071,7 @@ class debrid:
             return response
         #Post Function
         def post(url, data):
-            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'authorization' : 'Bearer ' + debrid.debridlink.api_key}
+            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36','Content-Type': 'application/x-www-form-urlencoded', 'Authorization' : 'Bearer ' + debrid.debridlink.api_key}
             try :
                 response = debrid.debridlink.session.post(url, headers = headers, data = data)
                 debrid.debridlink.logerror(response)
@@ -1075,6 +1080,19 @@ class debrid:
                 ui.print("debridlink error: (json exception): " + str(e),debug=ui_settings.debug)
                 response = None
             return response
+        #Oauth Method
+        def oauth(code=""):
+            if code == "":
+                response = debrid.debridlink.post('https://debrid-link.fr/api/oauth/device/code','client_id='+debrid.debridlink.client_id+'&scope=get.files')
+                return response.device_code, response.user_code
+            else:
+                response = None
+                while response == None:
+                    response = debrid.debridlink.post('https://debrid-link.fr/api/oauth/token','client_id='+debrid.debridlink.client_id+'&code='+code+'&grant_type=http%3A%2F%2Foauth.net%2Fgrant_type%2Fdevice%2F1.0')
+                    if hasattr(response,'error'):
+                        response = None
+                    time.sleep(1)
+                return response.access_token
         #(required) Download Function. 
         def download(element:plex.media,stream=True,query='',force=False):
             cached = element.Releases
@@ -1088,14 +1106,29 @@ class debrid:
                 if regex.match(r'('+ query.replace('.','\.') + ')',release.title,regex.I) or force:
                     if stream:
                         #Cached Download Method for debridlink
-                        #...
-                        ui.print('adding cached release: ' + release.title)
-                        return True
+                        hashstring = regex.findall(r'(?<=btih:).*?(?=&)',str(release.download[0]),regex.I)[0]
+                        url = 'https://debrid-link.fr/api/v2/seedbox/cached?url=' + hashstring
+                        response = debrid.debridlink.get(url)
+                        try:
+                            if hasattr(response.value,hashstring.lower()):
+                                url = 'https://debrid-link.fr/api/v2/seedbox/add'
+                                response = debrid.debridlink.post(url,'url=' + hashstring + '&async=true')
+                                if response.success:
+                                    ui.print('[debridlink] adding cached release: ' + release.title)
+                                    return True
+                        except:
+                            continue
                     else:
                         #Uncached Download Method for debridlink
-                        #...
-                        ui.print('adding uncached release: '+ release.title)
-                        return True
+                        try:
+                            hashstring = regex.findall(r'(?<=btih:).*?(?=&)',str(release.download[0]),regex.I)[0]
+                            url = 'https://debrid-link.fr/api/v2/seedbox/add'
+                            response = debrid.debridlink.post(url,'url=' + hashstring + '&async=true')
+                            if response.success:
+                                ui.print('[debridlink] adding uncached release: '+ release.title)
+                                return True
+                        except:
+                            continue
             return False  
 #Release Class
 class releases:
@@ -1362,14 +1395,20 @@ class scraper:
                 filter = ""
                 tags = ""
                 for indexer in scraper.jackett.indexers:
-                    tags += "&Tracker[]=" + indexer[0]
+                    if not indexer[0] == '':
+                        tags += "&Tracker[]=" + indexer[0]
                 for category in scraper.jackett.categories:
-                    tags += "&Category[]=" + category[0]
+                    if not category[0] == '':
+                        tags += "&Category[]=" + category[0]
                 if not scraper.jackett.filters == []:
                     filters = []
                     for fil in scraper.jackett.filters:
-                        filters += fil[0]
-                    filter = (",").join(filters)
+                        if not fil[0] == '':
+                            filters += fil[0]
+                    if not filters == []:
+                        filter = (",").join(filters)
+                    else:
+                        filter = "all"
                 else:
                     filter = "all"
                 altquery = copy.deepcopy(query)
@@ -1537,10 +1576,17 @@ class ui:
                 choice = '1'
             if choice == '1':
                 if not isinstance(getattr(self.cls,self.key),list):
-                    clipboard.copy(getattr(self.cls,self.key))
-                    console_input = input(self.prompt + '- current value "'+str(getattr(self.cls,self.key))+'" copied to your clipboard: ')
-                    setattr(self.cls,self.key,console_input)
-                    return True
+                    if self.oauth:
+                        device_code, user_code = self.cls.oauth()
+                        print(self.prompt + str(user_code))
+                        console_input = self.cls.oauth(device_code)
+                        setattr(self.cls,self.key,console_input)
+                        return True
+                    else:
+                        clipboard.copy(getattr(self.cls,self.key))
+                        console_input = input(self.prompt + '- current value "'+str(getattr(self.cls,self.key))+'" copied to your clipboard: ')
+                        setattr(self.cls,self.key,console_input)
+                        return True
                 else:
                     lists = getattr(self.cls,self.key)
                     if self.moveable:
@@ -1727,8 +1773,14 @@ class ui:
                 while not working:
                     print(self.name + ' - current value: ' + str(getattr(self.cls,self.key)))
                     print()
-                    console_input = input(self.prompt)
-                    setattr(self.cls,self.key,console_input)
+                    if self.oauth:
+                        device_code, user_code = self.cls.oauth()
+                        print(self.prompt + str(user_code))
+                        console_input = self.cls.oauth(device_code)
+                        setattr(self.cls,self.key,console_input)
+                    else:
+                        console_input = input(self.prompt)
+                        setattr(self.cls,self.key,console_input)
                     if self.name == 'Real Debrid API Key':
                         url = 'https://api.real-debrid.com/rest/1.0/torrents?limit=2&auth_token=' + console_input
                         response = debrid.realdebrid.session.get(url)
@@ -1772,9 +1824,9 @@ class ui:
             setting('Rarbg API Key','The Rarbg API Key gets refreshed automatically, enter the default value: ',scraper.rarbg,'token',hidden=True),
             setting('Jackett Base URL','Please specify your Jackett base URL: ',scraper.jackett,'base_url',hidden=True),
             setting('Jackett API Key','Please specify your Jackett API Key: ',scraper.jackett,'api_key',hidden=True),
-            #setting('Jackett Indexers',['Please specify a Jackett indexer: '],scraper.jackett,'indexers',hidden=True,entry="indexer"),
-            #setting('Jackett Categories',['Please specify a Jackett category: '],scraper.jackett,'categories',hidden=True,entry="category"),
-            #setting('Jackett Filters',['Please specify a Jackett filter: '],scraper.jackett,'categories',hidden=True,entry="filter"),
+            setting('Jackett Indexers',['Please specify a Jackett indexer (Leave blank to scrape all indexers): '],scraper.jackett,'indexers',hidden=True,entry="indexer"),
+            setting('Jackett Categories',['Please specify a Jackett torrent category (Leave blank to scrape all categories): '],scraper.jackett,'categories',hidden=True,entry="category"),
+            setting('Jackett Filters',['Please specify a Jackett indexer filter (Leave blank to not apply filter): '],scraper.jackett,'categories',hidden=True,entry="filter"),
             ]
         ],
         ['Debrid Services', [
@@ -1783,6 +1835,7 @@ class ui:
             setting('All Debrid API Key','Please enter your All Debrid API Key: ',debrid.alldebrid,'api_key',hidden=True),
             setting('Premiumize API Key','Please enter your Premiumize API Key: ',debrid.premiumize,'api_key',hidden=True),
             setting('Debrid Link API Key','Please enter your Debrid Link API Key: ',debrid.debridlink,'api_key',hidden=True),
+            #setting('Debrid Link API Key','Please open your favorite browser, log into your debridlink account and open "https://debrid-link.fr/device". Enter this code: ',debrid.debridlink,'api_key',hidden=True,oauth=True),
             ]
         ],
         ['UI Settings',[
@@ -1863,7 +1916,7 @@ class ui:
                         time.sleep(3)
                     else:
                         print()
-                        print("These releases do not seem to be cached on realdebrid. Add uncached torrent?")
+                        print("These releases do not seem to be cached on your debrid services. Add uncached torrent?")
                         print()
                         print("0) Back")
                         print("1) Add uncached torrent")
@@ -1881,7 +1934,7 @@ class ui:
                         time.sleep(3)
                     else:
                         print()
-                        print("This release does not seem to be cached on realdebrid. Add uncached torrent?")
+                        print("This release does not seem to be cached on your debrid services. Add uncached torrent?")
                         print()
                         print("0) Back")
                         print("1) Add uncached torrent")
