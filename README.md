@@ -44,6 +44,7 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 <details>
   <summary><b><u>Mounting RealDebrid</u></b></summary>
   
+  *Its recommended to remove all but a few pages of finished torrents before mounting realdebrid for the first time. You can add as many torrents as you want after that.*
   1. Install my rclone fork: https://github.com/itsToggle/rclone_RD
   2. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
   3. create a new remote by typing 'n'
