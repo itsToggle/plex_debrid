@@ -39,7 +39,7 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 
 ### 1) Mount your debrid services:
 
-*For this download automation to work, you need to mount at least one debrid service as a virtual drive.*
+*For this download automation to work, you need to mount at least one debrid service as a virtual drive. I highly recommend using RealDebrid, as this service will recieve updates from me first.*
 
 <details>
   <summary><b><u>Mounting RealDebrid</u></b></summary>
@@ -162,35 +162,50 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
   <summary><b><u>Download Automation Settings:</u></b></summary>
   
   - You can add more than one debrid service and change the order in which they should be checked for cached releases by navigating to '/Settings/Debrid Services/Edit'.
-  - This script will automatically pick the best release that could be found. To change how the script picks the best release, check out the next section.
   - If you don't want the main menu to show when you start the script and run the download automation right away, you can define this in the 'UI Settings' section of the 'Settings' menu. You can return to the main menu at any time by typing 'exit'.
 
 </details>
 
 <details>
+  <summary><b><u>How releases are scraped</u></b></summary>
+  
+  The scraping of movies is pretty simple, there is not a lot to explain.
+  
+  When scraping for shows however, the scraper follows the steps below:
+  - If more than 1 season is to be downloaded, the scraper searches for releases with the following query: 'some.show' - which usually returns all releases related to that show.
+    - If more than 3 seasons are to be downloaded, the scraper looks for multi-season packs within the already scraped releases and tries to download one.
+    - The scraper then looks for single-season packs for the remaining seasons within the already scraped releases.
+    - If not all seasons could be downloaded, the scraper specifically searches for the missing seasons with the following query: 'some.show.S0X.'
+  - If less than one entire season is to be downloaded or episodes are still missing, the scraper searches for releases with the following query: 'some.show.S0X' which usually returns all episodes and partial releases of that season.
+    - If missing episodes are found within the already scraped releases, they are downloaded.
+    - If there are still episodes missing, the scraper will look for the individual episodes with the following query: 'some.show.S0XE0X.'
+  
+  All that is done to minimize the amount of calls made to torrent indexers and to fetch the most episodes at once. The process is done via multiprosing to speed things up.
+</details>
+<details>
   <summary><b><u>Sorting and selecting scraped releases:</u></b></summary>
   
   The scrapers usually provide a whole bunch of releases. 
-  Adding them all to your debrid services would clutter your library and slow things down. This is why this script automatically sorts the releases by completely customizable categories and picks the best one.
+  Adding them all to your debrid services would clutter your library and slow things down. This is why this script automatically sorts the releases by completely customizable rules and picks the best one. The script provides some pretty ok rules by default.
 
-  The sorting is done by providing an unlimited number of sorting 'rules'. Rules can be added, edited, delted or moved. The first rule has the highest priority, the last one the lowest.
+  The sorting is done by providing an unlimited number of sorting 'rules'. Rules can be added, edited, delted or moved. The first rule has the highest priority, the last one the lowest. 
 
   Each rule consist of:
   - a regex match group that defines what we are looking for. Check out regexr.com to try out some regex match definitions.
-  - an attribute definition that defines which attribute of the release we want to look in (can be the title, the source, or the size)
+  - an attribute definition that defines which attribute of the release we want to look in (can be the title, the source, or the size, or other special attributes that arent described further)
   - an interpretation method. This can be either:
     - "number" : the first regex match group will be interpreted as an integer and releases will be ranked by this number.
     - "text" : we will give each release a rank accoring to which match group its in.
   - lastly we define wheter to rank the releases in ascending or descending order.
 
-  You can test out your current sorting rules by manually scraping for releases from the main menu. The returned releases are sorted by your current rules.
+  You can test out your current sorting rules by manually scraping for releases from the main menu. The returned releases are sorted by your current rules. If you follow the 'scraping steps' from the section above, you will be able to tell which releases would be automatically downloaded with your current settings.
 
   Lets make some rules: 
 
   <details>
     <summary><b><u>Example resolution sorting:</u></b></summary>
 
-    We want to download releases up to our prefered resolution of 1080p.
+  We want to download releases up to our prefered resolution of 1080p.
   For this, we will choose the following setup:
   - regex definition: "(1080|720|480)(?=p)" - This is one match group, that matches either "1080", "720" or "480", followed by the letter "p". This is a typical Resolution definition of releases.
   - attribute definition: "title" - we want to look for this inside the release title
