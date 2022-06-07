@@ -307,15 +307,25 @@ class plex(content.services):
                             self.watch()
             elif self.type == 'show':
                 if self.released() and not self.watched():
-                    Seasons = self.uncollected(library)
-                    if len(Seasons) > 0:
+                    self.Seasons = self.uncollected(library)
+                    if len(self.Seasons) > 0:
                         tic = time.perf_counter()
-                        if len(Seasons) > 1:
+                        if len(self.Seasons) > 1:
                             self.Releases += scraper(self.query())
-                        results = [None] * len(Seasons)
+                            if len(self.Seasons) > 3:
+                                if self.debrid_download():
+                                    for season in self.Seasons[:]:
+                                        for episode in season.Episodes[:]:
+                                            for file in self.downloaded_files:
+                                                if file.match == episode.files()[0]:
+                                                    season.Episodes.remove(episode)
+                                                    break
+                                        if len(season.Episodes) == 0:
+                                            self.Seasons.remove(season)
+                        results = [None] * len(self.Seasons)
                         threads = []
                         #start thread for each season
-                        for index,Season in enumerate(Seasons):
+                        for index,Season in enumerate(self.Seasons):
                             t = Thread(target=download, args=(Season,library,self.Releases,results,index))
                             threads.append(t)
                             t.start()
@@ -378,7 +388,10 @@ class plex(content.services):
                 return True
         def debrid_download(self):
             if not debrid.download(self,stream=True):
-                if not debrid.download(self,stream=False):
+                if not self.type == 'show':
+                    if not debrid.download(self,stream=False):
+                        return False
+                else:
                     return False
             return True             
         def files(self):
@@ -721,13 +734,30 @@ class debrid:
             return activeservices
     #Download Method:
     def download(element:plex.media,stream=True,query='',force=False):
-        scraped_releases = copy.deepcopy(element.Releases)
-        for release in scraped_releases:
-            element.Releases = [release,]
-            for service in debrid.services():
-                if service.download(element,stream=stream,query=query,force=force):
-                    return True
+        if stream:
+            cached_releases = debrid.check(element,force=force)
+            for release in cached_releases:
+                element.Releases = [release,]
+                for service in debrid.services():
+                    if release.service == service.name:
+                        if service.download(element,stream=stream,query=query,force=force):
+                            if element.type == 'show':
+                                element.downloaded_files = element.Releases[0].files
+                            return True
+        else:
+            scraped_releases = copy.deepcopy(element.Releases)
+            for release in scraped_releases:
+                element.Releases = [release,]
+                for service in debrid.services():
+                    if service.download(element,stream=stream,query=query,force=force):
+                        return True
         return False
+    def check(element:plex.media,force=False):
+        results = []
+        for service in debrid.services():
+            results += service.check(element,force=force)
+        releases.sort(results)
+        return results
     #RealDebrid class
     class realdebrid(services):
         #(required) Name of the Debrid service
@@ -780,10 +810,12 @@ class debrid:
                 self.id = id
                 self.name = name
                 self.size = size
+                self.match = ''
                 wanted = False
                 for key in wanted_list:
                     if regex.search(r'('+key+')',self.name,regex.I):
                         wanted = True
+                        self.match = key
                         break
                 unwanted = False
                 for key in unwanted_list:
@@ -797,6 +829,7 @@ class debrid:
         class version:
             def __init__(self,files):
                 self.files = files
+                self.needed = 0
                 self.wanted = 0
                 self.unwanted = 0
                 for file in self.files:
@@ -812,7 +845,6 @@ class debrid:
             if regex.search(r'(S[0-9][0-9])',query):
                 query = regex.split(r'(S[0-9]+)',query) 
                 query = query[0] + '[0-9]*.*' + query[1] + query[2]
-            unwanted = ['sample']
             wanted = [query]
             if not isinstance(element,releases):
                 wanted = element.files()
@@ -821,62 +853,35 @@ class debrid:
                 if regex.match(r'('+ query.replace('.','\.') + ')',release.title,regex.I) or force:
                     if stream:
                         release.size = 0
-                        files = []
-                        if regex.search(r'(?<=btih:).*?(?=&)',str(release.download[0]),regex.I):
-                            hashstring = regex.findall(r'(?<=btih:).*?(?=&)',str(release.download[0]),regex.I)[0]
-                            #get cached file ids
-                            response = debrid.realdebrid.get('https://api.real-debrid.com/rest/1.0/torrents/instantAvailability/' + hashstring)
-                            if hasattr(response, hashstring.lower()):
-                                if hasattr(getattr(response, hashstring.lower()),'rd'):
-                                    for cashed_version in getattr(response, hashstring.lower()).rd:
-                                        version_files = []
-                                        for file in cashed_version.__dict__:
-                                            debrid_file = debrid.realdebrid.file(file,getattr(cashed_version,file).filename,getattr(cashed_version,file).filesize,wanted,unwanted)
-                                            version_files.append(debrid_file)
-                                        files += [debrid.realdebrid.version(version_files),]
-                                    #select cached version that has the most wanted, least unwanted files and least files overall
-                                    files.sort(key=lambda x: len(x.files), reverse=False)
-                                    files.sort(key=lambda x: x.wanted, reverse=True)
-                                    files.sort(key=lambda x: x.unwanted, reverse=False)
-                                    #check if there are cached files available
-                                    if len(files) > 0:
-                                        for version in files:
-                                            if len(version.files) > 0 and version.wanted > len(wanted)/2 or force:
-                                                cached_ids = []
-                                                for file in version.files:
-                                                    cached_ids += [file.id]
-                                                #post magnet to real debrid
-                                                try:
-                                                    response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/addMagnet',{'magnet' : str(release.download[0])})
-                                                    torrent_id = str(response.id)
-                                                except:
-                                                    continue
-                                                response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/selectFiles/' + torrent_id , {'files' : str(','.join(cached_ids))})    
-                                                response = debrid.realdebrid.get('https://api.real-debrid.com/rest/1.0/torrents/info/' + torrent_id)
-                                                if len(response.links) == len(cached_ids):
-                                                    release.download = response.links
-                                                else:
-                                                    debrid.realdebrid.delete('https://api.real-debrid.com/rest/1.0/torrents/delete/' + torrent_id)
-                                                    continue
-                                                if len(release.download) > 0:
-                                                    for link in release.download:
-                                                        try:
-                                                            response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/unrestrict/link', {'link' : link})
-                                                        except:
-                                                            break
-                                                    ui.print('[realdebrid] adding cached release: ' + release.title)
-                                                    return True
-                            ui.print('done')
-                            return False
-                        else:
-                            if len(release.download) > 0:
-                                for link in release.download:
-                                    try:
-                                        response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/unrestrict/link', {'link' : link})
-                                    except:
-                                        break
-                                ui.print('[realdebrid] adding cached release: ' + release.title)
-                                return True
+                        for version in release.files:
+                            if len(version.files) > 0 and version.wanted > len(wanted)/2 or force:
+                                cached_ids = []
+                                for file in version.files:
+                                    cached_ids += [file.id]
+                                #post magnet to real debrid
+                                try:
+                                    response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/addMagnet',{'magnet' : str(release.download[0])})
+                                    torrent_id = str(response.id)
+                                except:
+                                    continue
+                                response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/selectFiles/' + torrent_id , {'files' : str(','.join(cached_ids))})    
+                                response = debrid.realdebrid.get('https://api.real-debrid.com/rest/1.0/torrents/info/' + torrent_id)
+                                if len(response.links) == len(cached_ids):
+                                    release.download = response.links
+                                else:
+                                    debrid.realdebrid.delete('https://api.real-debrid.com/rest/1.0/torrents/delete/' + torrent_id)
+                                    continue
+                                if len(release.download) > 0:
+                                    for link in release.download:
+                                        try:
+                                            response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/unrestrict/link', {'link' : link})
+                                        except:
+                                            break
+                                    release.files = version.files
+                                    ui.print('[realdebrid] adding cached release: ' + release.title)
+                                    return True
+                        ui.print('done')
+                        return False
                     else:
                         try:
                             response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/addMagnet',{'magnet':release.download[0]})
@@ -887,6 +892,48 @@ class debrid:
                         except:
                             continue
             return False
+        #(required) Check Function
+        def check(element,force=False):
+            cached_releases = []
+            if force:
+                wanted = ['.*']
+            else:
+                wanted = element.files()
+            unwanted = releases.unwanted
+            hashes = []
+            for release in element.Releases[:]:
+                if not release.hash == '':
+                    hashes += [release.hash]
+                else:
+                    element.Releases.remove(release)
+            if len(hashes) > 0:
+                response = debrid.realdebrid.get('https://api.real-debrid.com/rest/1.0/torrents/instantAvailability/' + '/'.join(hashes))
+                for release in element.Releases:
+                    release.files = []
+                    if hasattr(response, release.hash.lower()):
+                        if hasattr(getattr(response, release.hash.lower()),'rd'):
+                            if len(getattr(response, release.hash.lower()).rd) > 0:
+                                for cashed_version in getattr(response, release.hash.lower()).rd:
+                                    version_files = []
+                                    for file in cashed_version.__dict__:
+                                        debrid_file = debrid.realdebrid.file(file,getattr(cashed_version,file).filename,getattr(cashed_version,file).filesize,wanted,unwanted)
+                                        version_files.append(debrid_file)
+                                    release.files += [debrid.realdebrid.version(version_files),]
+                                #select cached version that has the most needed, most wanted, least unwanted files and most files overall
+                                release.files.sort(key=lambda x: len(x.files), reverse=True)
+                                release.files.sort(key=lambda x: x.wanted, reverse=True)
+                                release.files.sort(key=lambda x: x.unwanted, reverse=False)
+                                release.wanted = release.files[0].wanted
+                                release.unwanted = release.files[0].unwanted
+                                release.service = 'Real Debrid'
+                                cached_releases += [release]
+                                continue
+            try:
+                cached_releases.sort(key=lambda x: x.wanted, reverse=True)
+                cached_releases.sort(key=lambda x: x.unwanted, reverse=False)
+            except:
+                cached_releases = []
+            return cached_releases
     #AllDebrid class
     class alldebrid(services):
         #(required) Name of the Debrid service
@@ -965,6 +1012,38 @@ class debrid:
                         ui.print('[alldebrid] adding uncached release: '+ release.title)
                         return True
             return False  
+        #(required) Check Function
+        def check(element,force=False):
+            cached_releases = []
+            if force:
+                wanted = ['.*']
+            else:
+                wanted = element.files()
+            unwanted = releases.unwanted
+            hashes = []
+            for release in element.Releases[:]:
+                if not release.hash == '':
+                    hashes += [release.hash]
+                else:
+                    element.Releases.remove(release)
+            if len(hashes) > 0:
+                response = debrid.alldebrid.get('https://api.alldebrid.com/v4/magnet/instant?magnets[]=' + '&magnets[]='.join(hashes))
+                for i,release in enumerate(element.Releases):
+                    try:
+                        instant = response.data.magnets[i].instant
+                        if instant:
+                            release.service = 'All Debrid'
+                            release.wanted = 0
+                            release.unwanted = 0
+                            cached_releases += [release]
+                    except:
+                        continue
+            try:
+                cached_releases.sort(key=lambda x: x.wanted, reverse=True)
+                cached_releases.sort(key=lambda x: x.unwanted, reverse=False)
+            except:
+                cached_releases = []
+            return cached_releases
     #Premiumize class
     class premiumize(services):
         #(required) Name of the Debrid service
@@ -1036,6 +1115,38 @@ class debrid:
                             ui.print('[premiumize] adding uncached release: '+ release.title)
                             return True
             return False      
+        #(required) Check Function
+        def check(element,force=False):
+            cached_releases = []
+            if force:
+                wanted = ['.*']
+            else:
+                wanted = element.files()
+            unwanted = releases.unwanted
+            hashes = []
+            for release in element.Releases[:]:
+                if not release.hash == '':
+                    hashes += [release.hash]
+                else:
+                    element.Releases.remove(release)
+            if len(hashes) > 0:
+                response = debrid.premiumize.get('https://www.premiumize.me/api/cache/check?items[]=' + '&items[]='.join(hashes))
+                for i,release in enumerate(element.Releases):
+                    try:
+                        instant = response.response[i]
+                        if instant:
+                            release.service = 'Premiumize'
+                            release.wanted = 0
+                            release.unwanted = 0
+                            cached_releases += [release]
+                    except:
+                        continue
+            try:
+                cached_releases.sort(key=lambda x: x.wanted, reverse=True)
+                cached_releases.sort(key=lambda x: x.unwanted, reverse=False)
+            except:
+                cached_releases = []
+            return cached_releases
     #DebridLink class
     class debridlink(services):
         #(required) Name of the Debrid service
@@ -1130,8 +1241,41 @@ class debrid:
                         except:
                             continue
             return False  
+        #(required) Check Function
+        def check(element,force=False):
+            cached_releases = []
+            if force:
+                wanted = ['.*']
+            else:
+                wanted = element.files()
+            unwanted = releases.unwanted
+            hashes = []
+            for release in element.Releases[:]:
+                if not release.hash == '':
+                    hashes += [release.hash]
+                else:
+                    element.Releases.remove(release)
+            if len(hashes) > 0:
+                response = debrid.debridlink.get('https://debrid-link.fr/api/v2/seedbox/cached?url=' + ','.join(hashes[:200]))
+                for i,release in enumerate(element.Releases):
+                    try:
+                        if hasattr(response.value,release.hash.lower()):
+                            release.service = 'Debrid Link'
+                            release.wanted = 0
+                            release.unwanted = 0
+                            cached_releases += [release]
+                    except:
+                        continue
+            try:
+                cached_releases.sort(key=lambda x: x.wanted, reverse=True)
+                cached_releases.sort(key=lambda x: x.unwanted, reverse=False)
+            except:
+                cached_releases = []
+            return cached_releases
 #Release Class
 class releases:
+    #Unwanted definition
+    unwanted = ['sample']
     #Define release attributes
     def __init__(self, source, type, title, files, size, download):
         self.source     = source
@@ -1140,6 +1284,14 @@ class releases:
         self.files      = files
         self.size       = size
         self.download   = download
+        self.hash       = ''
+        if len(self.download)> 0:
+            if regex.search(r'(?<=btih:).*?(?=&)',str(self.download[0]),regex.I):
+                self.hash   = regex.findall(r'(?<=btih:).*?(?=&)',str(self.download[0]),regex.I)[0]            
+        self.cached     = []
+        self.title_deviation = 0
+        self.wanted = 0
+        self.unwanted = 0
     #Define when releases are Equal 
     def __eq__(self, other):
         return self.title == other.title
@@ -1148,10 +1300,28 @@ class releases:
         multiple_versions_trigger = ""
         ranking= [
             [
-                "(1080|720|480)(?=p)",
+                "(1080|720|480)(?=p|i)",
                 "title",
                 "number",
                 "1"
+            ],
+            [
+                "(.*)",
+                "wanted",
+                "number",
+                "1"
+            ],
+            [
+                "(.*)",
+                "unwanted",
+                "number",
+                "0"
+            ],
+            [
+                "(1337x)",
+                "source",
+                "text",
+                "0"
             ],
             [
                 "(EXTENDED|REMASTERED)",
@@ -1164,6 +1334,12 @@ class releases:
                 "title",
                 "text",
                 "1"
+            ],
+            [
+                "(.*)",
+                "title_deviation",
+                "number",
+                "0"
             ],
             [
                 "(.*)",
@@ -1208,11 +1384,18 @@ class releases:
         return string    
     #Print Method
     def print(scraped_releases):
+        longest_file = 0
+        longest_cached = 0
         longest_title = 0
         longest_size = 0
         longest_index = 0
         for index,release in enumerate(scraped_releases):
             release.size = str(round(release.size, 2))
+            release.file = '+' + str(release.wanted) + '/-' + str(release.unwanted)
+            if len(release.file) > longest_file:
+                longest_file = len(release.file)
+            if len('/'.join(release.cached)) > longest_cached:
+                longest_cached = len('/'.join(release.cached))
             if len(release.title) > longest_title:
                 longest_title = len(release.title)
             if len(str(release.size)) > longest_size:
@@ -1220,7 +1403,7 @@ class releases:
             if len(str(index+1)) > longest_index:
                 longest_index = len(str(index+1))
         for index,release in enumerate(scraped_releases):
-            print(str(index+1)+") "+' ' * (longest_index-len(str(index+1)))+"title: " + release.title + ' ' * (longest_title-len(release.title)) + " | size: " + str(release.size) + ' ' * (longest_size-len(str(release.size)))  + " | source: " + release.source)
+            print(str(index+1)+") "+' ' * (longest_index-len(str(index+1)))+"title: " + release.title + ' ' * (longest_title-len(release.title)) + " | size: " + str(release.size) + ' ' * (longest_size-len(str(release.size))) + " | cached: " + '/'.join(release.cached) + ' ' * (longest_cached-len('/'.join(release.cached))) + " | files: " + release.file + ' ' * (longest_file-len(release.file)) + " | source: " + release.source )
 #Scraper Class
 class scraper: 
     #Service Class:
@@ -1288,6 +1471,24 @@ class scraper:
         for result in results:
             if not result == []:
                 scraped_releases += result
+        if regex.search(r'(S[0-9]+)',query) or not query.endswith('.'):
+            if not query.endswith('.'):
+                altquery = [query,'(S[0-9]+)','']
+            else:
+                altquery = regex.split(r'(S[0-9]+)',query) 
+            for release in scraped_releases:
+                deviation = regex.search(r'(?<=' + altquery[0] + ')(.*?)(?=' + altquery[1] + altquery[2] + ')',release.title,regex.I)
+                if not deviation == None:
+                    if len(deviation.group()) <= 1:
+                        release.title_deviation = 0
+                    elif len(deviation.group()) > 6:
+                        release.title_deviation = 2
+                    else:
+                        release.title_deviation = 1
+                elif not query.endswith('.'):
+                    release.title_deviation = 2
+                else:
+                    release.title_deviation = 0
         releases.sort(scraped_releases)
         ui.print('done - found ' + str(len(scraped_releases)) + ' releases')
         return scraped_releases       
@@ -1534,6 +1735,7 @@ class download_script:
             time.sleep(1)
 #Ui Preference Class:
 class ui_settings:
+    version = ['1.0',"Release sorting has been updated. This update will add 3 special sorting rules, which should help the scraper to pick better releases. For optimal results, leave these special rules more or less at their current position.",['Release sorting',]]
     run_directly = "true"
     debug = "false"
 #Ui Class
@@ -1841,6 +2043,7 @@ class ui:
         ['UI Settings',[
             setting('Show Menu on Startup','Please enter "true" or "false": ',ui_settings,'run_directly'),
             setting('Debug printing','Please enter "true" or "false": ',ui_settings,'debug'),
+            setting('version','No snooping around! :D This is for compatability reasons.',ui_settings,'version',hidden=True),
             ]
         ],
     ]
@@ -1897,8 +2100,26 @@ class ui:
         ui.cls('Options/Scraper/')
         query = input("Enter a query: ")
         print()
+        obj = releases('','','',[],0,[])
         scraped_releases = scraper(query.replace(' ','.'))
         if len(scraped_releases) > 0:
+            obj.Releases = scraped_releases
+            cached_releases = debrid.check(obj,force=True)
+            for release in scraped_releases:
+                release.cached = []
+                for cached_release in cached_releases:
+                    if release.hash == cached_release.hash:
+                        release.wanted = cached_release.wanted
+                        release.unwanted = cached_release.unwanted
+                        if cached_release.service == 'Real Debrid' and not 'RD' in release.cached:
+                            release.cached += ['RD']
+                        elif cached_release.service == 'All Debrid' and not 'AD' in release.cached:
+                            release.cached += ['AD']
+                        elif cached_release.service == 'Premiumize' and not 'PM' in release.cached:
+                            release.cached += ['PM']
+                        elif cached_release.service == 'Debrid Link' and not 'DL' in release.cached:
+                            release.cached += ['DL']
+            releases.sort(scraped_releases)
             print()
             print("0) Back")
             releases.print(scraped_releases)
@@ -2033,9 +2254,15 @@ class ui:
             json.dump(save_settings, f,indent=4)
         print('Current settings saved!')
         time.sleep(2)
-    def load(doprint=False):
+    def load(doprint=False,updated=False):
         with open('settings.json', 'r') as f:
             settings = json.loads(f.read())
+        if 'version' not in settings:
+            ui.update(settings,ui_settings.version)
+            updated = True
+        elif not settings['version'][0] == ui_settings.version[0]:
+            ui.update(settings,ui_settings.version)
+            updated = True
         for category, load_settings in ui.settings_list:
             for setting in load_settings:
                 if setting.name in settings:
@@ -2043,18 +2270,42 @@ class ui:
         if doprint:
             print('Last settings loaded!')
             time.sleep(2)
+        if updated:
+            ui.save()
     def run():
         if ui.setup():
             ui.options()
         else:
             ui.load()
             download_script.run()
+    def update(settings,version):
+        ui.cls('/Update ' + version[0] + '/')
+        print('There has been an update to plex_debrid, which is not compatible with your current settings:')
+        print()
+        print(version[1])
+        print()
+        print('This update will overwrite the following setting/s: ' + str(version[2]))
+        print('A backup file (old.json) with your old settings will be created.')
+        print()
+        input('Press Enter to update your settings:')
+        with open("old.json","w+") as f:
+            json.dump(settings, f,indent=4)
+        for category, load_settings in ui.settings_list:
+            for setting in load_settings:
+                for setting_name in version[1]:
+                    if setting.name == setting_name:
+                        settings[setting.name] = setting.get()
+                    elif setting.name == 'version':
+                        settings[setting.name] = setting.get()
 
+
+            
 #TODO
 #clean up the messy code
 #make things even faster?
 #downloading boolean for element to check if in debrid uncached torrents
 #Add Google Watchlist, IMDB Watchlist, etc
-
+#Change library check to check the user library that added the item.
+#Add a local download option - integrate pyload? JD? idfk
 if __name__ == "__main__":
     ui.run()
