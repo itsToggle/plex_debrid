@@ -312,11 +312,12 @@ class plex(content.services):
                         tic = time.perf_counter()
                         if len(self.Seasons) > 1:
                             self.Releases += scraper(self.query())
+                            parentReleases = copy.deepcopy(self.Releases)
                             if len(self.Seasons) > 3:
                                 if self.debrid_download():
                                     for season in self.Seasons[:]:
                                         for episode in season.Episodes[:]:
-                                            for file in self.downloaded_files:
+                                            for file in self.Releases[0].files:
                                                 if file.match == episode.files()[0]:
                                                     season.Episodes.remove(episode)
                                                     break
@@ -326,7 +327,7 @@ class plex(content.services):
                         threads = []
                         #start thread for each season
                         for index,Season in enumerate(self.Seasons):
-                            t = Thread(target=download, args=(Season,library,self.Releases,results,index))
+                            t = Thread(target=download, args=(Season,library,parentReleases,results,index))
                             threads.append(t)
                             t.start()
                         # wait for the threads to complete
