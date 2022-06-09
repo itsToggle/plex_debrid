@@ -47,7 +47,7 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 
 *For this download automation to work, you need to mount at least one debrid service as a virtual drive. I highly recommend using RealDebrid, as this service will recieve updates and new features from plex_debrid first.*
 
-5Adroid version has only been tested with realdebrid.
+android version has only been tested with realdebrid.
 
 <details>
   <summary><b><u>Mounting RealDebrid</u></b></summary>
@@ -55,11 +55,17 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
   *Its recommended to remove all but a few pages of finished torrents before mounting realdebrid for the first time. You can add as many torrents as you want after that.*
   1. Install the apk file from my rclone fork: https://github.com/itsToggle/rclone_RD
   2. Install my rclone fork on a PC:
+  
       2a. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
+      
       2b. create a new remote by typing 'n'
+      
       2c. give your remote a name (e.g. 'your-remote')
+      
       2d. choose '47) realdebrid' as your remote type
+      
       2e. follow the rest of the prompted instructions, choose 'no advaced configuration'
+      
       2f. Head over to `C:\Users\BigSchlong\.config\rclone` and copy the `rclone.conf` file to your android device.
   3. Open the app and click on 'import config' - choose the rclone config file
   4. You can now see files from your debrid service!
