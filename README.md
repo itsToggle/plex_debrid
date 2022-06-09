@@ -1,4 +1,4 @@
-# plex_debrid
+# plex_debrid (android)
 Plex torrent streaming through Debrid Services, using the new Plex Discover feature.
 
 **Using the new Plex Discover Feature, your Plex Home users can add movies/shows to their watchlist and they become available to stream in seconds.**
@@ -37,7 +37,6 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 - Performing a plex library refresh to make the content available on Plex
 
 ### Upcoming Features:
-- android app version of this script. Ive compiled an android version of my rclone fork, this script is next so the whole setup can run on a shield :)
 - 'local' downloading of content while streaming (optional)
 - adding multiple versions of content (e.g. HDR and non-HDR versions or a version for each resolution etc) (optional)
 - tell me your ideas! :)
@@ -48,72 +47,24 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 
 *For this download automation to work, you need to mount at least one debrid service as a virtual drive. I highly recommend using RealDebrid, as this service will recieve updates and new features from plex_debrid first.*
 
+5Adroid version has only been tested with realdebrid.
+
 <details>
   <summary><b><u>Mounting RealDebrid</u></b></summary>
   
   *Its recommended to remove all but a few pages of finished torrents before mounting realdebrid for the first time. You can add as many torrents as you want after that.*
-  1. Install my rclone fork: https://github.com/itsToggle/rclone_RD
-  2. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
-  3. create a new remote by typing 'n'
-  4. give your remote a name (e.g. 'your-remote')
-  5. choose '47) realdebrid' as your remote type
-  6. follow the rest of the prompted instructions, choose 'no advaced configuration'
-  7. You can mount your newly created remote by running the command 'rclone cmount your-remote: X: --dir-cache-time=10s --vfs-cache-mode=full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
-  8. You've successfuly created a virtual drive of your debrid service!
+  1. Install the apk file from my rclone fork: https://github.com/itsToggle/rclone_RD
+  2. Install my rclone fork on a PC:
+      2a. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
+      2b. create a new remote by typing 'n'
+      2c. give your remote a name (e.g. 'your-remote')
+      2d. choose '47) realdebrid' as your remote type
+      2e. follow the rest of the prompted instructions, choose 'no advaced configuration'
+      2f. Head over to `C:\Users\BigSchlong\.config\rclone` and copy the `rclone.conf` file to your android device.
+  3. Open the app and click on 'import config' - choose the rclone config file
+  4. You can now see files from your debrid service!
 
 </details>
-
-<details>
-  <summary><b><u>Mounting Premiumize</u></b></summary>
-  
-  1. Install either the official rclone software or my fork: https://github.com/itsToggle/rclone_RD
-  2. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
-  3. create a new remote by typing 'n'
-  4. give your remote a name (e.g. 'your-remote')
-  5. choose '46) premiumize' as your remote type
-  6. follow the rest of the prompted instructions, choose 'no advaced configuration'
-  7. You can mount your newly created remote by running the command 'rclone cmount your-remote: X: --dir-cache-time=10s --vfs-cache-mode=full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
-  8. You've successfuly created a virtual drive of your debrid service!
-
-</details>
-
-<details>
-  <summary><b><u>Mounting AllDebrid</u></b></summary>
-  
-  1. Install either the official rclone software or my fork: https://github.com/itsToggle/rclone_RD
-  2. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
-  3. create a new remote by typing 'n'
-  4. give your remote a name (e.g. 'your-remote')
-  5. choose '42) WebDav' as your remote type
-  6. enter 'https://alldebrid.com/webdav/' as the server url
-  7. choose option '5) (other)'
-  8. enter an api key as your user name
-  9. choose option 'y) yes, enter in my own password'
-  10. enter 'eeeee' as the password
-  11. You can mount your newly created remote by running the command 'rclone cmount your-remote:history X: --dir-cache-time=10s --vfs-cache-mode=full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
-  12. You've successfuly created a virtual drive of your debrid service!
-  13. You will only be able to watch content from the "history" folder, not the magnet folder. (As far as I can tell)
-
-</details>
-
-<details>
-  <summary><b><u>Mounting DebridLink</u></b></summary>
-  
-  1. Install either the official rclone software or my fork: https://github.com/itsToggle/rclone_RD
-  2. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
-  3. create a new remote by typing 'n'
-  4. give your remote a name (e.g. 'your-remote')
-  5. choose '42) WebDav' as your remote type
-  6. enter 'https://webdav.debrid.link' as the server url
-  7. choose option '5) (other)'
-  8. enter your debrid-link user name as your user name
-  9. choose option 'y) yes, enter in my own password'
-  10. enter your "passkey" (Available in your account) as the password
-  11. You can mount your newly created remote by running the command 'rclone cmount your-remote X: --dir-cache-time=10s --vfs-cache-mode=full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
-  12. You've successfuly created a virtual drive of your debrid service!
-
-</details>
-
 
 ### 2) Setup Plex:
 
@@ -123,11 +74,18 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 4. You and your home users can now stream cached torrents from RealDebrid!
 
 ### 3) Setup plex_debrid:
-1. Run the script! (google "how to run a python script" ;) )
-2. The script will guide you through the initial setup.
-3. You're done!
-4. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
-5. Read the rest of the README!
+1. Install Termux from F-Droid
+2. run command 'pkg update'
+3. run command 'pkg install python'
+4. run command 'pkg install git'
+5. run command 'termux-setup-storage', allow the permission
+6. run command 'git clone -b android https://github.com/itsToggle/plex_debrid'
+7. run command 'python plex_debrid/plex_rd.py'
+8. The script will guide you through the initial setup.
+9. You're done!
+10. You will most likely need to edit your plex server address, if the server is not running on your android device. the script will tell you if it can't reach the server.
+11. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
+12. Read the rest of the README!
 
 ## Usage:
 
