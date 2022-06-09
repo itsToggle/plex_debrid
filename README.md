@@ -47,7 +47,9 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 
 *For this download automation to work, you need to mount at least one debrid service as a virtual drive. I highly recommend using RealDebrid, as this service will recieve updates and new features from plex_debrid first.*
 
-android version has only been tested with realdebrid.
+android version has only been tested with realdebrid. 
+
+**looks like this is a dead end, since a plex server on android will only accept mounted storage as file locations. Mounting is only possible with root privileges, and this app is not needed for the rooted Mounting method. I'll keep looking but im pretty sure the only way to mount is to root.**
 
 <details>
   <summary><b><u>Mounting RealDebrid</u></b></summary>
