@@ -37,6 +37,7 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 - Performing a plex library refresh to make the content available on Plex
 
 ### Upcoming Features:
+- android app version of this script. Ive compiled an android version of my rclone fork, this script is next so the whole setup can run on a shield :)
 - 'local' downloading of content while streaming (optional)
 - adding multiple versions of content (e.g. HDR and non-HDR versions or a version for each resolution etc) (optional)
 - tell me your ideas! :)
