@@ -279,7 +279,7 @@ class plex(content.services):
                 for season in Seasons[:]:
                     if not season.collected(list) and not season.watched() and season.released() and not season.downloading():
                         for episode in season.Episodes[:]:
-                            if episode.collected(list) or episode.watched() or not episode.released() and not episode.downloading():
+                            if episode.collected(list) or episode.watched() or not episode.released() or episode.downloading():
                                 season.Episodes.remove(episode)
                     else:
                         Seasons.remove(season)
