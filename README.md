@@ -75,6 +75,7 @@ android version has only been tested with realdebrid.
 </details>
 
 ### 2) Setup Plex:
+This step will not work (currently). There is no way to mount the files from the rclone apk.
 
 1. Create a plex 'movie' library of the mounted virtual drive or add the virtual drive to an existing 'movie' library.
 2. Create a plex 'shows' library of the mounted virtual drive or add the virtual drive to an existing 'shows' library.
