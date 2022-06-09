@@ -34,12 +34,18 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
   - <img src="https://www.premiumize.me/favicon-16x16.png" height="16"> **[Premiumize](https://www.premiumize.me/)**
   - <img src="https://cdn.alldebrid.com/lib/images/default/favicon.png" height="16"> **[AllDebrid](https://alldebrid.com/)**
   - <img src="https://cdn.debrid-link.com/favicon.ico?i=2" height="16"> **[DebridLink](https://debrid-link.com/)**
-- Performing a plex library refresh to make the content available
+- Performing a plex library refresh to make the content available on Plex
+
+### Upcoming Features:
+- 'local' downloading of content while streaming (optional)
+- adding multiple versions of content (e.g. HDR and non-HDR versions or a version for each resolution etc) (optional)
+- tell me your ideas! :)
+
 ## Setup:
 
 ### 1) Mount your debrid services:
 
-*For this download automation to work, you need to mount at least one debrid service as a virtual drive. I highly recommend using RealDebrid, as this service will recieve updates from me first.*
+*For this download automation to work, you need to mount at least one debrid service as a virtual drive. I highly recommend using RealDebrid, as this service will recieve updates and new features from plex_debrid first.*
 
 <details>
   <summary><b><u>Mounting RealDebrid</u></b></summary>
