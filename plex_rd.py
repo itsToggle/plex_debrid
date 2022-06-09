@@ -109,7 +109,7 @@ class plex(content.services):
             return None
     class watchlist(watchlist):
         def __init__(self) -> None:
-            ui.print('updating entire plex watchlist ...')
+            ui.print('getting entire plex watchlist ...')
             self.data = []
             try:
                 for user in plex.users:
@@ -144,7 +144,7 @@ class plex(content.services):
             elif item.type == 'movie':
                 self.data.append(plex.movie(item.ratingKey))
         def update(self):
-            ui.print("updating plex watchlist ...",debug=ui_settings.debug)
+            ui.print("getting plex watchlist ...",debug=ui_settings.debug)
             update = False
             try:
                 for user in plex.users:
@@ -277,9 +277,9 @@ class plex(content.services):
                     return []
                 Seasons = copy.deepcopy(self.Seasons)
                 for season in Seasons[:]:
-                    if not season.collected(list) and not season.watched() and season.released():
+                    if not season.collected(list) and not season.watched() and season.released() and not season.downloading():
                         for episode in season.Episodes[:]:
-                            if episode.collected(list) or episode.watched() or not episode.released():
+                            if episode.collected(list) or episode.watched() or not episode.released() and not episode.downloading():
                                 season.Episodes.remove(episode)
                     else:
                         Seasons.remove(season)
@@ -287,12 +287,14 @@ class plex(content.services):
                         Seasons.remove(season)
                 return Seasons
             return []
+        def downloading(self):
+            return self in debrid.downloading
         def download(self,retries=1,library=[],parentReleases=[]):
             i = 0
             refresh = False
             self.Releases = []
             if self.type == 'movie':
-                if self.released() and not self.watched():
+                if self.released() and not self.watched() and not self.downloading():
                     if len(self.uncollected(library)) > 0:
                         tic = time.perf_counter()
                         while len(self.Releases) == 0 and i <= retries:
@@ -388,13 +390,13 @@ class plex(content.services):
                     plex.library.refresh(plex.library.shows)
                 return True
         def debrid_download(self):
-            if not debrid.download(self,stream=True):
-                if not self.type == 'show':
-                    if not debrid.download(self,stream=False):
-                        return False
-                else:
-                    return False
-            return True             
+            if debrid.download(self,stream=True):
+                return True
+            if not self.type == 'show':
+                if debrid.download(self,stream=False):
+                    debrid.downloading += [self]
+                    return True
+            return False
         def files(self):
             files = []
             if self.type == 'movie':
@@ -483,22 +485,46 @@ class plex(content.services):
         url = 'http://localhost:32400'
         movies = '1'
         shows = '2'
+        check = []
         def refresh(section):
             ui.print('refreshing library section '+section+' ...')
             url = plex.library.url + '/library/sections/' + section + '/refresh?X-Plex-Token=' + plex.users[0][1]
             plex.session.get(url)
             ui.print('done')
         def __new__(self):
-            url = plex.library.url + '/library/all?X-Plex-Token='+ plex.users[0][1]
             list = []
-            response = plex.get(url)
-            if hasattr(response,'MediaContainer'):
-                if hasattr(response.MediaContainer,'Metadata'):
-                    for element in response.MediaContainer.Metadata:
-                        list += [plex.media(element)]
+            if not plex.library.check == [['']] and not plex.library.check == []:
+                ui.print('getting plex library section/s "'+','.join(x[0] for x in plex.library.check) +'" ...')
+                types = ['1','2','3','4']
+                for section in plex.library.check:
+                    if section[0] == '':
+                        continue
+                    section_response = []
+                    for type in types:
+                        url = plex.library.url + '/library/sections/'+section[0]+'/all?type='+type+'&X-Plex-Token='+ plex.users[0][1]
+                        response = plex.get(url)
+                        if hasattr(response,'MediaContainer'):
+                            if hasattr(response.MediaContainer,'Metadata'):
+                                for element in response.MediaContainer.Metadata:
+                                    section_response += [plex.media(element)]
+                    if len(section_response) == 0:
+                        ui.print("plex error: couldnt reach local plex library section '"+section[0]+"' at server address: " + plex.library.url + " - or this library really is empty.")  
+                    else:
+                        list += section_response
+                ui.print('done')
             else:
-                ui.print("plex error: couldnt reach local plex server at server address: " + plex.library.url + " - or your library really is empty.")    
-                ui.print("to prevent unwanted behaviour, no further downloads will be started." + plex.library.url) 
+                ui.print('getting entire plex library ...')
+                url = plex.library.url + '/library/all?X-Plex-Token='+ plex.users[0][1]
+                response = plex.get(url)
+                ui.print('done')
+                if hasattr(response,'MediaContainer'):
+                    if hasattr(response.MediaContainer,'Metadata'):
+                        for element in response.MediaContainer.Metadata:
+                            list += [plex.media(element)]
+                else:
+                    ui.print("plex error: couldnt reach local plex server at server address: " + plex.library.url + " - or this library really is empty.")    
+            if len(list) == 0:
+                ui.print("plex error: Your library seems empty. To prevent unwanted behaviour, no further downloads will be started. If your library really is empty, please add at least one media item manually.") 
             return list
     def search(query,library=[]):
         query = query.replace(' ','%20')
@@ -692,6 +718,7 @@ class trakt(content.services):
             return None
 #Debrid Class 
 class debrid:
+    downloading = []
     #Service Class:
     class services:
         active = []
@@ -736,14 +763,13 @@ class debrid:
     #Download Method:
     def download(element:plex.media,stream=True,query='',force=False):
         if stream:
-            cached_releases = debrid.check(element,force=force)
+            debrid.check(element,force=force)
+            cached_releases = copy.deepcopy(element.Releases)
             for release in cached_releases:
                 element.Releases = [release,]
                 for service in debrid.services():
-                    if release.service == service.name:
+                    if service.short in release.cached:
                         if service.download(element,stream=stream,query=query,force=force):
-                            if element.type == 'show':
-                                element.downloaded_files = element.Releases[0].files
                             return True
         else:
             scraped_releases = copy.deepcopy(element.Releases)
@@ -753,16 +779,16 @@ class debrid:
                     if service.download(element,stream=stream,query=query,force=force):
                         return True
         return False
+    #Check Method:
     def check(element:plex.media,force=False):
-        results = []
         for service in debrid.services():
-            results += service.check(element,force=force)
-        releases.sort(results)
-        return results
+            service.check(element,force=force)
+        releases.sort(element.Releases)
     #RealDebrid class
     class realdebrid(services):
         #(required) Name of the Debrid service
         name = "Real Debrid"
+        short = "RD"
         #(required) Authentification of the Debrid service, can be oauth aswell. Create a setting for the required variables in the ui.settings_list. For an oauth example check the trakt authentification.
         api_key = ""
         #Define Variables
@@ -895,12 +921,11 @@ class debrid:
             return False
         #(required) Check Function
         def check(element,force=False):
-            cached_releases = []
             if force:
                 wanted = ['.*']
             else:
                 wanted = element.files()
-            unwanted = releases.unwanted
+            unwanted = releases.sort.unwanted
             hashes = []
             for release in element.Releases[:]:
                 if not release.hash == '':
@@ -926,19 +951,13 @@ class debrid:
                                 release.files.sort(key=lambda x: x.unwanted, reverse=False)
                                 release.wanted = release.files[0].wanted
                                 release.unwanted = release.files[0].unwanted
-                                release.service = 'Real Debrid'
-                                cached_releases += [release]
+                                release.cached += ['RD']
                                 continue
-            try:
-                cached_releases.sort(key=lambda x: x.wanted, reverse=True)
-                cached_releases.sort(key=lambda x: x.unwanted, reverse=False)
-            except:
-                cached_releases = []
-            return cached_releases
     #AllDebrid class
     class alldebrid(services):
         #(required) Name of the Debrid service
         name = "All Debrid"
+        short = "AD"
         #(required) Authentification of the Debrid service, can be oauth aswell. Create a setting for the required variables in the ui.settings_list. For an oauth example check the trakt authentification.
         api_key = ""
         #Define Variables
@@ -1015,12 +1034,11 @@ class debrid:
             return False  
         #(required) Check Function
         def check(element,force=False):
-            cached_releases = []
             if force:
                 wanted = ['.*']
             else:
                 wanted = element.files()
-            unwanted = releases.unwanted
+            unwanted = releases.sort.unwanted
             hashes = []
             for release in element.Releases[:]:
                 if not release.hash == '':
@@ -1033,22 +1051,16 @@ class debrid:
                     try:
                         instant = response.data.magnets[i].instant
                         if instant:
-                            release.service = 'All Debrid'
-                            release.wanted = 0
-                            release.unwanted = 0
-                            cached_releases += [release]
+                            release.cached += ['AD']
+                            #release.wanted = 0
+                            #release.unwanted = 0
                     except:
                         continue
-            try:
-                cached_releases.sort(key=lambda x: x.wanted, reverse=True)
-                cached_releases.sort(key=lambda x: x.unwanted, reverse=False)
-            except:
-                cached_releases = []
-            return cached_releases
     #Premiumize class
     class premiumize(services):
         #(required) Name of the Debrid service
         name = "Premiumize"
+        short = "PM"
         #(required) Authentification of the Debrid service, can be oauth aswell. Create a setting for the required variables in the ui.settings_list. For an oauth example check the trakt authentification.
         api_key = ""
         #Define Variables
@@ -1118,12 +1130,11 @@ class debrid:
             return False      
         #(required) Check Function
         def check(element,force=False):
-            cached_releases = []
             if force:
                 wanted = ['.*']
             else:
                 wanted = element.files()
-            unwanted = releases.unwanted
+            unwanted = releases.sort.unwanted
             hashes = []
             for release in element.Releases[:]:
                 if not release.hash == '':
@@ -1136,22 +1147,16 @@ class debrid:
                     try:
                         instant = response.response[i]
                         if instant:
-                            release.service = 'Premiumize'
-                            release.wanted = 0
-                            release.unwanted = 0
-                            cached_releases += [release]
+                            release.cached += ['PM']
+                            #release.wanted = 0
+                            #release.unwanted = 0
                     except:
                         continue
-            try:
-                cached_releases.sort(key=lambda x: x.wanted, reverse=True)
-                cached_releases.sort(key=lambda x: x.unwanted, reverse=False)
-            except:
-                cached_releases = []
-            return cached_releases
     #DebridLink class
     class debridlink(services):
         #(required) Name of the Debrid service
         name = "Debrid Link"
+        short = "DL"
         #(required) Authentification of the Debrid service, can be oauth aswell. Create a setting for the required variables in the ui.settings_list. For an oauth example check the trakt authentification.
         api_key = ""
         client_id = "0KLCzpbPTCsWZtQ9Ad0aZA"
@@ -1244,12 +1249,11 @@ class debrid:
             return False  
         #(required) Check Function
         def check(element,force=False):
-            cached_releases = []
             if force:
                 wanted = ['.*']
             else:
                 wanted = element.files()
-            unwanted = releases.unwanted
+            unwanted = releases.sort.unwanted
             hashes = []
             for release in element.Releases[:]:
                 if not release.hash == '':
@@ -1261,22 +1265,13 @@ class debrid:
                 for i,release in enumerate(element.Releases):
                     try:
                         if hasattr(response.value,release.hash.lower()):
-                            release.service = 'Debrid Link'
-                            release.wanted = 0
-                            release.unwanted = 0
-                            cached_releases += [release]
+                            release.cached += ['DL']
+                            #release.wanted = 0
+                            #release.unwanted = 0
                     except:
                         continue
-            try:
-                cached_releases.sort(key=lambda x: x.wanted, reverse=True)
-                cached_releases.sort(key=lambda x: x.unwanted, reverse=False)
-            except:
-                cached_releases = []
-            return cached_releases
 #Release Class
-class releases:
-    #Unwanted definition
-    unwanted = ['sample']
+class releases:   
     #Define release attributes
     def __init__(self, source, type, title, files, size, download):
         self.source     = source
@@ -1298,6 +1293,7 @@ class releases:
         return self.title == other.title
     #Sort Method
     class sort:
+        unwanted = ['sample']
         multiple_versions_trigger = ""
         ranking= [
             [
@@ -1385,26 +1381,27 @@ class releases:
         return string    
     #Print Method
     def print(scraped_releases):
-        longest_file = 0
-        longest_cached = 0
-        longest_title = 0
-        longest_size = 0
-        longest_index = 0
-        for index,release in enumerate(scraped_releases):
-            release.size = str(round(release.size, 2))
-            release.file = '+' + str(release.wanted) + '/-' + str(release.unwanted)
-            if len(release.file) > longest_file:
-                longest_file = len(release.file)
-            if len('/'.join(release.cached)) > longest_cached:
-                longest_cached = len('/'.join(release.cached))
-            if len(release.title) > longest_title:
-                longest_title = len(release.title)
-            if len(str(release.size)) > longest_size:
-                longest_size = len(str(release.size))
-            if len(str(index+1)) > longest_index:
-                longest_index = len(str(index+1))
-        for index,release in enumerate(scraped_releases):
-            print(str(index+1)+") "+' ' * (longest_index-len(str(index+1)))+"title: " + release.title + ' ' * (longest_title-len(release.title)) + " | size: " + str(release.size) + ' ' * (longest_size-len(str(release.size))) + " | cached: " + '/'.join(release.cached) + ' ' * (longest_cached-len('/'.join(release.cached))) + " | files: " + release.file + ' ' * (longest_file-len(release.file)) + " | source: " + release.source )
+        if __name__ == "__main__":
+            longest_file = 0
+            longest_cached = 0
+            longest_title = 0
+            longest_size = 0
+            longest_index = 0
+            for index,release in enumerate(scraped_releases):
+                release.printsize = str(round(release.size, 2))
+                release.file = '+' + str(release.wanted) + '/-' + str(release.unwanted)
+                if len(release.file) > longest_file:
+                    longest_file = len(release.file)
+                if len('/'.join(release.cached)) > longest_cached:
+                    longest_cached = len('/'.join(release.cached))
+                if len(release.title) > longest_title:
+                    longest_title = len(release.title)
+                if len(str(release.printsize)) > longest_size:
+                    longest_size = len(str(release.printsize))
+                if len(str(index+1)) > longest_index:
+                    longest_index = len(str(index+1))
+            for index,release in enumerate(scraped_releases):
+                print(str(index+1)+") "+' ' * (longest_index-len(str(index+1)))+"title: " + release.title + ' ' * (longest_title-len(release.title)) + " | size: " + str(release.printsize) + ' ' * (longest_size-len(str(release.printsize))) + " | cached: " + '/'.join(release.cached) + ' ' * (longest_cached-len('/'.join(release.cached))) + " | files: " + release.file + ' ' * (longest_file-len(release.file)) + " | source: " + release.source )
 #Scraper Class
 class scraper: 
     #Service Class:
@@ -2006,8 +2003,9 @@ class ui:
             setting('Trakt users',['Please provide a name for this Trakt user: ','Please open your favorite browser, log into this Trakt user and open "https://trakt.tv/activate". Enter this code: '],trakt,'users',entry="user",oauth=True,hidden=True),
             setting('Trakt-to-Plex synchronization','Please enter "true" or "false": ',trakt,'sync_with_plex',hidden=True),
             setting('Plex server address','Please enter your Plex server address: ',plex.library,'url',hidden=True),
-            setting('Plex "movies" library','Please enter the section number of the "movies" library, that should be refreshed after a movie download: ',plex.library,'movies',required=True,hidden=True),
-            setting('Plex "shows" library','Please enter the section number of the "shows" library, that should be refreshed after a show download: ',plex.library,'shows',required=True,hidden=True)
+            setting('Plex "movies" library','Please enter the section number of the "movies" library, that should be refreshed after a movie download. To find the section number, go to "https://app.plex.tv", open your "movies" library and look for the "source=" parameter in the url. Please enter the section number: ',plex.library,'movies',required=True,hidden=True),
+            setting('Plex "shows" library','Please enter the section number of the "shows" library, that should be refreshed after a show download. To find the section number, go to "https://app.plex.tv", open your "shows" library and look for the "source=" parameter in the url. Please enter the section number:  ',plex.library,'shows',required=True,hidden=True),
+            setting('Plex library check',['Please specify a library section number that should be checked for existing content before download: '],plex.library,'check',hidden=True,entry="section",help='By default, your entire library (including plex shares) is checked for existing content before a download is started. This setting allows you limit this check to specific library sections. To find a section number, go to "https://app.plex.tv", open your the library you want to include in the check and look for the "source=" parameter in the url.'),
             ]
         ],
         ['Scraper',[
@@ -2099,28 +2097,17 @@ class ui:
         ui.options()
     def scrape():
         ui.cls('Options/Scraper/')
+        print('Press Enter to return to the main menu.')
+        print()
         query = input("Enter a query: ")
+        if query == '':
+            return
         print()
         obj = releases('','','',[],0,[])
         scraped_releases = scraper(query.replace(' ','.'))
         if len(scraped_releases) > 0:
             obj.Releases = scraped_releases
-            cached_releases = debrid.check(obj,force=True)
-            for release in scraped_releases:
-                release.cached = []
-                for cached_release in cached_releases:
-                    if release.hash == cached_release.hash:
-                        release.wanted = cached_release.wanted
-                        release.unwanted = cached_release.unwanted
-                        if cached_release.service == 'Real Debrid' and not 'RD' in release.cached:
-                            release.cached += ['RD']
-                        elif cached_release.service == 'All Debrid' and not 'AD' in release.cached:
-                            release.cached += ['AD']
-                        elif cached_release.service == 'Premiumize' and not 'PM' in release.cached:
-                            release.cached += ['PM']
-                        elif cached_release.service == 'Debrid Link' and not 'DL' in release.cached:
-                            release.cached += ['DL']
-            releases.sort(scraped_releases)
+            debrid.check(obj,force=True)
             print()
             print("0) Back")
             releases.print(scraped_releases)
@@ -2130,44 +2117,50 @@ class ui:
             while not back:
                 print()
                 choice = input("Choose a release to download: ")
-                if choice == 'auto':
-                    release = scraped_releases[0]
-                    release.Releases = scraped_releases
-                    if debrid.download(release,stream=True,query=query,force=True):
-                        back = True
-                        time.sleep(3)
-                    else:
-                        print()
-                        print("These releases do not seem to be cached on your debrid services. Add uncached torrent?")
-                        print()
-                        print("0) Back")
-                        print("1) Add uncached torrent")
-                        print()
-                        choice = input("Choose an action: ")
-                        if choice == '1':
-                            debrid.download(release,stream=False,query=query,force=True)
+                try:
+                    if choice == 'auto':
+                        release = scraped_releases[0]
+                        release.Releases = scraped_releases
+                        if debrid.download(release,stream=True,query=query,force=True):
                             back = True
                             time.sleep(3)
-                elif int(choice) <= len(scraped_releases) and not int(choice) <= 0:
-                    release = scraped_releases[int(choice)-1]
-                    release.Releases = [release,]
-                    if debrid.download(release,stream=True,query=release.title,force=True):
-                        back = True
-                        time.sleep(3)
-                    else:
-                        print()
-                        print("This release does not seem to be cached on your debrid services. Add uncached torrent?")
-                        print()
-                        print("0) Back")
-                        print("1) Add uncached torrent")
-                        print()
-                        choice = input("Choose an action: ")
-                        if choice == '1':
-                            debrid.download(release,stream=False,query=query,force=True)
+                        else:
+                            print()
+                            print("These releases do not seem to be cached on your debrid services. Add uncached torrent?")
+                            print()
+                            print("0) Back")
+                            print("1) Add uncached torrent")
+                            print()
+                            choice = input("Choose an action: ")
+                            if choice == '1':
+                                debrid.download(release,stream=False,query=query,force=True)
+                                back = True
+                                time.sleep(3)
+                    elif int(choice) <= len(scraped_releases) and not int(choice) <= 0:
+                        release = scraped_releases[int(choice)-1]
+                        release.Releases = [release,]
+                        if debrid.download(release,stream=True,query=release.title,force=True):
                             back = True
                             time.sleep(3)
-                elif choice == '0':
-                    back = True
+                        else:
+                            print()
+                            print("This release does not seem to be cached on your debrid services. Add uncached torrent?")
+                            print()
+                            print("0) Back")
+                            print("1) Add uncached torrent")
+                            print()
+                            choice = input("Choose an action: ")
+                            if choice == '1':
+                                if debrid.download(release,stream=False,query=query,force=True):
+                                    back = True
+                                    time.sleep(3)
+                                else:
+                                    print()
+                                    print("There was an error adding this uncached torrent to your debrid service. Choose another release?")
+                    elif choice == '0':
+                        back = True
+                except:
+                    back = False
         else:
             print("No releases were found!")
             time.sleep(3)
@@ -2298,15 +2291,13 @@ class ui:
                         settings[setting.name] = setting.get()
                     elif setting.name == 'version':
                         settings[setting.name] = setting.get()
-
-
             
 #TODO
 #clean up the messy code
 #make things even faster?
-#downloading boolean for element to check if in debrid uncached torrents
 #Add Google Watchlist, IMDB Watchlist, etc
 #Change library check to check the user library that added the item.
 #Add a local download option - integrate pyload? JD? idfk
+
 if __name__ == "__main__":
     ui.run()
