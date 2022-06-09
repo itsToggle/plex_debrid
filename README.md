@@ -130,7 +130,7 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
   - The Plex Watchlist and the Discover feature are only available for accounts that are linked to an email address - so no managed accounts.
   - You've already added one user in the initial setup. To allow content download by other users that youve invited to your Plex Home, create a new user by navigation to '/Settings/Content Services/Plex/Plex users/Edit/Add user'.
   - You and the users you've added can now browse the Discover part of Plex and download content by adding it to the Plex Watchlist.
-  - Your *entire* Plex Library (including shares) is checked before downloading anything and the script will avoid duplicate downloads.
+  - By default, your *entire* Plex Library (including shares) is checked before downloading anything and the script will avoid duplicate downloads. To limit this library check to specific library sections, navigate to '/Settings/Content Services/Plex/Plex library check/Edit'
   - If you want to delete something from your Plex server, make sure that you've removed it from your Watchlist first. Otherwise the script will see that its in your watchlist and not on your server and will simply download it again.
   - Movies that you add to your Plex Watchlist are removed automatically once they are downloaded. Shows stay in the Watchlist, because only shows that are in the Watchlist are monitored for newly released episodes.
   - The Plex Watchlist of your specified users will polled for changes every 5 seconds, which is when it will try to find newly added content. 
