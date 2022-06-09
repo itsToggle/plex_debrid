@@ -424,6 +424,7 @@ class plex(content.services):
                             for episode in response.MediaContainer.Metadata:
                                 episode.grandparentYear = self.parentYear
                                 self.Episodes += [plex.episode(episode)] 
+                        self.leafCount = response.MediaContainer.totalSize
                 else: 
                     time.sleep(1)       
     class episode(media):
