@@ -49,33 +49,62 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 
 android version has only been tested with realdebrid. 
 
-**looks like this is a dead end, since a plex server on android will only accept mounted storage as file locations. Mounting is only possible with root privileges, and this app is not needed for the rooted Mounting method. I'll keep looking but im pretty sure the only way to mount is to root.**
-
 <details>
-  <summary><b><u>Mounting RealDebrid</u></b></summary>
+  <summary><b><u>Mounting RealDebrid (non-root, doesnt work with plex)</u></b></summary>
   
   *Its recommended to remove all but a few pages of finished torrents before mounting realdebrid for the first time. You can add as many torrents as you want after that.*
-  1. Install the apk file from my rclone fork: https://github.com/itsToggle/rclone_RD
-  2. Install my rclone fork on a PC:
   
-      2a. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
-      
-      2b. create a new remote by typing 'n'
-      
-      2c. give your remote a name (e.g. 'your-remote')
-      
-      2d. choose '47) realdebrid' as your remote type
-      
-      2e. follow the rest of the prompted instructions, choose 'no advaced configuration'
-      
-      2f. Head over to `C:\Users\BigSchlong\.config\rclone` and copy the `rclone.conf` file to your android device.
-  3. Open the app and click on 'import config' - choose the rclone config file
-  4. You can now see files from your debrid service!
+    1) Create an rclone config file:
+  
+    Create the file manually:
+    - Open your favorite text editor and paste the following lines:
+  
+    [realdebrid]
+    type = realdebrid
+    api_key = your-api-key-here
+
+    - replace 'your-api-key-here' with your api key, save the file as 'rclone.conf' and copy it to your android device.
+  
+    or install my rclone fork on a PC:
+  
+    - configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
+    - create a new remote by typing 'n'
+    - give your remote a name (e.g. 'your-remote')
+    - choose '47) realdebrid' as your remote type
+    - follow the rest of the prompted instructions, choose 'no advaced configuration'
+    - Head over to `C:\Users\BigSchlong\.config\rclone` and copy the `rclone.conf` file to your android device.
+  
+    2. Open the app and click on 'import config' - choose the rclone config file
+    3. You can now see files from your debrid service!
 
 </details>
 
+<details>
+  <summary><b><u>Mounting RealDebrid (root, works with plex)</u></b></summary>
+  
+  *Its recommended to remove all but a few pages of finished torrents before mounting realdebrid for the first time. You can add as many torrents as you want after that.*
+  
+  This setup can be done entirely on your android device:
+  
+  1. Install Termux from F-Droid
+  2. run command 'pkg update'
+  3. run command 'termux-setup-storage', allow the permission
+  4. run command 'pkg install wget'
+  5. run command 'wget https://github.com/itsToggle/rclone_RD/releases/download/v1.58.1-rd.1.4/rclone-android'
+  6. run command 'chmod +x rclone-android'
+  7. run command './rclone-android config'
+  8. create a new remote by typing 'n'
+  9. give your remote a name (e.g. 'your-remote')
+  10. choose '47) realdebrid' as your remote type
+  11. follow the rest of the prompted instructions, choose 'no advaced configuration'
+  12. You've successfully created a realdebrid remote!
+  13. I dont have a rooted device, so I dont know what 'sudo' or 'su' commands will be necessary here, but this is as far as I can come without root:
+  14. when running the command './rclone-android mount your-remote: x:' you will probaply encounter an error saying that fuselib2 is missing. Follow the prompted instructions by running both the commands that the error tells you to run.
+  15. From here you need to consult official rclone sources (e.g. googeling)
+</details>
+
 ### 2) Setup Plex:
-This step will not work (currently). There is no way to mount the files from the rclone apk.
+This step will only work if you have a rooted device and followed the rooted mounting procedure above.
 
 1. Create a plex 'movie' library of the mounted virtual drive or add the virtual drive to an existing 'movie' library.
 2. Create a plex 'shows' library of the mounted virtual drive or add the virtual drive to an existing 'shows' library.
