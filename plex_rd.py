@@ -13,7 +13,6 @@ try:
     import copy
     import random
     from threading import Thread
-    import clipboard
     from collections.abc import Sequence
 except Exception as e:
     print("python error: (module import exception): ")
@@ -1784,8 +1783,7 @@ class ui:
                         setattr(self.cls,self.key,console_input)
                         return True
                     else:
-                        clipboard.copy(getattr(self.cls,self.key))
-                        console_input = input(self.prompt + '- current value "'+str(getattr(self.cls,self.key))+'" copied to your clipboard: ')
+                        console_input = input(self.prompt + '- current value "'+str(getattr(self.cls,self.key))+'": ')
                         setattr(self.cls,self.key,console_input)
                         return True
                 else:
@@ -1899,8 +1897,7 @@ class ui:
                                         else:
                                             edit = []
                                             for k,prompt in enumerate(self.prompt):
-                                                clipboard.copy(lists[int(index)-1][k])
-                                                response = input(prompt + '- current value "'+lists[int(index)-1][k]+'" copied to your clipboard: ')
+                                                response = input(prompt + '- current value "'+lists[int(index)-1][k]+'": ')
                                                 edit += [response]
                                             lists[int(index)-1] = edit
                                             setattr(self.cls,self.key,lists)
