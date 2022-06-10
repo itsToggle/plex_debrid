@@ -43,6 +43,13 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 - tell me your ideas! :)
 
 ## Setup:
+For linux, mac and windows, the setup process does not require any additional preparation. For different operating systems, check out the information the fine people linked here have gathered:
+<details>
+  <summary><b><u>Help for your OS</u></b></summary>
+  
+  - **[FreeBSD (u/TheNicestRichtofen)](https://www.reddit.com/r/Piracy/comments/v5zpj7/comment/ibnikqh/?utm_source=share&utm_medium=web2x&context=3)**
+  - **[Android](https://github.com/itsToggle/plex_debrid/tree/android)**
+</details>
 
 ### 1) Mount your debrid services:
 
@@ -261,3 +268,7 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 
 ## Limitations:
 - The plex discover API only provides a release date, not a release time for new episodes. This makes it hard to determined when to start looking for releases and when to ignore an episode. This script will only download episodes when its been a day since the air-date or if plex shows the episode as availabe on streaming services. It is recommended to connect this script to trakt.tv, to allow for more accurate release dates and times.
+
+## Buy me a beer/coffee? :)
+
+I've written this automation because it's a hell of a lot of fun and because I've wanted a setup like this for a while. The continuation of this project does **not**, in any way, depend on monetary contributions. If you do want to buy me a beer/coffee, feel free to use my real-debrid [affiliate link](http://real-debrid.com/?id=5708990) or send a virtual beverage via [PayPal](https://www.paypal.com/paypalme/oidulibbe) :)
