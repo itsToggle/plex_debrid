@@ -1603,7 +1603,7 @@ class scraper:
                     filters = []
                     for fil in scraper.jackett.filters:
                         if not fil[0] == '':
-                            filters += fil[0]
+                            filters += fil
                     if not filters == []:
                         filter = (",").join(filters)
                     else:
@@ -1648,15 +1648,18 @@ class scraper:
             return scraped_releases
         def resolve(result):
             scraped_releases = []
-            link = scraper.jackett.session.get(result.Link,allow_redirects=False)
-            if regex.search(r'(?<=btih:).*?(?=&)',str(link.headers['Location']),regex.I):
-                if not result.Tracker == None and not result.Size == None:
-                    scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],float(result.Size)/1000000000,[link.headers['Location']])]
-                elif not result.Tracker == None:
-                    scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],1,[link.headers['Location']])]
-                elif not result.Size == None:
-                    scraped_releases += [releases('[jackett: unnamed]','torrent',result.Title,[],float(result.Size)/1000000000,[link.headers['Location']])]
-            return scraped_releases 
+            try:
+                link = scraper.jackett.session.get(result.Link,allow_redirects=False)
+                if regex.search(r'(?<=btih:).*?(?=&)',str(link.headers['Location']),regex.I):
+                    if not result.Tracker == None and not result.Size == None:
+                        scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],float(result.Size)/1000000000,[link.headers['Location']])]
+                    elif not result.Tracker == None:
+                        scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],1,[link.headers['Location']])]
+                    elif not result.Size == None:
+                        scraped_releases += [releases('[jackett: unnamed]','torrent',result.Title,[],float(result.Size)/1000000000,[link.headers['Location']])]
+                return scraped_releases
+            except:
+                return scraped_releases
 #Multiprocessing scrape method
 def scrape(cls:scraper,query,result,index):
     result[index] = cls(query)
