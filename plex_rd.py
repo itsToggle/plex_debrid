@@ -88,9 +88,9 @@ class plex(content.services):
             ui.print("Plex error: " + str(response.content),debug=ui_settings.debug)
         if response.status_code == 401:
             ui.print("plex error: (401 unauthorized): user token does not seem to work. check your plex user settings.")
-    def get(url):
+    def get(url,timeout=30):
         try:
-            response = plex.session.get(url,headers=plex.headers)
+            response = plex.session.get(url,headers=plex.headers,timeout=timeout)
             plex.logerror(response)
             response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
             return response
@@ -154,6 +154,7 @@ class plex(content.services):
                             for entry in response.MediaContainer.Metadata:
                                 entry.user = user
                                 if not entry in self.data:
+                                    ui.print('item: "' + entry.title + '" found in '+ user[0] +'`s plex watchlist')
                                     update = True
                                     if entry.type == 'show':
                                         self.data += [plex.show(entry)]
@@ -197,35 +198,43 @@ class plex(content.services):
                 title = title.replace('.'+str(self.grandparentYear),'')
                 return title + '.S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index))+ '.'
         def released(self):
-            released = datetime.datetime.today() - datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
-            if self.type == 'movie':
-                if released.days >= 0 and released.days <= 60:
-                    if self.available():
-                        return True
-                    else:
-                        return False
-                return released.days > 0
-            else:
-                if released.days >= 0 and released.days <= 1:
-                    if self.available():
-                        return True
-                    else:
-                        return False
-                return released.days > 0
+            try:
+                released = datetime.datetime.today() - datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
+                if self.type == 'movie':
+                    if released.days >= -30 and released.days <= 60:
+                        if self.available():
+                            return True
+                        else:
+                            return False
+                    return released.days > 0
+                else:
+                    if released.days >= 0 and released.days <= 1:
+                        if self.available():
+                            return True
+                        else:
+                            return False
+                    return released.days > 0
+            except Exception as e:
+                ui.print("plex error: (attr exception): " + str(e),debug=ui_settings.debug)
+                return False
         def available(self):
             if len(trakt.users) > 0:
-                for guid in self.Guid:
-                    service,guid = guid.id.split('://')
-                    trakt_match = trakt.match(guid,service,self.type)
+                try:
+                    for guid in self.Guid:
+                        service,guid = guid.id.split('://')
+                        trakt_match = trakt.match(guid,service,self.type)
+                        if not trakt_match == None:
+                            break
                     if not trakt_match == None:
-                        break
-                if not trakt_match == None:
-                    if self.type == 'movie':
-                        return trakt.media.available(trakt_match)
-                    elif self.type == 'episode':
-                        trakt_match.next_season = self.parentIndex
-                        trakt_match.next_episode = self.index
-                        return trakt.media.available(trakt_match)
+                        if self.type == 'movie':
+                            return trakt.media.available(trakt_match)
+                        elif self.type == 'episode':
+                            trakt_match.next_season = self.parentIndex
+                            trakt_match.next_episode = self.index
+                            return trakt.media.available(trakt_match)
+                except Exception as e:
+                    ui.print("plex error: (attr exception): " + str(e),debug=ui_settings.debug)
+                    return False
             url = 'https://metadata.provider.plex.tv/library/metadata/'+self.ratingKey+'/availabilities?X-Plex-Token='+plex.users[0][1]
             response = plex.get(url)
             if not response == None:
@@ -244,29 +253,37 @@ class plex(content.services):
             plex.get(url)
             plex.ignored.remove(self)
         def watched(self):
-            if self.type == 'movie' or self.type == 'episode':
-                if self.viewCount > 0:
-                    if not self in plex.ignored:
-                        plex.ignored += [self]
-                    return True
-            else:
-                if self.viewedLeafCount == self.leafCount:
-                    if not self in plex.ignored:
-                        plex.ignored += [self]
-                    return True
-            return False
-        def collected(self,list):
-            if self.type == 'show' or self.type == 'season':
-                match = next((x for x in list if x == self),None)
-                if not hasattr(match,'leafCount'):
-                    return False
-                if match.leafCount == self.leafCount:
-                    return True
+            try:
+                if self.type == 'movie' or self.type == 'episode':
+                    if self.viewCount > 0:
+                        if not self in plex.ignored:
+                            plex.ignored += [self]
+                        return True
+                else:
+                    if self.viewedLeafCount == self.leafCount:
+                        if not self in plex.ignored:
+                            plex.ignored += [self]
+                        return True
                 return False
-            else:
-                if self in list:
-                    return True
-                return False            
+            except Exception as e:
+                ui.print("plex error: (attr exception): " + str(e),debug=ui_settings.debug)
+                return False
+        def collected(self,list):
+            try:
+                if self.type == 'show' or self.type == 'season':
+                    match = next((x for x in list if x == self),None)
+                    if not hasattr(match,'leafCount'):
+                        return False
+                    if match.leafCount == self.leafCount:
+                        return True
+                    return False
+                else:
+                    if self in list:
+                        return True
+                    return False
+            except Exception as e:
+                ui.print("plex error: (attr exception): " + str(e),debug=ui_settings.debug)
+                return False      
         def uncollected(self,list):
             if self.type == 'movie':
                 if not self.collected(list):
@@ -1603,7 +1620,7 @@ class scraper:
                     filters = []
                     for fil in scraper.jackett.filters:
                         if not fil[0] == '':
-                            filters += fil[0]
+                            filters += fil
                     if not filters == []:
                         filter = (",").join(filters)
                     else:
@@ -1648,15 +1665,18 @@ class scraper:
             return scraped_releases
         def resolve(result):
             scraped_releases = []
-            link = scraper.jackett.session.get(result.Link,allow_redirects=False)
-            if regex.search(r'(?<=btih:).*?(?=&)',str(link.headers['Location']),regex.I):
-                if not result.Tracker == None and not result.Size == None:
-                    scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],float(result.Size)/1000000000,[link.headers['Location']])]
-                elif not result.Tracker == None:
-                    scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],1,[link.headers['Location']])]
-                elif not result.Size == None:
-                    scraped_releases += [releases('[jackett: unnamed]','torrent',result.Title,[],float(result.Size)/1000000000,[link.headers['Location']])]
-            return scraped_releases 
+            try:
+                link = scraper.jackett.session.get(result.Link,allow_redirects=False)
+                if regex.search(r'(?<=btih:).*?(?=&)',str(link.headers['Location']),regex.I):
+                    if not result.Tracker == None and not result.Size == None:
+                        scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],float(result.Size)/1000000000,[link.headers['Location']])]
+                    elif not result.Tracker == None:
+                        scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],1,[link.headers['Location']])]
+                    elif not result.Size == None:
+                        scraped_releases += [releases('[jackett: unnamed]','torrent',result.Title,[],float(result.Size)/1000000000,[link.headers['Location']])]
+                return scraped_releases
+            except:
+                return scraped_releases
 #Multiprocessing scrape method
 def scrape(cls:scraper,query,result,index):
     result[index] = cls(query)
@@ -1718,19 +1738,20 @@ def run(stop):
 #Multiprocessing run class
 class download_script:   
     def run():
-        global stop
-        stop = False
-        t = Thread(target=run, args =(lambda : stop, ))
-        t.start()
-        while not stop:
-            text = input("")
-            if text == 'exit':
-                stop = True
-            else:
-                print("Type 'exit' to return to the main menu.")
-        print("Waiting for the download automation to stop ... ")
-        while t.is_alive():
-            time.sleep(1)
+        if ui.preflight():
+            global stop
+            stop = False
+            t = Thread(target=run, args =(lambda : stop, ))
+            t.start()
+            while not stop:
+                text = input("")
+                if text == 'exit':
+                    stop = True
+                else:
+                    print("Type 'exit' to return to the main menu.")
+            print("Waiting for the download automation to stop ... ")
+            while t.is_alive():
+                time.sleep(1)
 #Ui Preference Class:
 class ui_settings:
     version = ['1.0',"Release sorting has been updated. This update will add 3 special sorting rules, which should help the scraper to pick better releases. For optimal results, leave these special rules more or less at their current position.",['Release sorting',]]
@@ -1748,7 +1769,7 @@ class ui:
             func = getattr(self.cls,self.key)
             func()
     class setting:
-        def __init__(self,name,prompt,cls,key,required=False,entry="",test=None,help="",hidden=False,subclass=False,oauth=False,moveable=True):
+        def __init__(self,name,prompt,cls,key,required=False,entry="",test=None,help="",hidden=False,subclass=False,oauth=False,moveable=True,preflight=False):
             self.name = name
             self.prompt = prompt
             self.cls = cls
@@ -1761,6 +1782,7 @@ class ui:
             self.oauth = oauth
             self.help = help
             self.moveable = moveable
+            self.preflight = preflight
         def input(self):
             if self.moveable:
                 if not self.help == "":
@@ -1783,8 +1805,7 @@ class ui:
                         setattr(self.cls,self.key,console_input)
                         return True
                     else:
-                        #clipboard.copy(getattr(self.cls,self.key))
-                        console_input = input(self.prompt + '- current value "'+str(getattr(self.cls,self.key))+'" copied to your clipboard: ')
+                        console_input = input(self.prompt + '- current value "'+str(getattr(self.cls,self.key))+'": ')
                         setattr(self.cls,self.key,console_input)
                         return True
                 else:
@@ -1898,8 +1919,7 @@ class ui:
                                         else:
                                             edit = []
                                             for k,prompt in enumerate(self.prompt):
-                                                #clipboard.copy(lists[int(index)-1][k])
-                                                response = input(prompt + '- current value "'+lists[int(index)-1][k]+'" copied to your clipboard: ')
+                                                response = input(prompt + '- current value "'+lists[int(index)-1][k]+'": ')
                                                 edit += [response]
                                             lists[int(index)-1] = edit
                                             setattr(self.cls,self.key,lists)
@@ -1999,7 +2019,7 @@ class ui:
     settings_list = [
         ['Content Services',[
             setting('Content Services',[''],content.services,'active',entry="content service",subclass=True,moveable=False),
-            setting('Plex users',['Please provide a name for this Plex user: ','Please provide the Plex token for this Plex user: '],plex,'users',required=True,entry="user",help="Please create a plex user by providing a name and a token. To find the plex token for this user, open your favorite browser, log in to this plex account and visit 'https://plex.tv/devices.xml'. Pick a 'token' from one of the listed devices.",hidden=True),
+            setting('Plex users',['Please provide a name for this Plex user: ','Please provide the Plex token for this Plex user: '],plex,'users',required=True,preflight=True,entry="user",help="Please create a plex user by providing a name and a token. To find the plex token for this user, open your favorite browser, log in to this plex account and visit 'https://plex.tv/devices.xml'. Pick a 'token' from one of the listed devices.",hidden=True),
             setting('Trakt users',['Please provide a name for this Trakt user: ','Please open your favorite browser, log into this Trakt user and open "https://trakt.tv/activate". Enter this code: '],trakt,'users',entry="user",oauth=True,hidden=True),
             setting('Trakt-to-Plex synchronization','Please enter "true" or "false": ',trakt,'sync_with_plex',hidden=True),
             setting('Plex server address','Please enter your Plex server address: ',plex.library,'url',hidden=True),
@@ -2009,7 +2029,7 @@ class ui:
             ]
         ],
         ['Scraper',[
-            setting('Sources',[''],scraper.services,'active',entry="source",subclass=True),
+            setting('Sources',[''],scraper.services,'active',entry="source",subclass=True,preflight=True),
             setting(
                 'Release sorting',
                 [
@@ -2031,7 +2051,7 @@ class ui:
             ]
         ],
         ['Debrid Services', [
-            setting('Debrid Services',[''],debrid.services,'active',required=True,entry="service",subclass=True,help='Please setup at least one debrid service: '),
+            setting('Debrid Services',[''],debrid.services,'active',required=True,preflight=True,entry="service",subclass=True,help='Please setup at least one debrid service: '),
             setting('Real Debrid API Key','Please enter your Real Debrid API Key: ',debrid.realdebrid,'api_key',hidden=True),
             setting('All Debrid API Key','Please enter your All Debrid API Key: ',debrid.alldebrid,'api_key',hidden=True),
             setting('Premiumize API Key','Please enter your Premiumize API Key: ',debrid.premiumize,'api_key',hidden=True),
@@ -2214,7 +2234,11 @@ class ui:
         for index,option in enumerate(list):
             print(str(index+1) + ') ' + option.name)
         print()
+        print('Type exit to quit.')
+        print()
         choice = input('Choose an action: ')
+        if choice == 'exit':
+            exit()
         for index,option in enumerate(list):
             if choice == str(index+1):
                 option.input()
@@ -2229,14 +2253,14 @@ class ui:
             return True
         else:
             ui.cls('Initial Setup')
-            input('Press any key to continue: ')
+            input('Press Enter to continue: ')
             for category, settings in ui.settings_list:
                 for setting in settings:
                     if setting.required:
                         ui.cls('Options/Settings/'+category+'/'+setting.name)
                         setting.setup()
             ui.cls('Done!')
-            input('Press any key to continue to the main menu: ')
+            input('Press Enter to continue to the main menu: ')
             ui.save()
             return True
     def save():
@@ -2266,12 +2290,29 @@ class ui:
             time.sleep(2)
         if updated:
             ui.save()
+    def preflight():
+        missing = []
+        for category,settings in ui.settings_list:
+            for setting in settings:
+                if setting.preflight:
+                    if len(setting.get()) == 0:
+                        missing += [setting]
+        if len(missing) > 0:
+            print()
+            print('Looks like your current settings didnt pass preflight checks. Please edit the following setting/s: ')
+            for setting in missing:
+                print(setting.name + ': Please add at least one ' + setting.entry + '.')
+            print()
+            input('Press Enter to return to the main menu: ')
+            return False
+        return True
     def run():
         if ui.setup():
             ui.options()
         else:
             ui.load()
             download_script.run()
+            ui.options()
     def update(settings,version):
         ui.cls('/Update ' + version[0] + '/')
         print('There has been an update to plex_debrid, which is not compatible with your current settings:')
@@ -2296,7 +2337,6 @@ class ui:
 #clean up the messy code
 #make things even faster?
 #Add Google Watchlist, IMDB Watchlist, etc
-#Change library check to check the user library that added the item.
 #Add a local download option - integrate pyload? JD? idfk
 
 if __name__ == "__main__":
