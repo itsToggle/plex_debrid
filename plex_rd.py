@@ -154,6 +154,7 @@ class plex(content.services):
                             for entry in response.MediaContainer.Metadata:
                                 entry.user = user
                                 if not entry in self.data:
+                                    ui.print('item: "' + entry.title + '" found in '+ user[0] +'`s plex watchlist')
                                     update = True
                                     if entry.type == 'show':
                                         self.data += [plex.show(entry)]
@@ -197,35 +198,43 @@ class plex(content.services):
                 title = title.replace('.'+str(self.grandparentYear),'')
                 return title + '.S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index))+ '.'
         def released(self):
-            released = datetime.datetime.today() - datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
-            if self.type == 'movie':
-                if released.days >= 0 and released.days <= 60:
-                    if self.available():
-                        return True
-                    else:
-                        return False
-                return released.days > 0
-            else:
-                if released.days >= 0 and released.days <= 1:
-                    if self.available():
-                        return True
-                    else:
-                        return False
-                return released.days > 0
+            try:
+                released = datetime.datetime.today() - datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
+                if self.type == 'movie':
+                    if released.days >= -30 and released.days <= 60:
+                        if self.available():
+                            return True
+                        else:
+                            return False
+                    return released.days > 0
+                else:
+                    if released.days >= 0 and released.days <= 1:
+                        if self.available():
+                            return True
+                        else:
+                            return False
+                    return released.days > 0
+            except:
+                ui.print("plex error: (attr exception): " + str(e),debug=ui_settings.debug)
+                return False
         def available(self):
             if len(trakt.users) > 0:
-                for guid in self.Guid:
-                    service,guid = guid.id.split('://')
-                    trakt_match = trakt.match(guid,service,self.type)
+                try:
+                    for guid in self.Guid:
+                        service,guid = guid.id.split('://')
+                        trakt_match = trakt.match(guid,service,self.type)
+                        if not trakt_match == None:
+                            break
                     if not trakt_match == None:
-                        break
-                if not trakt_match == None:
-                    if self.type == 'movie':
-                        return trakt.media.available(trakt_match)
-                    elif self.type == 'episode':
-                        trakt_match.next_season = self.parentIndex
-                        trakt_match.next_episode = self.index
-                        return trakt.media.available(trakt_match)
+                        if self.type == 'movie':
+                            return trakt.media.available(trakt_match)
+                        elif self.type == 'episode':
+                            trakt_match.next_season = self.parentIndex
+                            trakt_match.next_episode = self.index
+                            return trakt.media.available(trakt_match)
+                except:
+                    ui.print("plex error: (attr exception): " + str(e),debug=ui_settings.debug)
+                    return False
             url = 'https://metadata.provider.plex.tv/library/metadata/'+self.ratingKey+'/availabilities?X-Plex-Token='+plex.users[0][1]
             response = plex.get(url)
             if not response == None:
@@ -244,29 +253,37 @@ class plex(content.services):
             plex.get(url)
             plex.ignored.remove(self)
         def watched(self):
-            if self.type == 'movie' or self.type == 'episode':
-                if self.viewCount > 0:
-                    if not self in plex.ignored:
-                        plex.ignored += [self]
-                    return True
-            else:
-                if self.viewedLeafCount == self.leafCount:
-                    if not self in plex.ignored:
-                        plex.ignored += [self]
-                    return True
-            return False
-        def collected(self,list):
-            if self.type == 'show' or self.type == 'season':
-                match = next((x for x in list if x == self),None)
-                if not hasattr(match,'leafCount'):
-                    return False
-                if match.leafCount == self.leafCount:
-                    return True
+            try:
+                if self.type == 'movie' or self.type == 'episode':
+                    if self.viewCount > 0:
+                        if not self in plex.ignored:
+                            plex.ignored += [self]
+                        return True
+                else:
+                    if self.viewedLeafCount == self.leafCount:
+                        if not self in plex.ignored:
+                            plex.ignored += [self]
+                        return True
                 return False
-            else:
-                if self in list:
-                    return True
-                return False            
+            except:
+                ui.print("plex error: (attr exception): " + str(e),debug=ui_settings.debug)
+                return False
+        def collected(self,list):
+            try:
+                if self.type == 'show' or self.type == 'season':
+                    match = next((x for x in list if x == self),None)
+                    if not hasattr(match,'leafCount'):
+                        return False
+                    if match.leafCount == self.leafCount:
+                        return True
+                    return False
+                else:
+                    if self in list:
+                        return True
+                    return False
+            except:
+                ui.print("plex error: (attr exception): " + str(e),debug=ui_settings.debug)
+                return False      
         def uncollected(self,list):
             if self.type == 'movie':
                 if not self.collected(list):
@@ -2320,7 +2337,6 @@ class ui:
 #clean up the messy code
 #make things even faster?
 #Add Google Watchlist, IMDB Watchlist, etc
-#Change library check to check the user library that added the item.
 #Add a local download option - integrate pyload? JD? idfk
 
 if __name__ == "__main__":
