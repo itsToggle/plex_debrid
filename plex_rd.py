@@ -214,7 +214,7 @@ class plex(content.services):
                         else:
                             return False
                     return released.days > 0
-            except:
+            except Exception as e:
                 ui.print("plex error: (attr exception): " + str(e),debug=ui_settings.debug)
                 return False
         def available(self):
@@ -232,7 +232,7 @@ class plex(content.services):
                             trakt_match.next_season = self.parentIndex
                             trakt_match.next_episode = self.index
                             return trakt.media.available(trakt_match)
-                except:
+                except Exception as e:
                     ui.print("plex error: (attr exception): " + str(e),debug=ui_settings.debug)
                     return False
             url = 'https://metadata.provider.plex.tv/library/metadata/'+self.ratingKey+'/availabilities?X-Plex-Token='+plex.users[0][1]
@@ -265,7 +265,7 @@ class plex(content.services):
                             plex.ignored += [self]
                         return True
                 return False
-            except:
+            except Exception as e:
                 ui.print("plex error: (attr exception): " + str(e),debug=ui_settings.debug)
                 return False
         def collected(self,list):
@@ -281,7 +281,7 @@ class plex(content.services):
                     if self in list:
                         return True
                     return False
-            except:
+            except Exception as e:
                 ui.print("plex error: (attr exception): " + str(e),debug=ui_settings.debug)
                 return False      
         def uncollected(self,list):
