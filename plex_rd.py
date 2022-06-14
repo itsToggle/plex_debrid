@@ -1666,7 +1666,7 @@ class scraper:
         def resolve(result):
             scraped_releases = []
             try:
-                link = scraper.jackett.session.get(result.Link,allow_redirects=False)
+                link = scraper.jackett.session.get(result.Link,allow_redirects=False,timeout=0.5)
                 if regex.search(r'(?<=btih:).*?(?=&)',str(link.headers['Location']),regex.I):
                     if not result.Tracker == None and not result.Size == None:
                         scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],float(result.Size)/1000000000,[link.headers['Location']])]
