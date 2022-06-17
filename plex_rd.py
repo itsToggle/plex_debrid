@@ -1133,7 +1133,7 @@ class debrid:
                         if not response.response[0]:
                             continue
                         url = "https://www.premiumize.me/api/transfer/create"
-                        data = 'src=' + release.download[0]
+                        data = {'src':release.download[0]}
                         response = debrid.premiumize.post(url,data)
                         if response.status == 'success':
                             ui.print('[premiumize] adding cached release: ' + release.title)
@@ -1141,7 +1141,7 @@ class debrid:
                     else:
                         #Uncached Download Method for premiumize
                         url = "https://www.premiumize.me/api/transfer/create"
-                        data = 'src=' + release.download[0]
+                        data = {'src':release.download[0]}
                         response = debrid.premiumize.post(url,data)
                         if response.status == 'success':
                             ui.print('[premiumize] adding uncached release: '+ release.title)
