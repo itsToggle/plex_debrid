@@ -299,7 +299,7 @@ class plex(content.services):
                                 season.Episodes.remove(episode)
                     else:
                         Seasons.remove(season)
-                    if len(season.Episodes) == 0:
+                    if len(season.Episodes) == 0 and season in Seasons:
                         Seasons.remove(season)
                 return Seasons
             return []
@@ -333,6 +333,7 @@ class plex(content.services):
                             parentReleases = copy.deepcopy(self.Releases)
                             if len(self.Seasons) > 3:
                                 if self.debrid_download():
+                                    refresh = True
                                     for season in self.Seasons[:]:
                                         for episode in season.Episodes[:]:
                                             for file in self.Releases[0].files:
@@ -408,7 +409,7 @@ class plex(content.services):
         def debrid_download(self):
             if debrid.download(self,stream=True):
                 return True
-            if not self.type == 'show':
+            if not self.type == 'show' and debrid.uncached == 'true':
                 if debrid.download(self,stream=False):
                     debrid.downloading += [self]
                     return True
@@ -736,6 +737,7 @@ class trakt(content.services):
 #Debrid Class 
 class debrid:
     downloading = []
+    uncached = 'true'
     #Service Class:
     class services:
         active = []
@@ -2052,6 +2054,7 @@ class ui:
         ],
         ['Debrid Services', [
             setting('Debrid Services',[''],debrid.services,'active',required=True,preflight=True,entry="service",subclass=True,help='Please setup at least one debrid service: '),
+            setting('Uncached Release Download','Please enter "true" or "false": ',debrid,'uncached',help='Please specify wether uncached releases should be added to your debrid service, if no cached releases were found.'),
             setting('Real Debrid API Key','Please enter your Real Debrid API Key: ',debrid.realdebrid,'api_key',hidden=True),
             setting('All Debrid API Key','Please enter your All Debrid API Key: ',debrid.alldebrid,'api_key',hidden=True),
             setting('Premiumize API Key','Please enter your Premiumize API Key: ',debrid.premiumize,'api_key',hidden=True),
@@ -2327,7 +2330,7 @@ class ui:
             json.dump(settings, f,indent=4)
         for category, load_settings in ui.settings_list:
             for setting in load_settings:
-                for setting_name in version[1]:
+                for setting_name in version[2]:
                     if setting.name == setting_name:
                         settings[setting.name] = setting.get()
                     elif setting.name == 'version':
