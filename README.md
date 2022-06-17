@@ -19,6 +19,7 @@ Once new content is found, torrent indexers are scraped for the best, cached rel
 This is a pre-alpha release. shits not ready! Feel free to check it out though, I will continously improve the speed, reliability and user-friendlyness.
 
 ## Features:
+- Compatible with any OS (Mac, Linux, Windows, Android, FreeBSD, ...)
 - Gathering Content from:
   - <img src="https://app.plex.tv/desktop/favicon.ico" height="16"> **[Plex (every 5s)](https://plex.tv/)**
   - <img src="https://walter.trakt.tv/hotlink-ok/public/favicon.ico" height="16"> **[Trakt (every 30m)](https://trakt.tv/)**
@@ -37,23 +38,9 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 - Performing a plex library refresh to make the content available on Plex
 
 ### Upcoming Features:
-- android app version of this script. Ive compiled an android version of my rclone fork, this script is next so the whole setup can run on a shield :)
 - 'local' downloading of content while streaming (optional)
 - adding multiple versions of content (e.g. HDR and non-HDR versions or a version for each resolution etc) (optional)
 - tell me your ideas! :)
-
-Help wanted! I would like to improve the overall speed of this project. One of the ideas I had, was the following:
-
-    When opening a movie or a show, an availability request is made to your Plex server/s to check whether you have already collected the content.
-    The different viewing options are then displayed and you can choose from which plex server or streaming service you want to watch the content.
-    I would like to either:
-        - intercept the request and start scraping for releases of the requested content. This would already speed things up.
-        - then intercept the response the server sends to that request and add faked streaming options which refer to the scraped releases.
-    or 
-        - run a 'fake' plex server in the background that will essentially do the same thing.
-    The problem with option 1 is that you can't route plex's traffic through a transparent proxy. You would need to run a pcap service.
-    The problem with option 2 is that I have no idea how one would mock a plex server.
-    Any ideas are very much appreciated. 
 
 ## Setup:
 For linux, mac and windows, the setup process does not require any additional preparation. For different operating systems, check out the information the fine people linked here have gathered:
