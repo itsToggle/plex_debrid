@@ -1108,7 +1108,7 @@ class debrid:
         def post(url, data):
             headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36','accept': 'application/json','Content-Type': 'multipart/form-data'}
             try :
-                response = debrid.premiumize.session.post(url + '?apikey='+ debrid.premiumize.api_key, headers = headers, data = data)
+                response = debrid.premiumize.session.post(url + '?apikey='+ debrid.premiumize.api_key, headers = headers, files = [data], data={})
                 debrid.premiumize.logerror(response)
                 response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
             except Exception as e:
