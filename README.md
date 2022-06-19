@@ -273,3 +273,8 @@ For linux, mac and windows, the setup process does not require any additional pr
 ## Buy me a beer/coffee? :)
 
 I've written this automation because it's a hell of a lot of fun and because I've wanted a setup like this for a while. The continuation of this project does **not**, in any way, depend on monetary contributions. If you do want to buy me a beer/coffee, feel free to use my real-debrid [affiliate link](http://real-debrid.com/?id=5708990) or send a virtual beverage via [PayPal](https://www.paypal.com/paypalme/oidulibbe) :)
+
+## Side Project/s:
+Ive been working on a little side project that allows you to mock a plex server and fake its responses to your Plex clients. One use-case for this is scraping for releases and adding them to your debrid service from the search bar, which allows you to add content thats not on Plex Discover. The initial setup process for this is very complicated and requires 2 PCs (or a VM / VPS), so I wont be releasing this any time soon. I did want to document that this is possible however, if you are interested in how this works let me know.
+
+https://user-images.githubusercontent.com/71379623/174469820-b3d42177-f84f-40c3-bd17-d952d2da93fa.mp4
