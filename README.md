@@ -58,6 +58,8 @@ For linux, mac and windows, the setup process does not require any additional pr
 <details>
   <summary><b><u>Mounting RealDebrid</u></b></summary>
   
+  Realdebrid recently announced that they will implement support for WebDav, which means soon there will not be any need for my rclone fork anymore :)
+  
   *Its recommended to remove all but a few pages of finished torrents before mounting realdebrid for the first time. You can add as many torrents as you want after that.*
   1. Install my rclone fork: https://github.com/itsToggle/rclone_RD
   2. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
