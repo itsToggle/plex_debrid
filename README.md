@@ -58,9 +58,24 @@ For linux, mac and windows, the setup process does not require any additional pr
 <details>
   <summary><b><u>Mounting RealDebrid</u></b></summary>
   
-  Realdebrid has now implement support for WebDav, which means there is no need for my rclone fork anymore :)
+  Realdebrid has now implement support for WebDav, which means there is technically no need for my rclone fork anymore :)
   
-  1. Install the official rclone software: https://github.com/rclone/rclone
+  I do still recomend using my fork, since realdebrids WebDav does not (yet) allow for file deletion, and is (currently) a whole lot slower than my fork.
+  
+  **Mounting with my fork:**
+  
+  1. Install my rclone fork: https://github.com/itsToggle/rclone_rd
+  2. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
+  3. create a new remote by typing 'n'
+  4. give your remote a name (e.g. 'your-remote')
+  5. choose '47) realdebrid' as your remote type
+  6. follow the rest of the prompted instructions, choose 'no advaced configuration'
+  7. You can mount your newly created remote by running the command 'rclone cmount your-remote: X: --dir-cache-time=10s --vfs-cache-mode=full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
+  8. You've successfuly created a virtual drive of your debrid service!
+  
+  **Mounting with official rclone software (WebDav)**
+  
+  1. Install the official rclone software: https://github.com/rclone/rclone or my fork: https://github.com/itsToggle/rclone_rd
   2. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
   3. create a new remote by typing 'n'
   4. give your remote a name (e.g. 'your-remote')
@@ -78,7 +93,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 <details>
   <summary><b><u>Mounting Premiumize</u></b></summary>
   
-  1. Install the official rclone software: https://github.com/rclone/rclone
+  1. Install the official rclone software: https://github.com/rclone/rclone or my fork: https://github.com/itsToggle/rclone_rd
   2. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
   3. create a new remote by typing 'n'
   4. give your remote a name (e.g. 'your-remote')
@@ -92,7 +107,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 <details>
   <summary><b><u>Mounting AllDebrid</u></b></summary>
   
-  1. Install the official rclone software: https://github.com/rclone/rclone
+  1. Install the official rclone software: https://github.com/rclone/rclone or my fork: https://github.com/itsToggle/rclone_rd
   2. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
   3. create a new remote by typing 'n'
   4. give your remote a name (e.g. 'your-remote')
@@ -111,7 +126,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 <details>
   <summary><b><u>Mounting DebridLink</u></b></summary>
   
-  1. Install the official rclone software: https://github.com/rclone/rclone
+  1. Install the official rclone software: https://github.com/rclone/rclone or my fork: https://github.com/itsToggle/rclone_rd
   2. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
   3. create a new remote by typing 'n'
   4. give your remote a name (e.g. 'your-remote')
