@@ -1056,15 +1056,20 @@ class debrid:
                             if len(torrent_links) > 0:
                                 rate_limit = 1/12
                                 success = False
+                                saved_links = []
                                 for link in torrent_links:
                                     url = 'https://api.alldebrid.com/v4/link/unlock?link='+ requests.utils.quote(link)
                                     response = debrid.alldebrid.get(url)
                                     if not response.status == 'success':
                                         success = False
                                         break
+                                    saved_links += [response.data.link]
                                     success = True
                                     time.sleep(rate_limit)
                                 if success:
+                                    saved_links = '&links[]='.join(saved_links)
+                                    url = 'https://api.alldebrid.com/v4/user/links/save?links[]=' + saved_links
+                                    response = debrid.alldebrid.get(url)
                                     ui.print('[alldebrid] adding cached release: ' + release.title)
                                     return True
                                 else:
@@ -1094,7 +1099,7 @@ class debrid:
                 else:
                     element.Releases.remove(release)
             if len(hashes) > 0:
-                response = debrid.alldebrid.get('https://api.alldebrid.com/v4/magnet/instant?magnets[]=' + '&magnets[]='.join(hashes))
+                response = debrid.alldebrid.get('https://api.alldebrid.com/v4/magnet/instant?magnets[]=' + '&magnets[]='.join(hashes[:200]))
                 for i,release in enumerate(element.Releases):
                     try:
                         instant = response.data.magnets[i].instant
