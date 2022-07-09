@@ -1047,9 +1047,9 @@ class debrid:
                             url = 'https://api.alldebrid.com/v4/magnet/upload?magnets[]='+ release.download[0]
                             response = debrid.alldebrid.get(url)
                             torrent_id = response.data.magnets[0].id
-                            url = 'https://api.alldebrid.com/v4/magnet/status?id='+ torrent_id
+                            url = 'https://api.alldebrid.com/v4/magnet/status?id='+ str(torrent_id)
                             response = debrid.alldebrid.get(url)
-                            torrent_files = response.data.magnets[0].links
+                            torrent_files = response.data.magnets.links
                             torrent_links = []
                             for file in torrent_files:
                                 torrent_links += [file.link]
@@ -1063,7 +1063,7 @@ class debrid:
                                     if not response.status == 'success':
                                         success = False
                                         break
-                                    saved_links += [response.data.link]
+                                    saved_links += [requests.utils.quote(link)]
                                     success = True
                                     time.sleep(rate_limit)
                                 if success:
