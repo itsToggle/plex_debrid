@@ -1046,8 +1046,33 @@ class debrid:
                         if instant:
                             url = 'https://api.alldebrid.com/v4/magnet/upload?magnets[]='+ release.download[0]
                             response = debrid.alldebrid.get(url)
-                            ui.print('[alldebrid] adding cached release: ' + release.title)
-                            return True
+                            torrent_id = response.data.magnets[0].id
+                            url = 'https://api.alldebrid.com/v4/magnet/status?id='+ torrent_id
+                            response = debrid.alldebrid.get(url)
+                            torrent_files = response.data.magnets[0].links
+                            torrent_links = []
+                            for file in torrent_files:
+                                torrent_links += [file.link]
+                            if len(torrent_links) > 0:
+                                rate_limit = 1/12
+                                success = False
+                                for link in torrent_links:
+                                    url = 'https://api.alldebrid.com/v4/link/unlock?link='+ requests.utils.quote(link)
+                                    response = debrid.alldebrid.get(url)
+                                    if not response.status == 'success':
+                                        success = False
+                                        break
+                                    success = True
+                                    time.sleep(rate_limit)
+                                if success:
+                                    ui.print('[alldebrid] adding cached release: ' + release.title)
+                                    return True
+                                else:
+                                    #delete failed torrent
+                                    return False
+                            else:
+                                #delete failed torrent
+                                return False
                     else:
                         #Uncached Download Method for AllDebrid
                         url = 'https://api.alldebrid.com/v4/magnet/upload?magnets[]='+ release.download[0]
