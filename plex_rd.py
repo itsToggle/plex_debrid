@@ -890,13 +890,15 @@ class debrid:
                 query = element.query()
             if regex.search(r'(S[0-9][0-9])',query):
                 query = regex.split(r'(S[0-9]+)',query) 
+                season_number = regex.search(r'([0-9]+)',query[1]).group()
+                query[1] = '(S'+season_number+'|SEASON.'+str(int(season_number))+')'
                 query = query[0] + '[0-9]*.*' + query[1] + query[2]
             wanted = [query]
             if not isinstance(element,releases):
                 wanted = element.files()
             for release in cached[:]:
                 #if release matches query
-                if regex.match(r'('+ query.replace('.','\.') + ')',release.title,regex.I) or force:
+                if regex.match(r'('+ query.replace('.','\.').replace("\.*",".*") + ')',release.title,regex.I) or force:
                     if stream:
                         release.size = 0
                         for version in release.files:
@@ -1025,11 +1027,13 @@ class debrid:
             if query == '':
                 query = element.query()
             if regex.search(r'(S[0-9][0-9])',query):
-                query = regex.split(r'(S[0-9]+)',query) 
+                query = regex.split(r'(S[0-9]+)',query)
+                season_number = regex.search(r'([0-9]+)',query[1]).group()
+                query[1] = '(S'+season_number+'|SEASON.0?'+str(int(season_number))+')' 
                 query = query[0] + '[0-9]*.*' + query[1] + query[2]
             for release in cached[:]:
                 #if release matches query
-                if regex.match(r'('+ query.replace('.','\.') + ')',release.title,regex.I) or force:
+                if regex.match(r'('+ query.replace('.','\.').replace("\.*",".*") + ')',release.title,regex.I) or force:
                     if stream:
                         #Cached Download Method for AllDebrid
                         url = 'https://api.alldebrid.com/v4/magnet/instant?magnets[]=' + release.download[0]
@@ -1121,11 +1125,13 @@ class debrid:
             if query == '':
                 query = element.query()
             if regex.search(r'(S[0-9][0-9])',query):
-                query = regex.split(r'(S[0-9]+)',query) 
+                query = regex.split(r'(S[0-9]+)',query)
+                season_number = regex.search(r'([0-9]+)',query[1]).group()
+                query[1] = '(S'+season_number+'|SEASON.0?'+str(int(season_number))+')' 
                 query = query[0] + '[0-9]*.*' + query[1] + query[2]
             for release in cached[:]:
                 #if release matches query
-                if regex.match(r'('+ query.replace('.','\.') + ')',release.title,regex.I) or force:
+                if regex.match(r'('+ query.replace('.','\.').replace("\.*",".*") + ')',release.title,regex.I) or force:
                     if stream:
                         #Cached Download Method for premiumize
                         url = "https://www.premiumize.me/api/cache/check?items[]=" + release.download[0]
@@ -1235,11 +1241,13 @@ class debrid:
             if query == '':
                 query = element.query()
             if regex.search(r'(S[0-9][0-9])',query):
-                query = regex.split(r'(S[0-9]+)',query) 
+                query = regex.split(r'(S[0-9]+)',query)
+                season_number = regex.search(r'([0-9]+)',query[1]).group()
+                query[1] = '(S'+season_number+'|SEASON.0?'+str(int(season_number))+')' 
                 query = query[0] + '[0-9]*.*' + query[1] + query[2]
             for release in cached[:]:
                 #if release matches query
-                if regex.match(r'('+ query.replace('.','\.') + ')',release.title,regex.I) or force:
+                if regex.match(r'('+ query.replace('.','\.').replace("\.*",".*") + ')',release.title,regex.I) or force:
                     if stream:
                         #Cached Download Method for debridlink
                         hashstring = regex.findall(r'(?<=btih:).*?(?=&)',str(release.download[0]),regex.I)[0]
@@ -1490,9 +1498,11 @@ class scraper:
                 scraped_releases += result
         if regex.search(r'(S[0-9]+)',query) or not query.endswith('.'):
             if not query.endswith('.'):
-                altquery = [query,'(S[0-9]+)','']
+                altquery = [query,'(S[0-9]+|Season.[0-9]+)','']
             else:
                 altquery = regex.split(r'(S[0-9]+)',query) 
+                season_number = regex.search(r'([0-9]+)',altquery[1]).group()
+                altquery[1] = '(S'+season_number+'|SEASON.'+str(int(season_number))+')'
             for release in scraped_releases:
                 deviation = regex.search(r'(?<=' + altquery[0] + ')(.*?)(?=' + altquery[1] + altquery[2] + ')',release.title,regex.I)
                 if not deviation == None:
@@ -1554,7 +1564,7 @@ class scraper:
                     time.sleep(1+random.randint(0, 2))
                 if hasattr(response, "torrent_results"):
                     for result in response.torrent_results:
-                        if regex.match(r'('+ altquery.replace('.','\.') + ')',result.title,regex.I):
+                        if regex.match(r'('+ altquery.replace('.','\.').replace("\.*",".*") + ')',result.title,regex.I):
                             release = releases('[rarbg]','torrent',result.title,[],float(result.size)/1000000000,[result.download])
                             scraped_releases += [release]   
             return scraped_releases 
@@ -1580,7 +1590,7 @@ class scraper:
                             title = torrent.getText().strip()
                             title = title.replace(" ",'.')
                             title = regex.sub(r'\.+',".",title)
-                            if regex.match(r'('+ altquery.replace('.','\.') + ')',title,regex.I):
+                            if regex.match(r'('+ altquery.replace('.','\.').replace("\.*",".*") + ')',title,regex.I):
                                 link = torrent['href']
                                 response = scraper.x1337.session.get( 'https://1337x.to'+link, headers = headers)
                                 soup = BeautifulSoup(response.content, 'html.parser')
@@ -1639,7 +1649,7 @@ class scraper:
                     response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
                     for result in response.Results[:]:
                         result.Title = result.Title.replace(' ','.')
-                        if regex.match(r'('+ altquery.replace('.','\.') + ')',result.Title,regex.I):
+                        if regex.match(r'('+ altquery.replace('.','\.').replace("\.*",".*") + ')',result.Title,regex.I):
                             if not result.MagnetUri == None:
                                 if not result.Tracker == None and not result.Size == None:
                                     scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],float(result.Size)/1000000000,[result.MagnetUri])]
