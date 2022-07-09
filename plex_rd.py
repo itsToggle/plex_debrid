@@ -1255,7 +1255,7 @@ class debrid:
         #Oauth Method
         def oauth(code=""):
             if code == "":
-                response = debrid.debridlink.post('https://debrid-link.fr/api/oauth/device/code','client_id='+debrid.debridlink.client_id+'&scope=get.files')
+                response = debrid.debridlink.post('https://debrid-link.fr/api/oauth/device/code','client_id='+debrid.debridlink.client_id)
                 return response.device_code, response.user_code
             else:
                 response = None
@@ -1295,9 +1295,8 @@ class debrid:
                     else:
                         #Uncached Download Method for debridlink
                         try:
-                            hashstring = regex.findall(r'(?<=btih:).*?(?=&)',str(release.download[0]),regex.I)[0]
                             url = 'https://debrid-link.fr/api/v2/seedbox/add'
-                            response = debrid.debridlink.post(url,'url=' + hashstring + '&async=true')
+                            response = debrid.debridlink.post(url,'url=' + release.download[0] + '&async=true')
                             if response.success:
                                 ui.print('[debridlink] adding uncached release: '+ release.title)
                                 return True
@@ -2098,8 +2097,8 @@ class ui:
             setting('Real Debrid API Key','Please enter your Real Debrid API Key: ',debrid.realdebrid,'api_key',hidden=True),
             setting('All Debrid API Key','Please enter your All Debrid API Key: ',debrid.alldebrid,'api_key',hidden=True),
             setting('Premiumize API Key','Please enter your Premiumize API Key: ',debrid.premiumize,'api_key',hidden=True),
-            setting('Debrid Link API Key','Please enter your Debrid Link API Key: ',debrid.debridlink,'api_key',hidden=True),
-            #setting('Debrid Link API Key','Please open your favorite browser, log into your debridlink account and open "https://debrid-link.fr/device". Enter this code: ',debrid.debridlink,'api_key',hidden=True,oauth=True),
+            #setting('Debrid Link API Key','Please enter your Debrid Link API Key: ',debrid.debridlink,'api_key',hidden=True),
+            setting('Debrid Link API Key','Please open your favorite browser, log into your debridlink account and open "https://debrid-link.fr/device". Enter this code: ',debrid.debridlink,'api_key',hidden=True,oauth=True),
             ]
         ],
         ['UI Settings',[
