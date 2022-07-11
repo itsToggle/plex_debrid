@@ -60,7 +60,7 @@ For linux, mac and windows, the setup process does not require any additional pr
   
   Realdebrid has now implement support for WebDav, which means there is technically no need for my rclone fork anymore :)
   
-  I do still recomend using my fork, since realdebrids WebDav does not (yet) allow for file deletion, and is (currently) a whole lot slower than my fork.
+  I do still recomend using my fork, since realdebrids WebDav does not (yet) allow for torrent file deletion, They did fix all other issues I mentioned in this repository though, and their WebDav is now just as fast if not faster than my fork. 
   
   **Mounting with my fork:**
   
