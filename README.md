@@ -26,8 +26,8 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 - Checking your Plex Library to avoid duplicate downloads
 - Determining precise release dates and times, checking for early releases of movies
 - Scraping Releases from:
-  - <img src="https://prowlarr.com/img/favicon-32x32.png" height="16"> **[Prowlarr](https://github.com/Prowlarr/Prowlarr)**
   - <img src="https://user-images.githubusercontent.com/27040483/28728094-99f3e3f6-73c7-11e7-8f8d-28912dc6ac0d.png" height="16"> **[Jackett](https://github.com/Jackett/Jackett)**
+  - <img src="https://prowlarr.com/img/favicon-32x32.png" height="16"> **[Prowlarr (limited integration)](https://github.com/Prowlarr/Prowlarr)**
   - <img src="https://progsoft.net/images/rarbg-icon-648af4dcc6ec63ee49d6c050af63d2547c74d46c.png" height="16"> **[RARBG](https://rarbg.to/)**
   - <img src="https://1337x.to/favicon.ico" height="16"> **[1337X](https://1337x.to/)**
 - Sorting and selecting scraped releases by completely customizable rules
