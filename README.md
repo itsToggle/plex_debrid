@@ -5,7 +5,7 @@ Plex torrent streaming through Debrid Services, using the new Plex Discover feat
 
 ## In Action:
 
-![Alt Text](https://github.com/itsToggle/plex_debrid/blob/main/cool.gif)
+![nice](https://user-images.githubusercontent.com/71379623/178955976-cfd4b7b1-63c8-4940-8f4e-a4d5ebeaeaee.gif)
 
 ## Description:
 
