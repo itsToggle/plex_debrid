@@ -1732,6 +1732,66 @@ class scraper:
                 return scraped_releases
             except:
                 return scraped_releases
+    class prowlarr(services):
+        base_url = "http://127.0.0.1:9696"
+        api_key = ""
+        name = "prowlarr"
+        session = requests.Session()
+        def __new__(cls,query):
+            scraped_releases = []
+            if 'prowlarr' in scraper.services.active:
+                altquery = copy.deepcopy(query)
+                if regex.search(r'(S[0-9]+)',altquery):
+                    altquery = regex.split(r'(S[0-9]+)',altquery) 
+                    altquery = altquery[0] + '[0-9]*.*' + altquery[1] + altquery[2]
+                url = scraper.prowlarr.base_url + '/api/v1/search?query='+query+'&type=search&limit=1000&offset=0'
+                headers = {'X-Api-Key': scraper.prowlarr.api_key}
+                response = scraper.prowlarr.session.get(url,headers=headers)
+                if response.status_code == 200:
+                    response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
+                    for result in response[:]:
+                        result.title = result.title.replace(' ','.')
+                        if regex.match(r'('+ altquery.replace('.','\.').replace("\.*",".*") + ')',result.title,regex.I) and result.protocol == 'torrent':
+                            if hasattr(result,'magnetUrl'):
+                                if not result.magnetUrl == None:
+                                    if not result.indexer == None and not result.size == None:
+                                        scraped_releases += [releases('[prowlarr: '+str(result.indexer)+']','torrent',result.title,[],float(result.size)/1000000000,[result.magnetUrl])]
+                                    elif not result.indexer == None:
+                                        scraped_releases += [releases('[prowlarr: '+str(result.indexer)+']','torrent',result.title,[],1,[result.magnetUrl])]
+                                    elif not result.size == None:
+                                        scraped_releases += [releases('[prowlarr: unnamed]','torrent',result.title,[],float(result.size)/1000000000,[result.magnetUrl])]
+                                    response.remove(result)
+                        else:
+                            response.remove(result)
+                    #Multiprocess resolving of result.Link for remaining releases
+                    results = [None] * len(response)
+                    threads = []
+                    #start thread for each remaining release
+                    for index,result in enumerate(response):
+                        t = Thread(target=multi_init, args=(scraper.prowlarr.resolve,result,results,index))
+                        threads.append(t)
+                        t.start()
+                    # wait for the threads to complete
+                    for t in threads:
+                        t.join()
+                    for result in results:
+                        if not result == []:
+                            scraped_releases += result
+            return scraped_releases
+        def resolve(result):
+            scraped_releases = []
+            try:
+                link = scraper.prowlarr.session.get(result.downloadUrl,allow_redirects=False,timeout=2)
+                if regex.search(r'(?<=btih:).*?(?=&)',str(link.headers['Location']),regex.I):
+                    if not result.indexer == None and not result.size == None:
+                        scraped_releases += [releases('[prowlarr: '+str(result.indexer)+']','torrent',result.title,[],float(result.size)/1000000000,[link.headers['Location']])]
+                    elif not result.indexer == None:
+                        scraped_releases += [releases('[prowlarr: '+str(result.indexer)+']','torrent',result.title,[],1,[link.headers['Location']])]
+                    elif not result.size == None:
+                        scraped_releases += [releases('[prowlarr: unnamed]','torrent',result.title,[],float(result.size)/1000000000,[link.headers['Location']])]
+                return scraped_releases
+            except:
+                return scraped_releases
 #Multiprocessing scrape method
 def scrape(cls:scraper,query,result,index):
     result[index] = cls(query)
@@ -2103,6 +2163,8 @@ class ui:
             setting('Jackett Indexers',['Please specify a Jackett indexer (Leave blank to scrape all indexers): '],scraper.jackett,'indexers',hidden=True,entry="indexer"),
             setting('Jackett Categories',['Please specify a Jackett torrent category (Leave blank to scrape all categories): '],scraper.jackett,'categories',hidden=True,entry="category"),
             setting('Jackett Filters',['Please specify a Jackett indexer filter (Leave blank to not apply filter): '],scraper.jackett,'categories',hidden=True,entry="filter"),
+            setting('Prowlarr Base URL','Please specify your Prowlarr base URL: ',scraper.prowlarr,'base_url',hidden=True),
+            setting('Prowlarr API Key','Please specify your Prowlarr API Key: ',scraper.prowlarr,'api_key',hidden=True),
             ]
         ],
         ['Debrid Services', [
