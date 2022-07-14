@@ -150,11 +150,31 @@ For linux, mac and windows, the setup process does not require any additional pr
 4. You and your home users can now stream cached torrents from RealDebrid!
 
 ### 3) Setup plex_debrid:
-1. Run the script! (google "how to run a python script" ;) )
-2. The script will guide you through the initial setup.
-3. You're done!
-4. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
-5. Read the rest of the README!
+
+*The plex_debrid script can be run as a docker container (dockerized version) or by simply executing it with python (standard version).*
+
+<details>
+  <summary><b><u>Standard Version:</u></b></summary>
+  
+  1. Run the script! (google "how to run a python script" ;) )
+  2. The script will guide you through the initial setup.
+  3. You're done!
+  4. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
+  5. Read the rest of the README!
+  
+</details>
+
+<details>
+  <summary><b><u>Dockerized Version:</u></b></summary>
+  
+  1. Run 'docker build -t plex_debrid .'
+  2. Run 'docker run -ti plex_debrid'
+  3. The script will guide you through the initial setup.
+  4. You're done!
+  5. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
+  6. Read the rest of the README!
+  
+</details>
 
 ## Usage:
 
