@@ -147,7 +147,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 1. Create a plex 'movie' library of the mounted virtual drive or add the virtual drive to an existing 'movie' library.
 2. Create a plex 'shows' library of the mounted virtual drive or add the virtual drive to an existing 'shows' library.
 3. *Recommendation: disable 'video preview thumbnails', ~disable 'intro detection'~, disable the scheduled task 'perfom extensive media analysis' to reduce the download traffic*
-4. You and your home users can now stream cached torrents from RealDebrid!
+4. You and your home users can now stream cached torrents from your debrid service/s!
 
 ### 3) Setup plex_debrid:
 
