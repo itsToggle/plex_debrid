@@ -736,6 +736,7 @@ class trakt(content.services):
             return None
 #Debrid Class 
 class debrid:
+    tracker = []
     downloading = []
     uncached = 'true'
     #Service Class:
@@ -786,6 +787,10 @@ class debrid:
             cached_releases = copy.deepcopy(element.Releases)
             for release in cached_releases:
                 element.Releases = [release,]
+                if len(debrid.tracker) > 0:
+                    for t,s in debrid.tracker:
+                        if regex.search(t,release.source,regex.I):
+                            release.cached = s
                 for service in debrid.services():
                     if service.short in release.cached:
                         if service.download(element,stream=stream,query=query,force=force):
@@ -794,9 +799,18 @@ class debrid:
             scraped_releases = copy.deepcopy(element.Releases)
             for release in scraped_releases:
                 element.Releases = [release,]
+                if len(debrid.tracker) > 0:
+                    for t,s in debrid.tracker:
+                        if regex.search(t,release.source,regex.I):
+                            release.cached = s
                 for service in debrid.services():
-                    if service.download(element,stream=stream,query=query,force=force):
-                        return True
+                    if len(release.cached) > 0:
+                        if service.short in release.cached:
+                            if service.download(element,stream=stream,query=query,force=force):
+                                return True
+                    else:
+                        if service.download(element,stream=stream,query=query,force=force):
+                            return True
         return False
     #Check Method:
     def check(element:plex.media,force=False):
@@ -1142,7 +1156,7 @@ class debrid:
         def post(url, data):
             headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36','accept': 'application/json','Content-Type': 'multipart/form-data'}
             try :
-                response = debrid.premiumize.session.post(url + '?apikey='+ debrid.premiumize.api_key, headers = headers, files = data, data={})
+                response = debrid.premiumize.session.post(url + '?apikey='+ debrid.premiumize.api_key + data, headers = headers, data={})
                 debrid.premiumize.logerror(response)
                 response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
             except Exception as e:
@@ -1169,7 +1183,7 @@ class debrid:
                         if not response.response[0]:
                             continue
                         url = "https://www.premiumize.me/api/transfer/create"
-                        data = {'src':release.download[0]}
+                        data = '&src='+release.download[0]
                         response = debrid.premiumize.post(url,data)
                         if response.status == 'success':
                             ui.print('[premiumize] adding cached release: ' + release.title)
@@ -1177,7 +1191,7 @@ class debrid:
                     else:
                         #Uncached Download Method for premiumize
                         url = "https://www.premiumize.me/api/transfer/create"
-                        data = {'src':release.download[0]}
+                        data = '&src='+release.download[0]
                         response = debrid.premiumize.post(url,data)
                         if response.status == 'success':
                             ui.print('[premiumize] adding uncached release: '+ release.title)
@@ -1197,7 +1211,7 @@ class debrid:
                 else:
                     element.Releases.remove(release)
             if len(hashes) > 0:
-                response = debrid.premiumize.get('https://www.premiumize.me/api/cache/check?items[]=' + '&items[]='.join(hashes))
+                response = debrid.premiumize.get('https://www.premiumize.me/api/cache/check?items[]=' + '&items[]='.join(hashes[:200]))
                 for i,release in enumerate(element.Releases):
                     try:
                         instant = response.response[i]
@@ -2094,6 +2108,15 @@ class ui:
         ['Debrid Services', [
             setting('Debrid Services',[''],debrid.services,'active',required=True,preflight=True,entry="service",subclass=True,help='Please setup at least one debrid service: '),
             setting('Uncached Release Download','Please enter "true" or "false": ',debrid,'uncached',help='Please specify wether uncached releases should be added to your debrid service, if no cached releases were found.'),
+            setting(
+                'Tracker specific Debrid Services',
+                [
+                    'Please specify what tracker to look for by providing a regex match group: ',
+                    'Please specify what debrid service should be used for a matching tracker (enter "RD","PM","AD" or "DL"): ',
+                ],
+                debrid,'tracker',
+                entry="rule",
+            ),
             setting('Real Debrid API Key','Please enter your Real Debrid API Key: ',debrid.realdebrid,'api_key',hidden=True),
             setting('All Debrid API Key','Please enter your All Debrid API Key: ',debrid.alldebrid,'api_key',hidden=True),
             setting('Premiumize API Key','Please enter your Premiumize API Key: ',debrid.premiumize,'api_key',hidden=True),
