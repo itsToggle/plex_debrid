@@ -22,6 +22,7 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 - Compatible with any OS (Mac, Linux, Windows, Android, FreeBSD, ...)
 - Gathering Content from:
   - <img src="https://app.plex.tv/desktop/favicon.ico" height="16"> **[Plex (every 5s)](https://plex.tv/)**
+  - <img src="https://hotio.dev/webhook-avatars/overseerr.png" height="16"> **[Overseerr (every 5s)](https://overseerr.dev/)**
   - <img src="https://walter.trakt.tv/hotlink-ok/public/favicon.ico" height="16"> **[Trakt (every 30m)](https://trakt.tv/)**
 - Checking your Plex Library to avoid duplicate downloads
 - Determining precise release dates and times, checking for early releases of movies
@@ -203,6 +204,14 @@ For linux, mac and windows, the setup process does not require any additional pr
   - You can connect the script to trakt.tv to get more accurate release dates and times for your content. You can also synchronize your trakt watchlist and the trakt watchlist of other users to your plex watchlist.
   - To connect the script to trakt, navigate to '/Settings/Content Services/Trakt/Trakt users/Edit/Add user'. You can add an unlimited amount of users.
   - To enable one-way Watchlist synchronization from Trakt to Plex for your specified users, navigate to '/Settings/Content Services/Trakt/Trakt-to-Plex synchronization'. Your Trakt Watchlist will be synchronized to Plex every 30 minutes.
+
+</details>
+
+<details>
+  <summary><b><u>Integrating Overseerr:</u></b></summary>
+  
+  - You can connect plex_debrid to overseerr to instantly and automatically download approved requests from selected users.
+  - To connect the script to overseerr, navigate to '/Settings/Content Services/Overseerr'. 
 
 </details>
 
