@@ -38,7 +38,7 @@ class watchlist(Sequence):
 #Provider Class
 class content:
     class services:
-        active = ['Plex','Trakt']
+        active = ['Plex','Trakt','Overseerr']
         def setup(cls,new=False):
             settings = []
             for category, allsettings in ui.settings_list:
@@ -129,11 +129,12 @@ class plex(content.services):
                 ui.print('plex error: could not reach plex')
             ui.print('done')        
         def remove(self,item):
-            ui.print('item: "' + item.title + '" removed from '+ item.user[0] +'`s plex watchlist')
-            url = 'https://metadata.provider.plex.tv/actions/removeFromWatchlist?ratingKey=' + item.ratingKey + '&X-Plex-Token=' + item.user[1]
-            response = plex.session.put(url,data={'ratingKey':item.ratingKey})
-            if not self == []:
-                self.data.remove(item)
+            if hasattr(item,'user'):
+                ui.print('item: "' + item.title + '" removed from '+ item.user[0] +'`s plex watchlist')
+                url = 'https://metadata.provider.plex.tv/actions/removeFromWatchlist?ratingKey=' + item.ratingKey + '&X-Plex-Token=' + item.user[1]
+                response = plex.session.put(url,data={'ratingKey':item.ratingKey})
+                if not self == []:
+                    self.data.remove(item)
         def add(self,item,user):
             ui.print('item: "' + item.title + '" added to '+ user[0] +'`s plex watchlist')
             url = 'https://metadata.provider.plex.tv/actions/addToWatchlist?ratingKey=' + item.ratingKey + '&X-Plex-Token=' + user[1]
@@ -734,6 +735,205 @@ class trakt(content.services):
                 return response[0].show
         except:
             return None
+#Overseer Class
+class overseerr(content.services):
+    name = 'Overseerr'
+    base_url = "http://localhost:5055"
+    users = ['all']
+    allowed_status = [['2'],]
+    api_key = ""
+    session = requests.Session()
+    def setup(self):
+        ui.cls("Options/Settings/Content Services/Content Services/Overseerr")
+        working_key = False
+        working_url = False
+        try:
+            response = overseerr.session.get(overseerr.base_url + '/api/v1/request',headers={"X-Api-Key" : overseerr.api_key},timeout=0.5)
+            if response.status_code == 200:
+                working_key = True
+                working_url = True
+            else:
+                working_key = False
+                working_url = True
+        except:
+            working_url = False
+        while not working_url:
+            if overseerr.base_url == "http://localhost:5055":
+                print("Looks like overseerr couldn't be reached under the default base url ('"+overseerr.base_url+"').") 
+            else:
+                print("Looks like overseerr couldn't be reached under the current base url ('"+overseerr.base_url+"').") 
+            print("Please make sure overseerr is running and try again, or provide your overseerr base URL below:")
+            print()
+            overseerr.base_url = input("Please provide your overseerr base URL (or press enter to retry default: 'http://localhost:5055'): ")
+            if overseerr.base_url == "":
+                overseerr.base_url = "http://localhost:5055"
+            working_key = False
+            working_url = False
+            try:
+                response = overseerr.session.get(overseerr.base_url + '/api/v1/request',headers={"X-Api-Key" : overseerr.api_key},timeout=0.5)
+                if response.status_code == 200:
+                    working_key = True
+                    working_url = True
+                else:
+                    working_key = False
+                    working_url = True
+            except:
+                working_url = False
+        while not working_key:
+            if overseerr.api_key == "":
+                print("To setup overseerr, please provide your overseerr API Key. Press enter to return to the main menu.")
+            else:
+                print("Looks like your current API Key ('"+overseerr.api_key+"') doesnt work.") 
+            print()
+            overseerr.api_key = input("Please enter your overseerr API Key: ")
+            if overseerr.api_key == "":
+                return
+            working_key = False
+            working_url = False
+            try:
+                response = overseerr.session.get(overseerr.base_url + '/api/v1/request',headers={"X-Api-Key" : overseerr.api_key},timeout=0.5)
+                if response.status_code == 200:
+                    working_key = True
+                    working_url = True
+                else:
+                    working_key = False
+                    working_url = True
+            except:
+                working_url = False
+        settings = []
+        for category, allsettings in ui.settings_list:
+            for setting in allsettings:
+                if setting.cls == self or setting.name.startswith(self.name):
+                    settings += [setting]
+        response = overseerr.get(overseerr.base_url + '/api/v1/user')
+        users = response.results
+        new_users = []
+        for user in users:
+            if not user.displayName in overseerr.users:
+                new_users += [user.displayName]
+        back = False
+        ui.cls("Options/Settings/Content Services/Content Services/Overseerr")
+        while not back:
+            print("0) Back")
+            indices = []
+            for index, setting in enumerate(settings):
+                print(str(index+1) + ') ' + setting.name)
+                indices += [str(index+1)]
+            print()
+            choice = input("Choose an action: ")
+            if choice in indices:
+                if settings[int(choice)-1].name == "Overseerr users":
+                    print()
+                    print("You can define which users approved requests should be downloaded by plex_debrid.")
+                    print()
+                    print('Currently monitored Overseerr users: "'+str(overseerr.users)+'"')
+                    print()
+                    print('0) Back')
+                    print('1) Always monitor all users')
+                    print('2) Add user')
+                    if len(overseerr.users) > 0 and not overseerr.users == ['all']:
+                        print('3) Remove user')
+                    print()
+                    choice = input('Choose an action: ')
+                    print()
+                    if choice == '1':
+                        overseerr.users = ['all']
+                        return True
+                    elif choice == '2':
+                        print("Choose which users approved requests should be downloaded by plex_debrid. Type 'all' to add all currently listed users.")
+                        print()
+                        i=0
+                        indices = []
+                        add_user = []
+                        print('0) Back')
+                        for user in users:
+                            if not user.displayName in overseerr.users:
+                                print(str(i+1) + ') ' + user.displayName)
+                                indices += [str(i+1)]
+                                add_user += [user.displayName]
+                                i+=1
+                        print()
+                        choice = input("Choose a user: ")
+                        if choice == '0':
+                            back = True
+                        elif choice == 'all':
+                            overseerr.users += new_users
+                            return True
+                        elif choice in indices:
+                            overseerr.users += [add_user[int(choice)-1]]
+                            return True
+                    elif choice == '3':
+                        indices = []
+                        print("Choose a user to remove.")
+                        print()
+                        print('0) Back')
+                        for index,user in enumerate(overseerr.users):
+                            print(str(index+1) + ') ' + user)
+                            indices += [str(index+1)]
+                        print()
+                        choice = input("Choose a user: ")
+                        if choice == '0':
+                            back = True
+                        elif choice in indices:
+                            overseerr.users.remove(overseerr.users[int(choice)-1])
+                            return True
+                else:
+                    settings[int(choice)-1].input()
+                back = True
+            elif choice == '0':
+                back = True
+    def get(url): 
+        try :
+            response = overseerr.session.get(url, headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'Content-type' : "application/json", "X-Api-Key" : overseerr.api_key})
+            response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
+        except :
+            response = None
+        return response
+    def post(url, data):
+        try :
+            response = overseerr.session.post(url, headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'Content-type' : "application/json", "X-Api-Key" : overseerr.api_key}, data = data)
+            response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
+        except :
+            response = None
+        return response
+    class requests(watchlist):
+        def __init__(self):
+            self.data = []
+            response = overseerr.get(overseerr.base_url + '/api/v1/request')
+            for element in response.results:
+                if not element in self.data and (element.requestedBy.displayName in overseerr.users or overseerr.users == ['all']) and [str(element.status)] in overseerr.allowed_status:
+                    self.data.append(element)
+        def sync(self,other:plex.watchlist,library):
+            add = []
+            for element in self.data:
+                result = []
+                try:
+                    if not element.media.tmdbId == None:
+                        match_id = 'tmdb-'+str(element.media.tmdbId)
+                    elif not element.media.tvdbId == None:
+                        match_id = 'tvdb-'+str(element.media.tvdbId)
+                    if element.type == 'movie':
+                        result = plex.match(match_id,'movie',library = library)
+                    elif element.type == 'tv':
+                        result = plex.match(match_id,'show',library = library)
+                except:
+                    result = []
+                if not result == []:
+                    add += result
+            for element in add:
+                if not element in other:
+                    other.data.append(element)
+        def update(self):
+            refresh = False
+            response = overseerr.get(overseerr.base_url + '/api/v1/request')
+            for element in response.results:
+                if not element in self.data and (element.requestedBy.displayName in overseerr.users or overseerr.users == ['all']) and [str(element.status)] in overseerr.allowed_status:
+                    ui.print('found new overseerr request by user "' + element.requestedBy.displayName + '".')
+                    refresh = True
+                    self.data.append(element)
+            if refresh:
+                return True
+            return False
 #Debrid Class 
 class debrid:
     tracker = []
@@ -1815,6 +2015,8 @@ def run(stop):
             trakt_watchlist = trakt.watchlist()
             trakt_watchlist.sync(plex_watchlist,library)
             plex_watchlist.update()
+        overseerr_requests = overseerr.requests()
+        overseerr_requests.sync(plex_watchlist,library)
         if len(plex_watchlist) == 0:
             ui.print('checking new content ... done' )
         else:
@@ -1823,8 +2025,9 @@ def run(stop):
                 element.download(library=library)
             ui.print('done')
         while not stop():   
-            if plex_watchlist.update():
+            if plex_watchlist.update() or overseerr_requests.update():
                 library = plex.library()
+                overseerr_requests.sync(plex_watchlist,library)
                 if len(library) == 0:
                     break
                 ui.print('checking new content ...')
@@ -1869,7 +2072,7 @@ class download_script:
                 time.sleep(1)
 #Ui Preference Class:
 class ui_settings:
-    version = ['1.0',"Release sorting has been updated. This update will add 3 special sorting rules, which should help the scraper to pick better releases. For optimal results, leave these special rules more or less at their current position.",['Release sorting',]]
+    version = ['1.1',"Content Services have been updated. Overseerr is now an available content service.",['Content Services',]]
     run_directly = "true"
     debug = "false"
 #Ui Class
@@ -2141,6 +2344,9 @@ class ui:
             setting('Plex "movies" library','Please enter the section number of the "movies" library, that should be refreshed after a movie download. To find the section number, go to "https://app.plex.tv", open your "movies" library and look for the "source=" parameter in the url. Please enter the section number: ',plex.library,'movies',required=True,hidden=True),
             setting('Plex "shows" library','Please enter the section number of the "shows" library, that should be refreshed after a show download. To find the section number, go to "https://app.plex.tv", open your "shows" library and look for the "source=" parameter in the url. Please enter the section number:  ',plex.library,'shows',required=True,hidden=True),
             setting('Plex library check',['Please specify a library section number that should be checked for existing content before download: '],plex.library,'check',hidden=True,entry="section",help='By default, your entire library (including plex shares) is checked for existing content before a download is started. This setting allows you limit this check to specific library sections. To find a section number, go to "https://app.plex.tv", open your the library you want to include in the check and look for the "source=" parameter in the url.'),
+            setting('Overseerr users',['Please choose a user: '],overseerr,'users',entry="user",help="Please specify which users requests should be downloaded by plex_debrid.",hidden=True),
+            setting('Overseerr API Key','Please specify your Overseerr API Key: ',overseerr,'api_key',hidden=True),
+            setting('Overseerr Base URL','Please specify your Overseerr base URL: ',overseerr,'base_url',hidden=True),
             ]
         ],
         ['Scraper',[
@@ -2460,11 +2666,5 @@ class ui:
                     elif setting.name == 'version':
                         settings[setting.name] = setting.get()
             
-#TODO
-#clean up the messy code
-#make things even faster?
-#Add Google Watchlist, IMDB Watchlist, etc
-#Add a local download option - integrate pyload? JD? idfk
-
 if __name__ == "__main__":
     ui.run()
