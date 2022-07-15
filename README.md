@@ -21,9 +21,9 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 ## Features:
 - Compatible with any OS (Mac, Linux, Windows, Android, FreeBSD, ...)
 - Gathering Content from:
-  - <img src="https://app.plex.tv/desktop/favicon.ico" height="16"> **[Plex (every 5s)](https://plex.tv/)**
-  - <img src="https://hotio.dev/webhook-avatars/overseerr.png" height="16"> **[Overseerr (every 5s)](https://overseerr.dev/)**
-  - <img src="https://walter.trakt.tv/hotlink-ok/public/favicon.ico" height="16"> **[Trakt (every 30m)](https://trakt.tv/)**
+  - <img src="https://app.plex.tv/desktop/favicon.ico" height="16"> **[Plex (updated every 5s)](https://plex.tv/)**
+  - <img src="https://hotio.dev/webhook-avatars/overseerr.png" height="16"> **[Overseerr (updated every 5s)](https://overseerr.dev/)**
+  - <img src="https://walter.trakt.tv/hotlink-ok/public/favicon.ico" height="16"> **[Trakt (updated every 5s)](https://trakt.tv/)**
 - Checking your Plex Library to avoid duplicate downloads
 - Determining precise release dates and times, checking for early releases of movies
 - Scraping Releases from:
@@ -201,9 +201,9 @@ For linux, mac and windows, the setup process does not require any additional pr
 <details>
   <summary><b><u>Integrating Trakt:</u></b></summary>
   
-  - You can connect the script to trakt.tv to get more accurate release dates and times for your content. You can also synchronize your trakt watchlist and the trakt watchlist of other users to your plex watchlist.
+  - You can connect plex_debrid to trakt.tv to get more accurate release dates and times for your content. You can also add trakt watchlists from multiple users or public lists to be monitored for new content by plex_debrid.
   - To connect the script to trakt, navigate to '/Settings/Content Services/Trakt/Trakt users/Edit/Add user'. You can add an unlimited amount of users.
-  - To enable one-way Watchlist synchronization from Trakt to Plex for your specified users, navigate to '/Settings/Content Services/Trakt/Trakt-to-Plex synchronization'. Your Trakt Watchlist will be synchronized to Plex every 30 minutes.
+  - To monitor and download your users trakt watchlists or public lists, navigate to '/Settings/Content Services/Trakt/Trakt lists'. By default, no trakt watchlist is monitored for new content. The lists will be checked for new content every 5 seconds.
   - To match content from trakt to plex, its neccessary to have at least one movie and one show inside a library thats visible by plex_debrid. Thats because in order to accurately match content, a search by imdb/tmdb/tvdb ID is necessary - which currently only works by requesting a "Fix Match" call to an existing library item.
 
 </details>
