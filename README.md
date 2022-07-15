@@ -204,6 +204,7 @@ For linux, mac and windows, the setup process does not require any additional pr
   - You can connect the script to trakt.tv to get more accurate release dates and times for your content. You can also synchronize your trakt watchlist and the trakt watchlist of other users to your plex watchlist.
   - To connect the script to trakt, navigate to '/Settings/Content Services/Trakt/Trakt users/Edit/Add user'. You can add an unlimited amount of users.
   - To enable one-way Watchlist synchronization from Trakt to Plex for your specified users, navigate to '/Settings/Content Services/Trakt/Trakt-to-Plex synchronization'. Your Trakt Watchlist will be synchronized to Plex every 30 minutes.
+  - To match content from trakt to plex, its neccessary to have at least one movie and one show inside a library thats visible by plex_debrid. Thats because in order to accurately match content, a search by imdb/tmdb/tvdb ID is necessary - which currently only works by requesting a "Fix Match" call to an existing library item.
 
 </details>
 
@@ -213,6 +214,7 @@ For linux, mac and windows, the setup process does not require any additional pr
   - You can connect plex_debrid to overseerr to instantly and automatically download approved requests from selected users.
   - To connect the script to overseerr, navigate to '/Settings/Content Services/Overseerr'. 
   - By default, all approved requests from all overseerr users are downloaded by plex_debrid. To limit this feature to specific users, navigate to '/Settings/Content Services/Overseerr/Overseerr users'
+  - To match requests from overseerr to plex, its neccessary to have at least one movie and one show inside a library thats visible by plex_debrid. Thats because in order to accurately match content, a search by imdb/tmdb/tvdb ID is necessary - which currently only works by requesting a "Fix Match" call to an existing library item.
 
 </details>
 
