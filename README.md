@@ -212,6 +212,7 @@ For linux, mac and windows, the setup process does not require any additional pr
   
   - You can connect plex_debrid to overseerr to instantly and automatically download approved requests from selected users.
   - To connect the script to overseerr, navigate to '/Settings/Content Services/Overseerr'. 
+  - By default, all approved requests from all overseerr users are downloaded by plex_debrid. To limit this feature to specific users, navigate to '/Settings/Content Services/Overseerr/Overseerr users'
 
 </details>
 
