@@ -108,7 +108,7 @@ class plex(content.services):
             return None
     class watchlist(watchlist):
         def __init__(self) -> None:
-            ui.print('getting entire plex watchlist ...')
+            ui.print('getting all plex watchlists ...')
             self.data = []
             try:
                 for user in plex.users:
@@ -144,7 +144,7 @@ class plex(content.services):
             elif item.type == 'movie':
                 self.data.append(plex.movie(item.ratingKey))
         def update(self):
-            ui.print("getting plex watchlist ...",debug=ui_settings.debug)
+            ui.print("updating all plex watchlists ...",debug=ui_settings.debug)
             update = False
             try:
                 for user in plex.users:
@@ -559,6 +559,9 @@ class plex(content.services):
                 if element.type == type:
                     some_local_media = element
                     break
+        else:
+            ui.print("plex error: couldnt match content to plex media type, because the plex library is empty. Please add at least one movie and one show!")
+            return []
         if type == 'movie':
             agent = 'tv.plex.agents.movie'
         elif type == 'show':
@@ -578,13 +581,109 @@ class trakt(content.services):
     name = 'Trakt'
     client_id = "0183a05ad97098d87287fe46da4ae286f434f32e8e951caad4cc147c947d79a3"
     client_secret = "87109ed53fe1b4d6b0239e671f36cd2f17378384fa1ae09888a32643f83b7e6c"
-    sync_with_plex = "false"
+    lists = []
     users = []
-    current_token = ""
+    current_user = ["",""]
     session = requests.Session()
+    def setup(self):
+        back = False
+        settings = []
+        for category, allsettings in ui.settings_list:
+            for setting in allsettings:
+                if setting.cls == self or setting.name.startswith(self.name):
+                    settings += [setting]
+        ui.cls("Options/Settings/Content Services/Content Services/Trakt")
+        while not back:
+            print("0) Back")
+            indices = []
+            for index, setting in enumerate(settings):
+                print(str(index+1) + ') ' + setting.name)
+                indices += [str(index+1)]
+            print()
+            choice = input("Choose an action: ")
+            if choice in indices:
+                if settings[int(choice)-1].name == "Trakt lists":
+                    print()
+                    print("You can define which trakt lists should be monitored by plex_debrid. This includes public lists and your trakt users watchlists.")
+                    print()
+                    print('Currently monitored trakt lists: "'+str(trakt.lists)+'"')
+                    print()
+                    print('0) Back')
+                    print('1) Add list')
+                    if len(trakt.lists) > 0:
+                        print('2) Remove list')
+                    print()
+                    choice = input('Choose an action: ')
+                    print()
+                    if choice == '1':
+                        print("Choose a trakt list that should be monitored by plex_debrid.")
+                        print()
+                        i=1
+                        indices = []
+                        add_user = []
+                        print('0) Back')
+                        print('1) add public list')
+                        for user in trakt.users:
+                            if not user[0] in trakt.lists:
+                                print(str(i+1) + ') add ' + user[0] + "'s trakt watchlist")
+                                indices += [str(i+1)]
+                                add_user += [user[0]]
+                                i+=1
+                        print()
+                        choice = input("Choose a list: ")
+                        if choice == '0':
+                            back = True
+                        elif choice == '1':
+                            print("To add a public list, please enter the lists url in the format shown by this example: (Example URL: '/users/giladg/lists/latest-releases') ")
+                            print()
+                            url = input("Please enter the public list url: ")
+                            working = False
+                            trakt.current_user = trakt.users[0]
+                            if trakt.current_user[1] == "":
+                                print("Please add at least one trakt user before adding a trakt list!")
+                                time.sleep(5)
+                                return False
+                            response,header = trakt.get('https://api.trakt.tv' + url + '/items')
+                            while response == None:
+                                print()
+                                print("Looks like that url didnt work. Please enter the lists url in the format shown by this example: (Example URL: '/users/giladg/lists/latest-releases') ")
+                                print()
+                                url = input("Please enter the public list url: ")
+                                response,header = trakt.get('https://api.trakt.tv' + url)
+                            trakt.lists += [url]
+                            return True
+                        elif choice in indices:
+                            trakt.lists += [add_user[int(choice)-2] + "'s watchlist"]
+                            return True
+                    elif choice == '2':
+                        indices = []
+                        print("Choose a list to remove.")
+                        print()
+                        print('0) Back')
+                        for index,list in enumerate(trakt.lists):
+                            print(str(index+1) + ') ' + list)
+                            indices += [str(index+1)]
+                        print()
+                        choice = input("Choose a list: ")
+                        if choice == '0':
+                            back = True
+                        elif choice in indices:
+                            trakt.lists.remove(trakt.lists[int(choice)-1])
+                            return True
+                else:
+                    settings[int(choice)-1].input()
+                back = True
+            elif choice == '0':
+                back = True
+    def logerror(response):
+        if not response.status_code == 200:
+            ui.print("[trakt] error: " + str(response.content),debug=ui_settings.debug)
+        if response.status_code == 401:
+            ui.print("[trakt] error: (401 unauthorized): trakt api key for user '"+trakt.current_user[0]+"' does not seem to work. Consider re-authorizing plex_debrid for this trakt user.")
     def get(url): 
         try :
-            response = trakt.session.get(url, headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'Content-type' : "application/json", "trakt-api-key" : trakt.client_id, "trakt-api-version" : "2", "Authorization" : "Bearer " + trakt.current_token})
+            response = trakt.session.get(url, headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'Content-type' : "application/json", "trakt-api-key" : trakt.client_id, "trakt-api-version" : "2", "Authorization" : "Bearer " + trakt.current_user[1]})
+            trakt.logerror(response)
             header = response.headers
             response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
         except :
@@ -593,7 +692,8 @@ class trakt(content.services):
         return response, header
     def post(url, data):
         try :
-            response = trakt.session.post(url, headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'Content-type' : "application/json", "trakt-api-key" : trakt.client_id, "trakt-api-version" : "2", "Authorization" : "Bearer " + trakt.current_token}, data = data)
+            response = trakt.session.post(url, headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'Content-type' : "application/json", "trakt-api-key" : trakt.client_id, "trakt-api-version" : "2", "Authorization" : "Bearer " + trakt.current_user[1]}, data = data)
+            trakt.logerror(response)
             response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
             time.sleep(1)
         except :
@@ -611,36 +711,111 @@ class trakt(content.services):
             return response.access_token       
     class watchlist(watchlist):
         def __init__(self):
+            if len(trakt.lists) > 0:
+                ui.print('getting all trakt lists ...')
             self.data = []
-            for user in trakt.users:
-                trakt.current_token = user[1]
-                watchlist_shows, header = trakt.get('https://api.trakt.tv/users/me/watchlist/shows')
-                watchlist_movies, header = trakt.get('https://api.trakt.tv/users/me/watchlist/movies')
-                for element in watchlist_shows:
-                    if not element.show in self.data:
+            for list in trakt.lists:
+                public = True
+                for user in trakt.users:
+                    if list == user[0] + "'s watchlist":
+                        public = False
+                        break
+                trakt.current_user = user
+                if not public:
+                    watchlist_shows, header = trakt.get('https://api.trakt.tv/users/me/watchlist/shows')
+                    watchlist_movies, header = trakt.get('https://api.trakt.tv/users/me/watchlist/movies')
+                    for element in watchlist_shows:
                         element.show.type = 'show'
                         element.show.user = user
-                        self.data.append(element.show)
-                for element in watchlist_movies:
-                    if not element.movie in self.data:
+                        if not element.show in self.data:
+                            self.data.append(element.show)
+                    for element in watchlist_movies:
                         element.movie.type = 'movie'
                         element.movie.user = user
-                        self.data.append(element.movie)
+                        if not element.movie in self.data:
+                            self.data.append(element.movie)
+                else:
+                    watchlist_shows, header = trakt.get('https://api.trakt.tv'+list+'/items/shows')
+                    watchlist_movies, header = trakt.get('https://api.trakt.tv'+list+'/items/movies')
+                    for element in watchlist_shows:
+                        element.show.type = 'show'
+                        element.show.user = user
+                        if not element.show in self.data:
+                            self.data.append(element.show)
+                    for element in watchlist_movies:
+                        element.movie.type = 'movie'
+                        element.movie.user = user
+                        if not element.movie in self.data:
+                            self.data.append(element.movie)
+            ui.print('done')
         def sync(self,other:plex.watchlist,library):
             add = []
             for element in self.data:
                 try:
-                    result = plex.match(element.ids.imdb,element.type,library=library)
+                    result = plex.match("imdb-"+element.ids.imdb,element.type,library=library)
+                    if result == []:
+                        result = plex.match("tmdb-"+str(element.ids.tmdb),element.type,library=library)
+                    if result == []:
+                        result = plex.match("tvdb-"+str(element.ids.tvdb),element.type,library=library)
                     result[0].trakt = element
                 except:
+                    ui.print('couldnt add item: "' + element.title + '" - no plex match found!',debug=ui_settings.debug)
                     result = []
                 if not result == []:
                     add += result
             for element in add:
                 if not element in other:
-                    other.add(element,plex.users[0])
-                if element.type == 'movie':
-                    self.remove(element.trakt)
+                    other.data.append(element)
+        def update(self):
+            if len(trakt.lists) > 0:
+                ui.print('updating all trakt lists ...',debug=ui_settings.debug)
+            refresh = False
+            for list in trakt.lists:
+                public = True
+                for user in trakt.users:
+                    if list == user[0] + "'s watchlist":
+                        public = False
+                        break
+                trakt.current_user = user
+                if not public:
+                    watchlist_shows, header = trakt.get('https://api.trakt.tv/users/me/watchlist/shows')
+                    watchlist_movies, header = trakt.get('https://api.trakt.tv/users/me/watchlist/movies')
+                    for element in watchlist_shows:
+                        element.show.type = 'show'
+                        element.show.user = user
+                        if not element.show in self.data:
+                            refresh = True
+                            ui.print('item: "' + element.show.title + '" found in ' + trakt.current_user[0]+ "'s trakt watchlist.")
+                            self.data.append(element.show)
+                    for element in watchlist_movies:
+                        element.movie.type = 'movie'
+                        element.movie.user = user
+                        if not element.movie in self.data:
+                            refresh = True
+                            ui.print('item: "' + element.movie.title + '" found in ' + trakt.current_user[0]+ "'s trakt watchlist.")
+                            self.data.append(element.movie)
+                else:
+                    watchlist_shows, header = trakt.get('https://api.trakt.tv'+list+'/items/shows')
+                    watchlist_movies, header = trakt.get('https://api.trakt.tv'+list+'/items/movies')
+                    for element in watchlist_shows:
+                        element.show.type = 'show'
+                        element.show.user = user
+                        if not element.show in self.data:
+                            refresh = True
+                            ui.print('item: "' + element.show.title + '" found in public trakt list "' + list + '".')
+                            self.data.append(element.show)
+                    for element in watchlist_movies:
+                        element.movie.type = 'movie'
+                        element.movie.user = user
+                        if not element.movie in self.data:
+                            refresh = True
+                            ui.print('item: "' + element.movie.title + '" found in public trakt list "' + list + '".')
+                            self.data.append(element.movie)
+            if len(trakt.lists) > 0:
+                ui.print('done',debug=ui_settings.debug)
+            if refresh:
+                return True
+            return False
         def remove(self,element):
             user = copy.deepcopy(element.user)
             data = []
@@ -667,11 +842,11 @@ class trakt(content.services):
                 ui.print('item: "' + element.title + '" removed from '+user[0]+'`s trakt watchlist')
                 movies += [element]
             data = {'movies':movies,'shows':shows}
-            trakt.current_token = user[1]
+            trakt.current_user = user
             trakt.post('https://api.trakt.tv/sync/watchlist/remove',json.dumps(data, default=lambda o: o.__dict__))
     class media:
         def available(self):
-            trakt.current_token = trakt.users[0][1]
+            trakt.current_user = trakt.users[0]
             if self.type == 'show':
                 #Determine air-date of next episode
                 next_episode, header = trakt.get('https://api.trakt.tv/shows/' + str(self.ids.trakt) + '/seasons/' + str(self.next_season) + '/episodes/' + str(self.next_episode) + '?extended=full')
@@ -704,7 +879,7 @@ class trakt(content.services):
                 #if release_date and delay have passed or the movie was released early
                 return datetime.datetime.utcnow() > datetime.datetime.strptime(release_date,'%Y-%m-%d') or match
     def search(query,type):
-        trakt.current_token = trakt.users[0][1]
+        trakt.current_user = trakt.users[0]
         if type == 'all':
             response, header = trakt.get('https://api.trakt.tv/search/movie,show?query=' + str(query))
         elif type == 'movie':
@@ -719,7 +894,7 @@ class trakt(content.services):
             response, header = trakt.get('https://api.trakt.tv/search/tvdb?query=' + str(query))
         return response
     def match(query,service,type):
-        trakt.current_token = trakt.users[0][1]
+        trakt.current_user = trakt.users[0]
         if service == 'imdb':
             response, header = trakt.get('https://api.trakt.tv/search/imdb/' + str(query) + '?type=' + type + '&extended=full')
         elif service == 'tmdb':
@@ -898,11 +1073,14 @@ class overseerr(content.services):
         return response
     class requests(watchlist):
         def __init__(self):
+            if len(overseerr.users) > 0:
+                ui.print('getting all overseerr requests ...')
             self.data = []
             response = overseerr.get(overseerr.base_url + '/api/v1/request')
             for element in response.results:
                 if not element in self.data and (element.requestedBy.displayName in overseerr.users or overseerr.users == ['all']) and [str(element.status)] in overseerr.allowed_status:
                     self.data.append(element)
+            ui.print('done')
         def sync(self,other:plex.watchlist,library):
             add = []
             for element in self.data:
@@ -924,15 +1102,18 @@ class overseerr(content.services):
                 if not element in other:
                     other.data.append(element)
         def update(self):
-            refresh = False
-            response = overseerr.get(overseerr.base_url + '/api/v1/request')
-            for element in response.results:
-                if not element in self.data and (element.requestedBy.displayName in overseerr.users or overseerr.users == ['all']) and [str(element.status)] in overseerr.allowed_status:
-                    ui.print('found new overseerr request by user "' + element.requestedBy.displayName + '".')
-                    refresh = True
-                    self.data.append(element)
-            if refresh:
-                return True
+            if len(overseerr.users) > 0:
+                ui.print('updating all overseerr requests ...',debug=ui_settings.debug)
+                refresh = False
+                response = overseerr.get(overseerr.base_url + '/api/v1/request')
+                for element in response.results:
+                    if not element in self.data and (element.requestedBy.displayName in overseerr.users or overseerr.users == ['all']) and [str(element.status)] in overseerr.allowed_status:
+                        ui.print('found new overseerr request by user "' + element.requestedBy.displayName + '".')
+                        refresh = True
+                        self.data.append(element)
+                ui.print('done',debug=ui_settings.debug)
+                if refresh:
+                    return True
             return False
 #Debrid Class 
 class debrid:
@@ -2010,11 +2191,12 @@ def run(stop):
     timeout_counter = 0
     library = plex.library()
     if len(library) > 0:
+        #get entire plex_watchlist
         plex_watchlist = plex.watchlist()
-        if trakt.sync_with_plex == "true":
-            trakt_watchlist = trakt.watchlist()
-            trakt_watchlist.sync(plex_watchlist,library)
-            plex_watchlist.update()
+        #get entire trakt_watchlist, match content to plex media type and add to monitored list
+        trakt_watchlist = trakt.watchlist()
+        trakt_watchlist.sync(plex_watchlist,library)
+        #get all overseerr request, match content to plex media type and add to monitored list
         overseerr_requests = overseerr.requests()
         overseerr_requests.sync(plex_watchlist,library)
         if len(plex_watchlist) == 0:
@@ -2025,8 +2207,9 @@ def run(stop):
                 element.download(library=library)
             ui.print('done')
         while not stop():   
-            if plex_watchlist.update() or overseerr_requests.update():
+            if plex_watchlist.update() or overseerr_requests.update() or trakt_watchlist.update():
                 library = plex.library()
+                trakt_watchlist.sync(plex_watchlist,library)
                 overseerr_requests.sync(plex_watchlist,library)
                 if len(library) == 0:
                     break
@@ -2035,10 +2218,14 @@ def run(stop):
                     element.download(library=library)
                 ui.print('done')
             elif timeout_counter >= regular_check:
-                if trakt.sync_with_plex == "true":
-                    trakt_watchlist = trakt.watchlist()
-                    trakt_watchlist.sync(plex_watchlist,library)
+                #get entire plex_watchlist
                 plex_watchlist = plex.watchlist()
+                #get entire trakt_watchlist, match content to plex media type and add to monitored list
+                trakt_watchlist = trakt.watchlist()
+                trakt_watchlist.sync(plex_watchlist,library)
+                #get all overseerr request, match content to plex media type and add to monitored list
+                overseerr_requests = overseerr.requests()
+                overseerr_requests.sync(plex_watchlist,library)
                 library = plex.library()
                 if len(library) == 0:
                     break
@@ -2339,7 +2526,7 @@ class ui:
             setting('Content Services',[''],content.services,'active',entry="content service",subclass=True,moveable=False),
             setting('Plex users',['Please provide a name for this Plex user: ','Please provide the Plex token for this Plex user: '],plex,'users',required=True,preflight=True,entry="user",help="Please create a plex user by providing a name and a token. To find the plex token for this user, open your favorite browser, log in to this plex account and visit 'https://plex.tv/devices.xml'. Pick a 'token' from one of the listed devices.",hidden=True),
             setting('Trakt users',['Please provide a name for this Trakt user: ','Please open your favorite browser, log into this Trakt user and open "https://trakt.tv/activate". Enter this code: '],trakt,'users',entry="user",oauth=True,hidden=True),
-            setting('Trakt-to-Plex synchronization','Please enter "true" or "false": ',trakt,'sync_with_plex',hidden=True),
+            setting('Trakt lists',[''],trakt,'lists',hidden=True),
             setting('Plex server address','Please enter your Plex server address: ',plex.library,'url',hidden=True),
             setting('Plex "movies" library','Please enter the section number of the "movies" library, that should be refreshed after a movie download. To find the section number, go to "https://app.plex.tv", open your "movies" library and look for the "source=" parameter in the url. Please enter the section number: ',plex.library,'movies',required=True,hidden=True),
             setting('Plex "shows" library','Please enter the section number of the "shows" library, that should be refreshed after a show download. To find the section number, go to "https://app.plex.tv", open your "shows" library and look for the "source=" parameter in the url. Please enter the section number:  ',plex.library,'shows',required=True,hidden=True),
