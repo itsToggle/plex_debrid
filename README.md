@@ -1,5 +1,5 @@
 # plex_debrid
-Plex torrent streaming through Debrid Services, using the new Plex Discover feature.
+Plex torrent streaming through Debrid Services, using the new Plex Discover feature, Trakt lists and Overseerr.
 
 **Using the new Plex Discover Feature, your Plex Home users can add movies/shows to their watchlist and they become available to stream in seconds.**
 
@@ -11,7 +11,7 @@ Plex torrent streaming through Debrid Services, using the new Plex Discover feat
 
 *For this download automation to work, you need to mount your debrid service as a virtual drive. After creating a plex library of this virtual drive, you can stream torrents that are cached on your debrid service without the need to download them first.* 
 
-The plex watchlist of specified users is constantly checked for newly added movies/shows and newly released episodes of watchlisted shows.
+The plex watchlist (aswell as the trakt watchlist and overseer requests) of specified users are constantly checked for newly added movies/shows and newly released episodes of watchlisted shows.
 Once new content is found, torrent indexers are scraped for the best, cached release on selected debrid services. The torrent is then added to a suitable debrid service and a library refresh is performed to make the newly added content available. 
 
 **For any debrid-cached content (movies, one-season tv shows or even multi-season tv shows) the entire process from watchlisting content to watching it takes about 10-20 seconds.**
