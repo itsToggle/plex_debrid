@@ -28,7 +28,7 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
 - Determining precise release dates and times, checking for early releases of movies
 - Scraping Releases from:
   - <img src="https://user-images.githubusercontent.com/27040483/28728094-99f3e3f6-73c7-11e7-8f8d-28912dc6ac0d.png" height="16"> **[Jackett](https://github.com/Jackett/Jackett)**
-  - <img src="https://prowlarr.com/img/favicon-32x32.png" height="16"> **[Prowlarr (limited integration)](https://github.com/Prowlarr/Prowlarr)**
+  - <img src="https://prowlarr.com/img/favicon-32x32.png" height="16"> **[Prowlarr](https://github.com/Prowlarr/Prowlarr)**
   - <img src="https://progsoft.net/images/rarbg-icon-648af4dcc6ec63ee49d6c050af63d2547c74d46c.png" height="16"> **[RARBG](https://rarbg.to/)**
   - <img src="https://1337x.to/favicon.ico" height="16"> **[1337X](https://1337x.to/)**
 - Sorting and selecting scraped releases by completely customizable rules
@@ -223,7 +223,7 @@ For linux, mac and windows, the setup process does not require any additional pr
   
   - The only legacy scrapers currently integrated are for rarbg.to and 1337x.to 
   - Its recommended to install "jackett", a program that wraps a huge amount of torrent indexers (https://github.com/Jackett/Jackett). Once installed and setup, you can enable jackett by navigating to '/Settings/Scraper/Sources/Edit/Add source/jackett'. Once enabled, you can delete the legacy scrapers, since jackett can handle both 1337x and rarbg.
-  - If you prefer Prowlarr over Jackett, you are able to integrate prowlarr in the same way as jackett. Prowlarr support is very limited though, since prowlarr provides magnet links through a redirection link. These redirection links are resolved by plex_debrid, but prowlarr does not allow parallel requests to resolve the links - which causes plex_debrid to timeout the request to prowlarr and only show a very limited amount of releases.
+  - If you prefer Prowlarr over Jackett, you are able to integrate prowlarr in the same way as jackett. Prowlarr has stricted rate limits than jackett for some indexers (e.g. 1337x), which could cause plex_debrid to timeout the request to prowlarr and therefore find less releases than jackett.
   - You can now choose to use a specific debrid service for a specific torrent tracker by navigating to "/Settings/Debrid Services/Tracker specific Debrid Services". This comes in handy if you are using a private tracker that forces you to use a debrid service that will seed your torrents (e.g. debridlink).
 
 </details>
