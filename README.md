@@ -153,7 +153,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 
 ### 3) Setup plex_debrid:
 
-*The plex_debrid script can be run as a docker container (dockerized version) or by simply executing it with python (standard version).*
+*The plex_debrid script can be run as a docker container (dockerized version) or by simply executing it with python 3 (standard version).*
 
 <details>
   <summary><b><u>Standard Version:</u></b></summary>
