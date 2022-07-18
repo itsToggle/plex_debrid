@@ -2606,6 +2606,7 @@ class ui:
         print()
         print(path)
         print()
+        sys.stdout.flush()
     def print(string:str,debug="true"):
         if debug == "true":
             if string == 'done' and ui.sameline:
@@ -2616,11 +2617,10 @@ class ui:
                 ui.sameline = False
             elif string.endswith('...') and __name__ == "__main__":
                 print('[' + str(datetime.datetime.now()) + '] ' + string, end=' ')
-                sys.stdout.flush()
                 ui.sameline = True
             elif not string.startswith('done'):
                 print('[' + str(datetime.datetime.now()) + '] ' + string)
-                sys.stdout.flush()
+            sys.stdout.flush()
     def ignored():
         ui.cls('Options/Ignored Media/')
         if len(plex.ignored) == 0:
