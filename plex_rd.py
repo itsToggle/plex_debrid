@@ -1829,11 +1829,13 @@ class releases:
     def rename(string):
         deleteChars = ['.',':','(',')','`','´',',','!','?',' - ',"'","\u200b"]
         dotChars = [' ']#,'/']
+        replaceChars = [['&','and'],['ü','ue'],['ä','ae'],['ö','oe'],['ß','ss'],['é','e'],['è','e']]
         for specialChar in deleteChars:
             string = string.replace(specialChar, '')
         for specialChar in dotChars:
             string = string.replace(specialChar, '.')
-        string.replace('&','and').replace('ü','ue').replace('ä','ae').replace('ö','oe').replace('ß','ss').replace('é','e').replace('è','e')
+        for specialChar,repl in replaceChars:
+            string = string.replace(specialChar,repl)
         string = regex.sub(r'\.+',".",string)
         return string    
     #Print Method
