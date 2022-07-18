@@ -1073,14 +1073,17 @@ class overseerr(content.services):
         return response
     class requests(watchlist):
         def __init__(self):
-            if len(overseerr.users) > 0:
-                ui.print('getting all overseerr requests ...')
             self.data = []
-            response = overseerr.get(overseerr.base_url + '/api/v1/request')
-            for element in response.results:
-                if not element in self.data and (element.requestedBy.displayName in overseerr.users or overseerr.users == ['all']) and [str(element.status)] in overseerr.allowed_status:
-                    self.data.append(element)
-            ui.print('done')
+            if len(overseerr.users) > 0 and len(overseerr.api_key) > 0:
+                ui.print('getting all overseerr requests ...')
+                try:
+                    response = overseerr.get(overseerr.base_url + '/api/v1/request')
+                    for element in response.results:
+                        if not element in self.data and (element.requestedBy.displayName in overseerr.users or overseerr.users == ['all']) and [str(element.status)] in overseerr.allowed_status:
+                            self.data.append(element)
+                except:
+                    self.data = []
+                ui.print('done')
         def sync(self,other:plex.watchlist,library):
             add = []
             for element in self.data:
@@ -1102,18 +1105,21 @@ class overseerr(content.services):
                 if not element in other:
                     other.data.append(element)
         def update(self):
-            if len(overseerr.users) > 0:
+            if len(overseerr.users) > 0 and len(overseerr.api_key) > 0:
                 ui.print('updating all overseerr requests ...',debug=ui_settings.debug)
                 refresh = False
-                response = overseerr.get(overseerr.base_url + '/api/v1/request')
-                for element in response.results:
-                    if not element in self.data and (element.requestedBy.displayName in overseerr.users or overseerr.users == ['all']) and [str(element.status)] in overseerr.allowed_status:
-                        ui.print('found new overseerr request by user "' + element.requestedBy.displayName + '".')
-                        refresh = True
-                        self.data.append(element)
-                ui.print('done',debug=ui_settings.debug)
-                if refresh:
-                    return True
+                try:
+                    response = overseerr.get(overseerr.base_url + '/api/v1/request')
+                    for element in response.results:
+                        if not element in self.data and (element.requestedBy.displayName in overseerr.users or overseerr.users == ['all']) and [str(element.status)] in overseerr.allowed_status:
+                            ui.print('found new overseerr request by user "' + element.requestedBy.displayName + '".')
+                            refresh = True
+                            self.data.append(element)
+                    ui.print('done',debug=ui_settings.debug)
+                    if refresh:
+                        return True
+                except:
+                    return False
             return False
 #Debrid Class 
 class debrid:
@@ -2852,6 +2858,7 @@ class ui:
                         settings[setting.name] = setting.get()
                     elif setting.name == 'version':
                         settings[setting.name] = setting.get()
-            
+
+           
 if __name__ == "__main__":
     ui.run()
