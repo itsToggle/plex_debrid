@@ -107,6 +107,7 @@ class plex(content.services):
             ui.print("plex error: (json exception): " + str(e),debug=ui_settings.debug)
             return None
     class watchlist(watchlist):
+        autoremove = "movie"
         def __init__(self) -> None:
             ui.print('getting all plex watchlists ...')
             self.data = []
@@ -319,7 +320,8 @@ class plex(content.services):
                             i += 1
                         if self.debrid_download():
                             refresh = True
-                            plex.watchlist.remove([],self)
+                            if plex.watchlist.autoremove == "both" or plex.watchlist.autoremove == "movie":
+                                plex.watchlist.remove([],self)
                             toc = time.perf_counter()
                             ui.print('took ' + str(round(toc-tic,2)) + 's')
                         else:
@@ -356,6 +358,8 @@ class plex(content.services):
                         for result in results:
                             if result:
                                 refresh = True
+                        if refresh and (plex.watchlist.autoremove == "both" or plex.watchlist.autoremove == "show"):
+                            plex.watchlist.remove([],self)
                         toc = time.perf_counter()
                         ui.print('took ' + str(round(toc-tic,2)) + 's')
             elif self.type == 'season':
@@ -1826,18 +1830,19 @@ class releases:
                 ui.print("sorting error: (sorting exception): " + str(e),debug=ui_settings.debug)
             return scraped_releases
     #Rename Method
-    def rename(string):
+    class rename:
         deleteChars = ['.',':','(',')','`','´',',','!','?',' - ',"'","\u200b"]
         dotChars = [' ']#,'/']
         replaceChars = [['&','and'],['ü','ue'],['ä','ae'],['ö','oe'],['ß','ss'],['é','e'],['è','e']]
-        for specialChar in deleteChars:
-            string = string.replace(specialChar, '')
-        for specialChar in dotChars:
-            string = string.replace(specialChar, '.')
-        for specialChar,repl in replaceChars:
-            string = string.replace(specialChar,repl)
-        string = regex.sub(r'\.+',".",string)
-        return string    
+        def __new__(self,string):
+            for specialChar in self.deleteChars:
+                string = string.replace(specialChar, '')
+            for specialChar in self.dotChars:
+                string = string.replace(specialChar, '.')
+            for specialChar,repl in self.replaceChars:
+                string = string.replace(specialChar,repl)
+            string = regex.sub(r'\.+',".",string)
+            return string    
     #Print Method
     def print(scraped_releases):
         if __name__ == "__main__":
@@ -2539,6 +2544,7 @@ class ui:
             setting('Plex "movies" library','Please enter the section number of the "movies" library, that should be refreshed after a movie download. To find the section number, go to "https://app.plex.tv", open your "movies" library and look for the "source=" parameter in the url. Please enter the section number: ',plex.library,'movies',required=True,hidden=True),
             setting('Plex "shows" library','Please enter the section number of the "shows" library, that should be refreshed after a show download. To find the section number, go to "https://app.plex.tv", open your "shows" library and look for the "source=" parameter in the url. Please enter the section number:  ',plex.library,'shows',required=True,hidden=True),
             setting('Plex library check',['Please specify a library section number that should be checked for existing content before download: '],plex.library,'check',hidden=True,entry="section",help='By default, your entire library (including plex shares) is checked for existing content before a download is started. This setting allows you limit this check to specific library sections. To find a section number, go to "https://app.plex.tv", open your the library you want to include in the check and look for the "source=" parameter in the url.'),
+            setting('Plex auto remove','Please choose which media type/s should be removed from your watchlist after successful download ("movie","show","both" or "none"): ',plex.watchlist,'autoremove',hidden=True,help='By default, movies are removed from your watchlist after a successful download. In this setting you can choose to automatically remove shows, shows and movies or nothing.'),
             setting('Overseerr users',['Please choose a user: '],overseerr,'users',entry="user",help="Please specify which users requests should be downloaded by plex_debrid.",hidden=True),
             setting('Overseerr API Key','Please specify your Overseerr API Key: ',overseerr,'api_key',hidden=True),
             setting('Overseerr Base URL','Please specify your Overseerr base URL: ',overseerr,'base_url',hidden=True),
@@ -2557,6 +2563,7 @@ class ui:
                 releases.sort,'ranking',
                 entry="rule",
             ),
+            setting('Special character renaming',['Please specify a character or string that should be replaced: ','Please specify with what character or string it should be replaced: '],releases.rename,'replaceChars',entry="rule",help='By default, spaces in plex media titles are replaced by dots and the following character/s are removed: "' + '","'.join(releases.rename.deleteChars) + '". In this setting you can specify a character or a string that should be replaced by nothing, some other character or a string.'),
             #setting('Multiple versions trigger','Please specify your multiple versions trigger: ',releases.sort,'multiple_versions_trigger',help='This setting allows you to download more than one release every time you add a movie or show. If the selected release regex-matches the specified trigger, the next, best release that doesnt match this trigger will be downloaded aswell. Example: You want to download both HDR and non-HDR versions of your content - type "(HDR)."'),
             setting('Rarbg API Key','The Rarbg API Key gets refreshed automatically, enter the default value: ',scraper.rarbg,'token',hidden=True),
             setting('Jackett Base URL','Please specify your Jackett base URL: ',scraper.jackett,'base_url',hidden=True),
