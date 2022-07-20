@@ -146,6 +146,8 @@ For linux, mac and windows, the setup process does not require any additional pr
 
 ### 2) Setup Plex:
 
+*If you are running rclone on a Linux based OS and Plex cant find your mounted virtual drive, try adding the mounting tag '--allow-other'*
+
 1. Create a plex 'movie' library of the mounted virtual drive or add the virtual drive to an existing 'movie' library.
 2. Create a plex 'shows' library of the mounted virtual drive or add the virtual drive to an existing 'shows' library.
 3. *Recommendation: disable 'video preview thumbnails', ~disable 'intro detection'~, disable the scheduled task 'perfom extensive media analysis' to reduce the download traffic*
