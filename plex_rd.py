@@ -147,6 +147,7 @@ class plex(content.services):
         def update(self):
             ui.print("updating all plex watchlists ...",debug=ui_settings.debug)
             update = False
+            new_watchlist = []
             try:
                 for user in plex.users:
                     url = 'https://metadata.provider.plex.tv/library/sections/watchlist/all?X-Plex-Token=' + user[1]
@@ -162,6 +163,10 @@ class plex(content.services):
                                         self.data += [plex.show(entry)]
                                     if entry.type == 'movie':
                                         self.data += [plex.movie(entry)]
+                            new_watchlist += response.MediaContainer.Metadata
+                for entry in self.data[:]:
+                    if not entry in new_watchlist:
+                        self.data.remove(entry)
             except Exception as e:
                 ui.print('done') 
                 ui.print("plex error: (watchlist exception): " + str(e),debug=ui_settings.debug)
