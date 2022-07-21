@@ -75,6 +75,8 @@ For linux, mac and windows, the setup process does not require any additional pr
   7. You can mount your newly created remote by running the command 'rclone cmount your-remote: X: --dir-cache-time=10s --vfs-cache-mode=full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
   8. You've successfuly created a virtual drive of your debrid service!
   
+  *You can run rclone as a background service by adding the mounting tag '--no-console' (Windows) or '--deamon' (Linux, Mac, etc)*
+  
   **Mounting with official rclone software (WebDav)**
   
   1. Install the official rclone software: https://github.com/rclone/rclone or my fork: https://github.com/itsToggle/rclone_rd
@@ -89,7 +91,8 @@ For linux, mac and windows, the setup process does not require any additional pr
   10. enter your webdav password (available in your account settings) as the password
   11. You can mount your newly created remote by running the command 'rclone mount your-remote X: --dir-cache-time=10s --vfs-cache-mode=full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
   12. You've successfuly created a virtual drive of your debrid service!
-
+  
+  *You can run rclone as a background service by adding the mounting tag '--no-console' (Windows) or '--deamon' (Linux, Mac, etc)*
 </details>
 
 <details>
@@ -103,7 +106,8 @@ For linux, mac and windows, the setup process does not require any additional pr
   6. follow the rest of the prompted instructions, choose 'no advaced configuration'
   7. You can mount your newly created remote by running the command 'rclone mount your-remote: X: --dir-cache-time=10s --vfs-cache-mode=full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
   8. You've successfuly created a virtual drive of your debrid service!
-
+  
+  *You can run rclone as a background service by adding the mounting tag '--no-console' (Windows) or '--deamon' (Linux, Mac, etc)*
 </details>
 
 <details>
@@ -122,7 +126,8 @@ For linux, mac and windows, the setup process does not require any additional pr
   11. You can mount your newly created remote by running the command 'rclone mount your-remote:links X: --dir-cache-time=10s --vfs-cache-mode=full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
   12. You've successfuly created a virtual drive of your debrid service!
   13. You will only be able to watch content from the "links" and "history" folder, not the "magnet" folder. The "links" folder is recommended and the one used in the mounting command above.
-
+  
+  *You can run rclone as a background service by adding the mounting tag '--no-console' (Windows) or '--deamon' (Linux, Mac, etc)*
 </details>
 
 <details>
@@ -140,9 +145,9 @@ For linux, mac and windows, the setup process does not require any additional pr
   10. enter your "passkey" (Available in your account) as the password
   11. You can mount your newly created remote by running the command 'rclone mount your-remote X: --dir-cache-time=10s --vfs-cache-mode=full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
   12. You've successfuly created a virtual drive of your debrid service!
-
+  
+  *You can run rclone as a background service by adding the mounting tag '--no-console' (Windows) or '--deamon' (Linux, Mac, etc)*
 </details>
-
 
 ### 2) Setup Plex:
 
