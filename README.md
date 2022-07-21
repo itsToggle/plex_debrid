@@ -90,7 +90,9 @@ android version has only been tested with realdebrid.
   
   official version (Magisk Module):
   https://github.com/Magisk-Modules-Repo/com.piyushgarg.rclone
-  
+  or
+  https://github.com/AvinashReddy3108/rclone-mount-magisk
+   
   my fork:
   1. Install Termux from F-Droid
   2. run command 'pkg update'
