@@ -86,6 +86,12 @@ android version has only been tested with realdebrid.
   
   This setup can be done entirely on your android device:
   
+  You can either run the official rclone software and mount realdebrid through their webdav implementation (recommended), or you can run realdebrid through my fork.
+  
+  official version (Magisk Module):
+  https://github.com/Magisk-Modules-Repo/com.piyushgarg.rclone
+  
+  my fork:
   1. Install Termux from F-Droid
   2. run command 'pkg update'
   3. run command 'termux-setup-storage', allow the permission
