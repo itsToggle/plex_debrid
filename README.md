@@ -123,7 +123,7 @@ This step will only work if you have a rooted device and followed the rooted mou
 3. run command 'pkg install python'
 4. run command 'pkg install git'
 5. run command 'termux-setup-storage', allow the permission
-6. run command 'git clone -b android https://github.com/itsToggle/plex_debrid'
+6. run command 'git clone https://github.com/itsToggle/plex_debrid'
 7. run command 'python plex_debrid/plex_rd.py'
 8. The script will guide you through the initial setup.
 9. You're done!
