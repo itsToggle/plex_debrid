@@ -265,7 +265,9 @@ For linux, mac and windows, the setup process does not require any additional pr
   
   The scrapers usually provide a whole bunch of releases. 
   Adding them all to your debrid services would clutter your library and slow things down. This is why this script automatically sorts the releases by completely customizable rules and picks the best one. The script provides some pretty ok rules by default.
-
+  
+  You can define a minimum and maximum release size to filter out any unwanted releases. By default, the minimum release size is 100MB.
+  
   The sorting is done by providing an unlimited number of sorting 'rules'. Rules can be added, edited, delted or moved. The first rule has the highest priority, the last one the lowest. 
 
   Each rule consist of:
