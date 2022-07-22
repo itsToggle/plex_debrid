@@ -779,6 +779,7 @@ class trakt(content.services):
             if len(trakt.lists) > 0:
                 ui.print('updating all trakt lists ...',debug=ui_settings.debug)
             refresh = False
+            new_watchlist = []
             for list in trakt.lists:
                 public = True
                 for user in trakt.users:
@@ -796,6 +797,7 @@ class trakt(content.services):
                             refresh = True
                             ui.print('item: "' + element.show.title + '" found in ' + trakt.current_user[0]+ "'s trakt watchlist.")
                             self.data.append(element.show)
+                        new_watchlist += [element.show]
                     for element in watchlist_movies:
                         element.movie.type = 'movie'
                         element.movie.user = user
@@ -803,6 +805,7 @@ class trakt(content.services):
                             refresh = True
                             ui.print('item: "' + element.movie.title + '" found in ' + trakt.current_user[0]+ "'s trakt watchlist.")
                             self.data.append(element.movie)
+                        new_watchlist += [element.movie]
                 else:
                     watchlist_shows, header = trakt.get('https://api.trakt.tv'+list+'/items/shows')
                     watchlist_movies, header = trakt.get('https://api.trakt.tv'+list+'/items/movies')
@@ -813,6 +816,7 @@ class trakt(content.services):
                             refresh = True
                             ui.print('item: "' + element.show.title + '" found in public trakt list "' + list + '".')
                             self.data.append(element.show)
+                        new_watchlist += [element.show]
                     for element in watchlist_movies:
                         element.movie.type = 'movie'
                         element.movie.user = user
@@ -820,6 +824,10 @@ class trakt(content.services):
                             refresh = True
                             ui.print('item: "' + element.movie.title + '" found in public trakt list "' + list + '".')
                             self.data.append(element.movie)
+                        new_watchlist += [element.movie]
+            for element in self.data[:]:
+                if not element in new_watchlist:
+                    self.data.remove(element)
             if len(trakt.lists) > 0:
                 ui.print('done',debug=ui_settings.debug)
             if refresh:
@@ -1124,10 +1132,14 @@ class overseerr(content.services):
                             ui.print('found new overseerr request by user "' + element.requestedBy.displayName + '".')
                             refresh = True
                             self.data.append(element)
+                    for element in self.data[:]:
+                        if not element in response.results:
+                            self.data.remove(element)
                     ui.print('done',debug=ui_settings.debug)
                     if refresh:
                         return True
                 except:
+                    ui.print('done',debug=ui_settings.debug)
                     return False
             return False
 #Debrid Class 
@@ -1759,6 +1771,8 @@ class releases:
         return self.title == other.title
     #Sort Method
     class sort:
+        size_min = '0.1'
+        size_max = ''
         unwanted = ['sample']
         multiple_versions_trigger = ""
         ranking= [
@@ -1830,6 +1844,19 @@ class releases:
                 for group,attribute,type,descending in reversed(releases.sort.ranking):
                     scraped_releases.sort(key=lambda s: s.rank[index][attribute+': '+group], reverse=int(descending))
                     index += -1
+                size_max = 2000
+                size_min = 0
+                try:
+                    size_max = float(releases.sort.size_max)
+                except:
+                    size_max = 2000
+                try:
+                    size_min = float(releases.sort.size_min)
+                except:
+                    size_min = 0
+                for release in scraped_releases[:]:
+                    if float(release.size) > size_max or float(release.size) < size_min:
+                        scraped_releases.remove(release)
             except Exception as e:
                 ui.print("sorting error: (sorting exception): something seems wrong with your sorting rules. Aborted sorting. For details enable debug printing.")
                 ui.print("sorting error: (sorting exception): " + str(e),debug=ui_settings.debug)
@@ -2568,6 +2595,8 @@ class ui:
                 releases.sort,'ranking',
                 entry="rule",
             ),
+            setting('Maximum release size (Gb)','Please enter a maximum release size in Gb (e.g. enter 0.1 for 100Mb): ',releases.sort,'size_max'),
+            setting('Minimum release size (Gb)','Please enter a minimum release size in Gb (e.g. enter 0.1 for 100Mb): ',releases.sort,'size_min'),
             setting('Special character renaming',['Please specify a character or string that should be replaced: ','Please specify with what character or string it should be replaced: '],releases.rename,'replaceChars',entry="rule",help='By default, spaces in plex media titles are replaced by dots and the following character/s are removed: "' + '","'.join(releases.rename.deleteChars) + '". In this setting you can specify a character or a string that should be replaced by nothing, some other character or a string.'),
             #setting('Multiple versions trigger','Please specify your multiple versions trigger: ',releases.sort,'multiple_versions_trigger',help='This setting allows you to download more than one release every time you add a movie or show. If the selected release regex-matches the specified trigger, the next, best release that doesnt match this trigger will be downloaded aswell. Example: You want to download both HDR and non-HDR versions of your content - type "(HDR)."'),
             setting('Rarbg API Key','The Rarbg API Key gets refreshed automatically, enter the default value: ',scraper.rarbg,'token',hidden=True),
