@@ -14,6 +14,9 @@ try:
     import random
     from threading import Thread
     from collections.abc import Sequence
+    import six
+    import hashlib
+    import base64
 except Exception as e:
     print("python error: (module import exception): ")
     print(e)
@@ -1875,6 +1878,102 @@ class releases:
                 string = string.replace(specialChar,repl)
             string = regex.sub(r'\.+',".",string)
             return string    
+    #torrent2magnet Class:
+    class torrent2magnet:
+        class BTFailure(Exception):
+            pass
+        def decode_int(x, f):
+            f += 1
+            newf = x.find(b"e", f)
+            n = int(x[f:newf])
+            if six.indexbytes(x, f) == 45:
+                if six.indexbytes(x, f + 1) == 48:
+                    raise ValueError
+            elif six.indexbytes(x, f) == 48 and newf != f + 1:
+                raise ValueError
+            return (n, newf + 1)
+        def decode_string(x, f):
+            colon = x.find(b":", f)
+            n = int(x[f:colon])
+            if six.indexbytes(x, f) == 48 and colon != f + 1:
+                raise ValueError
+            colon += 1
+            return (x[colon : colon + n], colon + n)
+        def decode_list(x, f):
+            r, f = [], f + 1
+            while six.indexbytes(x, f) != 101:
+                v, f = releases.torrent2magnet.decode_func[six.indexbytes(x, f)](x, f)
+                r.append(v)
+            return (r, f + 1)
+        def decode_dict(x, f):
+            r, f = {}, f + 1
+            while six.indexbytes(x, f) != 101:
+                k, f = releases.torrent2magnet.decode_string(x, f)
+                r[k], f = releases.torrent2magnet.decode_func[six.indexbytes(x, f)](x, f)
+            return (r, f + 1)
+        decode_func = {}
+        decode_func[108] = decode_list
+        decode_func[100] = decode_dict
+        decode_func[105] = decode_int
+        for i in range(48, 59):
+            decode_func[i] = decode_string
+        def bdecode(x):
+            try:
+                r, l = releases.torrent2magnet.decode_func[six.indexbytes(x, 0)](x, 0)
+            except (IndexError, KeyError, ValueError):
+                raise
+                raise releases.torrent2magnet.BTFailure("not a valid bencoded string")
+            if l != len(x):
+                raise releases.torrent2magnet.BTFailure("invalid bencoded value (data after valid prefix)")
+            return r
+        class Bencached(object):
+            __slots__ = ["bencoded"]
+            def __init__(self, s):
+                self.bencoded = s
+        def encode_bencached(x, r):
+            r.append(x.bencoded)
+        def encode_int(x, r):
+            r.extend((b"i", str(x).encode(), b"e"))
+        def encode_bool(x, r):
+            if x:
+                releases.torrent2magnet.encode_int(1, r)
+            else:
+                releases.torrent2magnet.encode_int(0, r)
+        def encode_string(x, r):
+            r.extend((str(len(x)).encode(), b":", x))
+        def encode_list(x, r):
+            r.append(b"l")
+            for i in x:
+                releases.torrent2magnet.encode_func[type(i)](i, r)
+            r.append(b"e")
+        def encode_dict(x, r):
+            r.append(b"d")
+            for k, v in sorted(x.items()):
+                r.extend((str(len(k)).encode(), b":", k))
+                releases.torrent2magnet.encode_func[type(v)](v, r)
+            r.append(b"e")
+        encode_func = {}
+        encode_func[Bencached] = encode_bencached
+        encode_func[int] = encode_int
+        encode_func[str] = encode_string
+        encode_func[bytes] = encode_string
+        encode_func[list] = encode_list
+        encode_func[tuple] = encode_list
+        encode_func[dict] = encode_dict
+        def bencode(x):
+            r = []
+            releases.torrent2magnet.encode_func[type(x)](x, r)
+            return b"".join(r)
+        def __new__(cls,x):
+            metadata = releases.torrent2magnet.bdecode(x)
+            subj = metadata[b'info']
+            hashcontents = releases.torrent2magnet.bencode(subj)
+            digest = hashlib.sha1(hashcontents).digest()
+            b32hash = base64.b32encode(digest).decode()
+            return 'magnet:?'\
+                    + 'xt=urn:btih:' + b32hash\
+                    + '&dn=' + metadata[b'info'][b'name'].decode()\
+                    + '&tr=' + metadata[b'announce'].decode()\
     #Print Method
     def print(scraped_releases):
         if __name__ == "__main__":
@@ -2148,14 +2247,24 @@ class scraper:
             scraped_releases = []
             try:
                 link = scraper.jackett.session.get(result.Link,allow_redirects=False,timeout=0.5)
-                if regex.search(r'(?<=btih:).*?(?=&)',str(link.headers['Location']),regex.I):
+                if 'Location' in link.headers:
+                    if regex.search(r'(?<=btih:).*?(?=&)',str(link.headers['Location']),regex.I):
+                        if not result.Tracker == None and not result.Size == None:
+                            scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],float(result.Size)/1000000000,[link.headers['Location']])]
+                        elif not result.Tracker == None:
+                            scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],1,[link.headers['Location']])]
+                        elif not result.Size == None:
+                            scraped_releases += [releases('[jackett: unnamed]','torrent',result.Title,[],float(result.Size)/1000000000,[link.headers['Location']])]
+                    return scraped_releases
+                elif link.headers['Content-Type'] == "application/x-bittorrent":
+                    magnet = releases.torrent2magnet(link.content)
                     if not result.Tracker == None and not result.Size == None:
-                        scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],float(result.Size)/1000000000,[link.headers['Location']])]
+                        scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],float(result.Size)/1000000000,[magnet])]
                     elif not result.Tracker == None:
-                        scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],1,[link.headers['Location']])]
+                        scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],1,[magnet])]
                     elif not result.Size == None:
-                        scraped_releases += [releases('[jackett: unnamed]','torrent',result.Title,[],float(result.Size)/1000000000,[link.headers['Location']])]
-                return scraped_releases
+                        scraped_releases += [releases('[jackett: unnamed]','torrent',result.Title,[],float(result.Size)/1000000000,[magnet])]
+                    return scraped_releases
             except:
                 return scraped_releases
     class prowlarr(services):
@@ -2208,14 +2317,24 @@ class scraper:
             scraped_releases = []
             try:
                 link = scraper.prowlarr.session.get(result.downloadUrl,allow_redirects=False,timeout=2)
-                if regex.search(r'(?<=btih:).*?(?=&)',str(link.headers['Location']),regex.I):
+                if 'Location' in link.headers:
+                    if regex.search(r'(?<=btih:).*?(?=&)',str(link.headers['Location']),regex.I):
+                        if not result.indexer == None and not result.size == None:
+                            scraped_releases += [releases('[prowlarr: '+str(result.indexer)+']','torrent',result.title,[],float(result.size)/1000000000,[link.headers['Location']])]
+                        elif not result.indexer == None:
+                            scraped_releases += [releases('[prowlarr: '+str(result.indexer)+']','torrent',result.title,[],1,[link.headers['Location']])]
+                        elif not result.size == None:
+                            scraped_releases += [releases('[prowlarr: unnamed]','torrent',result.title,[],float(result.size)/1000000000,[link.headers['Location']])]
+                    return scraped_releases
+                elif link.headers['Content-Type'] == "application/x-bittorrent":
+                    magnet = releases.torrent2magnet(link.content)
                     if not result.indexer == None and not result.size == None:
-                        scraped_releases += [releases('[prowlarr: '+str(result.indexer)+']','torrent',result.title,[],float(result.size)/1000000000,[link.headers['Location']])]
+                        scraped_releases += [releases('[prowlarr: '+str(result.indexer)+']','torrent',result.title,[],float(result.size)/1000000000,[magnet])]
                     elif not result.indexer == None:
-                        scraped_releases += [releases('[prowlarr: '+str(result.indexer)+']','torrent',result.title,[],1,[link.headers['Location']])]
+                        scraped_releases += [releases('[prowlarr: '+str(result.indexer)+']','torrent',result.title,[],1,[magnet])]
                     elif not result.size == None:
-                        scraped_releases += [releases('[prowlarr: unnamed]','torrent',result.title,[],float(result.size)/1000000000,[link.headers['Location']])]
-                return scraped_releases
+                        scraped_releases += [releases('[prowlarr: unnamed]','torrent',result.title,[],float(result.size)/1000000000,[magnet])]
+                    return scraped_releases
             except:
                 return scraped_releases
 #Multiprocessing scrape method
