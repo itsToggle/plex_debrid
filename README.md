@@ -150,6 +150,16 @@ For linux, mac and windows, the setup process does not require any additional pr
   *You can run rclone as a background service by adding the mounting tag '--no-console' (Windows) or '--deamon' (Linux, Mac, etc)*
 </details>
 
+<details>
+  <summary><b><u>Mounting PUT.io</u></b></summary>
+  
+  Here is a nicely written article from the put.io team on how to mount put.io using rclone:
+  
+  http://help.put.io/en/articles/3480094-plex-rclone
+  
+  *You can run rclone as a background service by adding the mounting tag '--no-console' (Windows) or '--deamon' (Linux, Mac, etc)*
+</details>
+
 ### 2) Setup Plex:
 
 1. Create a plex 'movie' library of the mounted virtual drive or add the virtual drive to an existing 'movie' library.
