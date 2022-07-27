@@ -121,12 +121,16 @@ class plex(content.services):
                     if hasattr(response,'MediaContainer'):
                         if hasattr(response.MediaContainer,'Metadata'):
                             for entry in response.MediaContainer.Metadata:
-                                entry.user = user
+                                entry.user = [user]
                                 if not entry in self.data:
                                     if entry.type == 'show':
                                         self.data += [plex.show(entry)]
                                     if entry.type == 'movie':
                                         self.data += [plex.movie(entry)]
+                                else:
+                                    element = next(x for x in self.data if x == entry)
+                                    if not user in element.user:
+                                        element.user += [user]
             except Exception as e:
                 ui.print('done') 
                 ui.print("plex error: (watchlist exception): " + str(e),debug=ui_settings.debug)
@@ -134,11 +138,19 @@ class plex(content.services):
             ui.print('done')        
         def remove(self,item):
             if hasattr(item,'user'):
-                ui.print('item: "' + item.title + '" removed from '+ item.user[0] +'`s plex watchlist')
-                url = 'https://metadata.provider.plex.tv/actions/removeFromWatchlist?ratingKey=' + item.ratingKey + '&X-Plex-Token=' + item.user[1]
-                response = plex.session.put(url,data={'ratingKey':item.ratingKey})
-                if not self == []:
-                    self.data.remove(item)
+                if isinstance(item.user[0],list):
+                    for user in item.user:
+                        ui.print('item: "' + item.title + '" removed from '+ user[0] +'`s plex watchlist')
+                        url = 'https://metadata.provider.plex.tv/actions/removeFromWatchlist?ratingKey=' + item.ratingKey + '&X-Plex-Token=' + user[1]
+                        response = plex.session.put(url,data={'ratingKey':item.ratingKey})
+                    if not self == []:
+                        self.data.remove(item)
+                else:
+                    ui.print('item: "' + item.title + '" removed from '+ item.user[0] +'`s plex watchlist')
+                    url = 'https://metadata.provider.plex.tv/actions/removeFromWatchlist?ratingKey=' + item.ratingKey + '&X-Plex-Token=' + item.user[1]
+                    response = plex.session.put(url,data={'ratingKey':item.ratingKey})
+                    if not self == []:
+                        self.data.remove(item)
         def add(self,item,user):
             ui.print('item: "' + item.title + '" added to '+ user[0] +'`s plex watchlist')
             url = 'https://metadata.provider.plex.tv/actions/addToWatchlist?ratingKey=' + item.ratingKey + '&X-Plex-Token=' + user[1]
@@ -158,7 +170,7 @@ class plex(content.services):
                     if hasattr(response,'MediaContainer'):
                         if hasattr(response.MediaContainer,'Metadata'):
                             for entry in response.MediaContainer.Metadata:
-                                entry.user = user
+                                entry.user = [user]
                                 if not entry in self.data:
                                     ui.print('item: "' + entry.title + '" found in '+ user[0] +'`s plex watchlist')
                                     update = True
@@ -166,6 +178,10 @@ class plex(content.services):
                                         self.data += [plex.show(entry)]
                                     if entry.type == 'movie':
                                         self.data += [plex.movie(entry)]
+                                else:
+                                    element = next(x for x in self.data if x == entry)
+                                    if not user in element.user:
+                                        element.user += [user]
                             new_watchlist += response.MediaContainer.Metadata
                 for entry in self.data[:]:
                     if not entry in new_watchlist:
@@ -465,7 +481,10 @@ class plex(content.services):
             if not isinstance(ratingKey,str):
                 self.__dict__.update(ratingKey.__dict__)
                 ratingKey = ratingKey.ratingKey
-                token = self.user[1]
+                if isinstance(self.user[0],list):
+                    token = self.user[0][1]
+                else:
+                    token = self.user[1]
             else:
                 if ratingKey.startswith('plex://'):
                     ratingKey = ratingKey.split('/')[-1]
