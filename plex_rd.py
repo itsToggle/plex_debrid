@@ -1751,6 +1751,108 @@ class debrid:
                             #release.unwanted = 0
                     except:
                         continue
+    #Putio class
+    class putio(services):
+        #(required) Name of the Debrid service
+        name = "PUT.io"
+        short = "PUT"
+        #(required) Authentification of the Debrid service, can be oauth aswell. Create a setting for the required variables in the ui.settings_list. For an oauth example check the trakt authentification.
+        api_key = ""
+        client_id = "5843"
+        #Define Variables
+        session = requests.Session()
+        #Error Log
+        def logerror(response):
+            if not response.status_code == 200:
+                ui.print("[put.io] error: " + str(response.content),debug=ui_settings.debug)
+            if 'error' in str(response.content) and not response.status_code == 200:
+                try:
+                    response2 = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
+                    ui.print("[put.io] error: " + response2.error_message)
+                except:
+                    ui.print("[put.io] error: unknown error")
+            if response.status_code == 401:
+                ui.print("[put.io] error: (401 unauthorized): put.io api key does not seem to work. check your put.io settings.")
+        #Get Function
+        def get(url): 
+            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36','Content-Type': 'application/x-www-form-urlencoded', 'Authorization' : 'Bearer ' + debrid.putio.api_key}
+            try :
+                response = debrid.putio.session.get(url, headers = headers)
+                debrid.putio.logerror(response)
+                response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
+            except Exception as e:
+                ui.print("[put.io] error: (json exception): " + str(e),debug=ui_settings.debug)
+                response = None
+            return response
+        #Post Function
+        def post(url, data):
+            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36','Content-Type': 'application/x-www-form-urlencoded', 'Authorization' : 'Bearer ' + debrid.putio.api_key}
+            try :
+                response = debrid.putio.session.post(url, headers = headers, data = data)
+                debrid.putio.logerror(response)
+                response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
+            except Exception as e:
+                ui.print("[put.io] error: (json exception): " + str(e),debug=ui_settings.debug)
+                response = None
+            return response
+        #Oauth Method
+        def oauth(code=""):
+            #I used the swaggerhub oauth redirection url for creating a put.io app, as putio doesnt provide a general redirection url :)
+            if code == "":
+                response = debrid.putio.get('https://api.put.io/v2/oauth2/oob/code?app_id='+debrid.putio.client_id)
+                return response.code, response.code
+            else:
+                response = None
+                while response == None:
+                    response = debrid.putio.get('https://api.put.io/v2/oauth2/oob/code/'+code)
+                    if not hasattr(response,'oauth_token'):
+                        response = None
+                    elif response.oauth_token == None:
+                        response = None
+                    time.sleep(1)
+                return response.oauth_token
+        #(required) Download Function. 
+        def download(element:plex.media,stream=True,query='',force=False):
+            cached = element.Releases
+            if query == '':
+                query = element.query()
+            if regex.search(r'(S[0-9][0-9])',query):
+                query = regex.split(r'(S[0-9]+)',query)
+                season_number = regex.search(r'([0-9]+)',query[1]).group()
+                query[1] = '(S'+season_number+'|SEASON.0?'+str(int(season_number))+')' 
+                query = query[0] + '[0-9]*.*' + query[1] + query[2]
+            for release in cached[:]:
+                #if release matches query
+                if regex.match(r'('+ query.replace('.','\.').replace("\.*",".*") + ')',release.title,regex.I) or force:
+                    if stream:
+                        #Cached Download Method for put.io
+                        url = 'https://api.put.io/v2/transfers/add'
+                        response = debrid.putio.post(url,'url='+release.download[0])
+                        try:
+                            if hasattr(response,'transfer'):
+                                ui.print('[put.io] adding release: ' + release.title)
+                                return True
+                            else:
+                                continue
+                        except:
+                            continue
+                    else:
+                        #Uncached Download Method for put.io
+                        try:
+                            url = 'https://api.put.io/v2/transfers/add'
+                            response = debrid.putio.post(url,'url='+release.download[0])
+                            if hasattr(response,'transfer'):
+                                ui.print('[put.io] adding release: '+ release.title)
+                                return True
+                            else:
+                                continue
+                        except:
+                            continue
+            return False  
+        #(required) Check Function
+        def check(element,force=False):
+            force
+            #there is no official check method for putio.
 #Release Class
 class releases:   
     #Define release attributes
@@ -2112,22 +2214,22 @@ class scraper:
                             response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
                             if hasattr(response, "error"):
                                 if 'Invalid token' in response.error:
-                                    ui.print('rarbg error: ' + response.error)
-                                    ui.print('fetching new token ...')
+                                    ui.print('rarbg error: ' + response.error,debug=ui_settings.debug)
+                                    ui.print('fetching new token ...',debug=ui_settings.debug)
                                     url = 'https://torrentapi.org/pubapi_v2.php?get_token=get_token&app_id=fuckshit'
                                     response = scraper.rarbg.session.get(url, headers = headers)
                                     if len(response.content) > 5:
                                         response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
                                         scraper.rarbg.token = response.token 
                                     else:
-                                        ui.print('rarbg error: could not fetch new token')
+                                        ui.print('rarbg error: could not fetch new token',debug=ui_settings.debug)
                                 elif hasattr(response, "rate_limit"):
                                     retries += -1
                         else:
                             retries += -1
                     except:
                         response = None
-                        ui.print('rarbg error: (parse exception)')
+                        ui.print('rarbg error: (parse exception)',debug=ui_settings.debug)
                     retries += 1
                     time.sleep(1+random.randint(0, 2))
                 if hasattr(response, "torrent_results"):
@@ -2743,8 +2845,8 @@ class ui:
             setting('Real Debrid API Key','Please enter your Real Debrid API Key: ',debrid.realdebrid,'api_key',hidden=True),
             setting('All Debrid API Key','Please enter your All Debrid API Key: ',debrid.alldebrid,'api_key',hidden=True),
             setting('Premiumize API Key','Please enter your Premiumize API Key: ',debrid.premiumize,'api_key',hidden=True),
-            #setting('Debrid Link API Key','Please enter your Debrid Link API Key: ',debrid.debridlink,'api_key',hidden=True),
             setting('Debrid Link API Key','Please open your favorite browser, log into your debridlink account and open "https://debrid-link.fr/device". Enter this code: ',debrid.debridlink,'api_key',hidden=True,oauth=True),
+            setting('Put.io API Key','Please open your favorite browser, log into your put.io account and open "http://put.io/link". Enter this code: ',debrid.putio,'api_key',hidden=True,oauth=True),
             ]
         ],
         ['UI Settings',[
