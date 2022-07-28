@@ -1393,7 +1393,7 @@ class debrid:
             unwanted = releases.sort.unwanted
             hashes = []
             for release in element.Releases[:]:
-                if not release.hash == '':
+                if len(release.hash) == 40:
                     hashes += [release.hash]
                 else:
                     element.Releases.remove(release)
@@ -1538,7 +1538,7 @@ class debrid:
             unwanted = releases.sort.unwanted
             hashes = []
             for release in element.Releases[:]:
-                if not release.hash == '':
+                if len(release.hash) == 40:
                     hashes += [release.hash]
                 else:
                     element.Releases.remove(release)
@@ -1636,7 +1636,7 @@ class debrid:
             unwanted = releases.sort.unwanted
             hashes = []
             for release in element.Releases[:]:
-                if not release.hash == '':
+                if len(release.hash) == 40:
                     hashes += [release.hash]
                 else:
                     element.Releases.remove(release)
@@ -1756,7 +1756,7 @@ class debrid:
             unwanted = releases.sort.unwanted
             hashes = []
             for release in element.Releases[:]:
-                if not release.hash == '':
+                if len(release.hash) == 40:
                     hashes += [release.hash]
                 else:
                     element.Releases.remove(release)
@@ -3141,7 +3141,6 @@ class ui:
                         settings[setting.name] = setting.get()
                     elif setting.name == 'version':
                         settings[setting.name] = setting.get()
-
-           
+     
 if __name__ == "__main__":
     ui.run()
