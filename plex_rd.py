@@ -838,43 +838,51 @@ class trakt(content.services):
                         break
                 trakt.current_user = user
                 if not public:
-                    watchlist_shows, header = trakt.get('https://api.trakt.tv/users/me/watchlist/shows')
-                    watchlist_movies, header = trakt.get('https://api.trakt.tv/users/me/watchlist/movies')
-                    for element in watchlist_shows:
-                        element.show.type = 'show'
-                        element.show.user = user
-                        if not element.show in self.data:
-                            refresh = True
-                            ui.print('item: "' + element.show.title + '" found in ' + trakt.current_user[0]+ "'s trakt watchlist.")
-                            self.data.append(element.show)
-                        new_watchlist += [element.show]
-                    for element in watchlist_movies:
-                        element.movie.type = 'movie'
-                        element.movie.user = user
-                        if not element.movie in self.data:
-                            refresh = True
-                            ui.print('item: "' + element.movie.title + '" found in ' + trakt.current_user[0]+ "'s trakt watchlist.")
-                            self.data.append(element.movie)
-                        new_watchlist += [element.movie]
+                    try:
+                        watchlist_shows, header = trakt.get('https://api.trakt.tv/users/me/watchlist/shows')
+                        watchlist_movies, header = trakt.get('https://api.trakt.tv/users/me/watchlist/movies')
+                        for element in watchlist_shows:
+                            element.show.type = 'show'
+                            element.show.user = user
+                            if not element.show in self.data:
+                                refresh = True
+                                ui.print('item: "' + element.show.title + '" found in ' + trakt.current_user[0]+ "'s trakt watchlist.")
+                                self.data.append(element.show)
+                            new_watchlist += [element.show]
+                        for element in watchlist_movies:
+                            element.movie.type = 'movie'
+                            element.movie.user = user
+                            if not element.movie in self.data:
+                                refresh = True
+                                ui.print('item: "' + element.movie.title + '" found in ' + trakt.current_user[0]+ "'s trakt watchlist.")
+                                self.data.append(element.movie)
+                            new_watchlist += [element.movie]
+                    except Exception as e:
+                        ui.print("trakt error: (exception): " + str(e),debug=ui_settings.debug)
+                        continue
                 else:
-                    watchlist_shows, header = trakt.get('https://api.trakt.tv'+list+'/items/shows')
-                    watchlist_movies, header = trakt.get('https://api.trakt.tv'+list+'/items/movies')
-                    for element in watchlist_shows:
-                        element.show.type = 'show'
-                        element.show.user = user
-                        if not element.show in self.data:
-                            refresh = True
-                            ui.print('item: "' + element.show.title + '" found in public trakt list "' + list + '".')
-                            self.data.append(element.show)
-                        new_watchlist += [element.show]
-                    for element in watchlist_movies:
-                        element.movie.type = 'movie'
-                        element.movie.user = user
-                        if not element.movie in self.data:
-                            refresh = True
-                            ui.print('item: "' + element.movie.title + '" found in public trakt list "' + list + '".')
-                            self.data.append(element.movie)
-                        new_watchlist += [element.movie]
+                    try:
+                        watchlist_shows, header = trakt.get('https://api.trakt.tv'+list+'/items/shows')
+                        watchlist_movies, header = trakt.get('https://api.trakt.tv'+list+'/items/movies')
+                        for element in watchlist_shows:
+                            element.show.type = 'show'
+                            element.show.user = user
+                            if not element.show in self.data:
+                                refresh = True
+                                ui.print('item: "' + element.show.title + '" found in public trakt list "' + list + '".')
+                                self.data.append(element.show)
+                            new_watchlist += [element.show]
+                        for element in watchlist_movies:
+                            element.movie.type = 'movie'
+                            element.movie.user = user
+                            if not element.movie in self.data:
+                                refresh = True
+                                ui.print('item: "' + element.movie.title + '" found in public trakt list "' + list + '".')
+                                self.data.append(element.movie)
+                            new_watchlist += [element.movie]
+                    except Exception as e:
+                        ui.print("trakt error: (exception): " + str(e),debug=ui_settings.debug)
+                        continue
             for element in self.data[:]:
                 if not element in new_watchlist:
                     self.data.remove(element)
