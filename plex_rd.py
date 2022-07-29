@@ -536,11 +536,31 @@ class plex(content.services):
         movies = '1'
         shows = '2'
         check = []
-        def refresh(section):
-            ui.print('refreshing library section '+section+' ...')
-            url = plex.library.url + '/library/sections/' + section + '/refresh?X-Plex-Token=' + plex.users[0][1]
-            plex.session.get(url)
-            ui.print('done')
+        class refresh:
+            def poll(self):
+                try:
+                    refreshing = True
+                    while refreshing:
+                        refreshing = False
+                        url = plex.library.url + '/library/sections/?X-Plex-Token=' + plex.users[0][1]
+                        response = plex.get(url)
+                        for section in response.MediaContainer.Directory:
+                            if section.refreshing:
+                                refreshing = True
+                        time.sleep(1)
+                    return True
+                except Exception as e:
+                    ui.print(str(e),debug=ui_settings.debug)
+                    return True
+            def call(section):
+                time.sleep(2)
+                plex.library.refresh.poll(None)
+                url = plex.library.url + '/library/sections/' + section + '/refresh?X-Plex-Token=' + plex.users[0][1]
+                plex.session.get(url)
+            def __new__(cls,section):
+                ui.print('refreshing library section '+section+'')
+                t = Thread(target=multi_init, args=(plex.library.refresh.call,section,[None],0))
+                t.start()
         def __new__(self):
             list = []
             if not plex.library.check == [['']] and not plex.library.check == []:
@@ -753,31 +773,39 @@ class trakt(content.services):
                         break
                 trakt.current_user = user
                 if not public:
-                    watchlist_shows, header = trakt.get('https://api.trakt.tv/users/me/watchlist/shows')
-                    watchlist_movies, header = trakt.get('https://api.trakt.tv/users/me/watchlist/movies')
-                    for element in watchlist_shows:
-                        element.show.type = 'show'
-                        element.show.user = user
-                        if not element.show in self.data:
-                            self.data.append(element.show)
-                    for element in watchlist_movies:
-                        element.movie.type = 'movie'
-                        element.movie.user = user
-                        if not element.movie in self.data:
-                            self.data.append(element.movie)
+                    try:
+                        watchlist_shows, header = trakt.get('https://api.trakt.tv/users/me/watchlist/shows')
+                        watchlist_movies, header = trakt.get('https://api.trakt.tv/users/me/watchlist/movies')
+                        for element in watchlist_shows:
+                            element.show.type = 'show'
+                            element.show.user = user
+                            if not element.show in self.data:
+                                self.data.append(element.show)
+                        for element in watchlist_movies:
+                            element.movie.type = 'movie'
+                            element.movie.user = user
+                            if not element.movie in self.data:
+                                self.data.append(element.movie)
+                    except Exception as e:
+                        ui.print("trakt error: (exception): " + str(e),debug=ui_settings.debug)
+                        continue
                 else:
-                    watchlist_shows, header = trakt.get('https://api.trakt.tv'+list+'/items/shows')
-                    watchlist_movies, header = trakt.get('https://api.trakt.tv'+list+'/items/movies')
-                    for element in watchlist_shows:
-                        element.show.type = 'show'
-                        element.show.user = user
-                        if not element.show in self.data:
-                            self.data.append(element.show)
-                    for element in watchlist_movies:
-                        element.movie.type = 'movie'
-                        element.movie.user = user
-                        if not element.movie in self.data:
-                            self.data.append(element.movie)
+                    try:
+                        watchlist_shows, header = trakt.get('https://api.trakt.tv'+list+'/items/shows')
+                        watchlist_movies, header = trakt.get('https://api.trakt.tv'+list+'/items/movies')
+                        for element in watchlist_shows:
+                            element.show.type = 'show'
+                            element.show.user = user
+                            if not element.show in self.data:
+                                self.data.append(element.show)
+                        for element in watchlist_movies:
+                            element.movie.type = 'movie'
+                            element.movie.user = user
+                            if not element.movie in self.data:
+                                self.data.append(element.movie)
+                    except Exception as e:
+                        ui.print("trakt error: (exception): " + str(e),debug=ui_settings.debug)
+                        continue
             ui.print('done')
         def sync(self,other:plex.watchlist,library):
             add = []
@@ -1987,16 +2015,33 @@ class releases:
             return scraped_releases
     #Rename Method
     class rename:
-        deleteChars = ['.',':','(',')','`','´',',','!','?',' - ',"'","\u200b"]
-        dotChars = [' ']#,'/']
-        replaceChars = [['&','and'],['ü','ue'],['ä','ae'],['ö','oe'],['ß','ss'],['é','e'],['è','e']]
+        replaceChars = [
+            ['&','and'],
+            ['ü','ue'],
+            ['ä','ae'],
+            ['ö','oe'],
+            ['ß','ss'],
+            ['é','e'],
+            ['è','e'],
+            ['sh!t','shit'],
+            ['.',''],
+            [':',''],
+            ['(',''],
+            [')',''],
+            ['`',''],
+            ['´',''],
+            [',',''],
+            ['!',''],
+            ['?',''],
+            [' - ',''],
+            ["'",''],
+            ["\u200b",''],
+            [' ','.']
+        ]
         def __new__(self,string):
-            for specialChar in self.deleteChars:
-                string = string.replace(specialChar, '')
-            for specialChar in self.dotChars:
-                string = string.replace(specialChar, '.')
+            string = string.lower()
             for specialChar,repl in self.replaceChars:
-                string = string.replace(specialChar,repl)
+                string = string.replace(specialChar.lower(),repl.lower())
             string = regex.sub(r'\.+',".",string)
             return string    
     #torrent2magnet Class:
@@ -2544,7 +2589,7 @@ class download_script:
                 time.sleep(1)
 #Ui Preference Class:
 class ui_settings:
-    version = ['1.1',"Content Services have been updated. Overseerr is now an available content service.",['Content Services',]]
+    version = ['1.2',"Special character renaming have been updated. You now have more control over how characters are renamed for scraping.",['Special character renaming',]]
     run_directly = "true"
     debug = "false"
 #Ui Class
@@ -2837,7 +2882,7 @@ class ui:
             ),
             setting('Maximum release size (Gb)','Please enter a maximum release size in Gb (e.g. enter 0.1 for 100Mb): ',releases.sort,'size_max'),
             setting('Minimum release size (Gb)','Please enter a minimum release size in Gb (e.g. enter 0.1 for 100Mb): ',releases.sort,'size_min'),
-            setting('Special character renaming',['Please specify a character or string that should be replaced: ','Please specify with what character or string it should be replaced: '],releases.rename,'replaceChars',entry="rule",help='By default, spaces in plex media titles are replaced by dots and the following character/s are removed: "' + '","'.join(releases.rename.deleteChars) + '". In this setting you can specify a character or a string that should be replaced by nothing, some other character or a string.'),
+            setting('Special character renaming',['Please specify a character or string that should be replaced: ','Please specify with what character or string it should be replaced: '],releases.rename,'replaceChars',entry="rule",help='In this setting you can specify a character or a string that should be replaced by nothing, some other character or a string.'),
             #setting('Multiple versions trigger','Please specify your multiple versions trigger: ',releases.sort,'multiple_versions_trigger',help='This setting allows you to download more than one release every time you add a movie or show. If the selected release regex-matches the specified trigger, the next, best release that doesnt match this trigger will be downloaded aswell. Example: You want to download both HDR and non-HDR versions of your content - type "(HDR)."'),
             setting('Rarbg API Key','The Rarbg API Key gets refreshed automatically, enter the default value: ',scraper.rarbg,'token',hidden=True),
             setting('Jackett Base URL','Please specify your Jackett base URL: ',scraper.jackett,'base_url',hidden=True),
