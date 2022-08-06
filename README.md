@@ -84,7 +84,7 @@ For linux, mac and windows, the setup process does not require any additional pr
   2. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
   3. create a new remote by typing 'n'
   4. give your remote a name (e.g. 'your-remote')
-  5. choose '42) WebDav' as your remote type
+  5. choose '45) WebDav' as your remote type
   6. enter 'https://dav.real-debrid.com/' as the server url
   7. choose option '5) (other)'
   8. enter your realdebrid user name as your user name
