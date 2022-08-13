@@ -196,12 +196,20 @@ class content:
                     return False
             elif self.watchlist == trakt.watchlist and content.libraries.active == ['Plex Library']:
                 try:
-                    result = plex.match("imdb-"+self.ids.imdb,self.type,library=list)
-                    if result == []:
-                        result = plex.match("tmdb-"+str(self.ids.tmdb),self.type,library=list)
-                    if result == []:
-                        result = plex.match("tvdb-"+str(self.ids.tvdb),self.type,library=list)
-                    return content.media.collected(result[0],list)
+                    if self.type in ['movie','show']:
+                        if hasattr(self.ids,'imdb'):
+                            result = plex.match("imdb-"+self.ids.imdb,self.type,library=list)
+                        elif hasattr(self.ids,'tmdb'):
+                            result = plex.match("tmdb-"+str(self.ids.tmdb),self.type,library=list)
+                        elif hasattr(self.ids,'tvdb'):
+                            result = plex.match("tvdb-"+str(self.ids.tvdb),self.type,library=list)
+                        for season in self.Seasons:
+                            season.parentGuid = result[0].guid
+                            for episode in season.Episodes:
+                                episode.grandparentGuid = result[0].guid
+                        return content.media.collected(result[0],list)
+                    else:
+                        return self in list
                 except Exception as e:
                     ui.print("trakt error: (trakt to plex library check exception): " + str(e),debug=ui_settings.debug)
                     return False
@@ -746,7 +754,7 @@ class plex(content.services):
             return []
         if type == 'movie':
             agent = 'tv.plex.agents.movie'
-        elif type == 'show':
+        else:
             agent = 'tv.plex.agents.series'
         url = plex.library.url + '/library/metadata/'+some_local_media.ratingKey+'/matches?manual=1&title='+query+'&agent='+agent+'&language=en-US&X-Plex-Token='+plex.users[0][1]
         response = plex.get(url)
@@ -772,7 +780,7 @@ class trakt(content.services):
         settings = []
         for category, allsettings in ui.settings_list:
             for setting in allsettings:
-                if setting.cls == self or setting.name.startswith(self.name):
+                if setting.cls == self or setting.name == self.name + ' auto remove':
                     settings += [setting]
         ui.cls("Options/Settings/Content Services/Content Services/Trakt")
         if not new:
@@ -787,7 +795,7 @@ class trakt(content.services):
                 if choice in indices:
                     if settings[int(choice)-1].name == "Trakt lists":
                         print()
-                        print("You can define which trakt lists should be monitored by plex_debrid. This includes public lists and your trakt users watchlists.")
+                        print("You can define which trakt lists should be monitored by plex_debrid. This includes public lists and your trakt users watchlists and collections.")
                         print()
                         print('Currently monitored trakt lists: "'+str(trakt.lists)+'"')
                         print()
@@ -807,10 +815,15 @@ class trakt(content.services):
                             print('0) Back')
                             print('1) add public list')
                             for user in trakt.users:
-                                if not user[0] + "'s trakt watchlist" in trakt.lists:
-                                    print(str(i+1) + ') add ' + user[0] + "'s trakt watchlist")
+                                if not user[0] + "'s watchlist" in trakt.lists:
+                                    print(str(i+1) + ') add ' + user[0] + "'s watchlist")
                                     indices += [str(i+1)]
-                                    add_user += [user[0]]
+                                    add_user += [user[0] + "'s watchlist"]
+                                    i+=1
+                                if not user[0] + "'s collection" in trakt.lists:
+                                    print(str(i+1) + ') add ' + user[0] + "'s collection")
+                                    indices += [str(i+1)]
+                                    add_user += [user[0] + "'s collection"]
                                     i+=1
                             print()
                             choice = input("Choose a list: ")
@@ -836,7 +849,7 @@ class trakt(content.services):
                                 trakt.lists += [url]
                                 return True
                             elif choice in indices:
-                                trakt.lists += [add_user[int(choice)-2] + "'s watchlist"]
+                                trakt.lists += [add_user[int(choice)-2]]
                                 return True
                         elif choice == '2':
                             indices = []
@@ -905,13 +918,16 @@ class trakt(content.services):
                 ui.print('getting all trakt lists ...')
             self.data = []
             for list in trakt.lists:
-                public = True
+                list_type = "public"
                 for user in trakt.users:
                     if list == user[0] + "'s watchlist":
-                        public = False
+                        list_type = "watchlist"
+                        break
+                    if list == user[0] + "'s collection":
+                        list_type = "collection"
                         break
                 trakt.current_user = user
-                if not public:
+                if list_type == "watchlist":
                     try:
                         watchlist_items, header = trakt.get('https://api.trakt.tv/users/me/watchlist/movies,shows?extended=full')
                         for element in watchlist_items:
@@ -927,6 +943,23 @@ class trakt(content.services):
                                 element.movie.guid = element.movie.ids.trakt
                                 if not element.movie in self.data:
                                     self.data.append(trakt.movie(element.movie))
+                    except Exception as e:
+                        ui.print("trakt error: (exception): " + str(e),debug=ui_settings.debug)
+                        continue
+                elif list_type == "collection":
+                    try:
+                        watchlist_items,header = trakt.get('https://api.trakt.tv/sync/collection/shows?extended=full')
+                        for element in watchlist_items:
+                            if hasattr(element,'show'):
+                                element.show.type = 'show'
+                                element.show.user = user
+                                element.show.guid = element.show.ids.trakt
+                                collected_count = 0
+                                for season in element.seasons:
+                                    for episode in season.episodes:
+                                        collected_count += 1
+                                if not element.show in self.data and not collected_count == element.show.aired_episodes:
+                                    self.data.append(trakt.show(element.show))
                     except Exception as e:
                         ui.print("trakt error: (exception): " + str(e),debug=ui_settings.debug)
                         continue
@@ -1631,9 +1664,9 @@ class debrid:
                         if service.short in release.cached:
                             if service.download(element,stream=stream,query=query,force=force):
                                 return True
-                    else:
-                        if service.download(element,stream=stream,query=query,force=force):
-                            return True
+                for service in debrid.services():
+                    if service.download(element,stream=stream,query=query,force=force):
+                        return True
         return False
     #Check Method:
     def check(element:plex.media,force=False):
