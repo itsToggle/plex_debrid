@@ -1,7 +1,5 @@
 # plex_debrid
-Plex torrent streaming through Debrid Services, using the new Plex Discover feature, Trakt lists and Overseerr.
-
-**Using the new Plex Discover Feature, your Plex Home users can add movies/shows to their watchlist and they become available to stream in seconds.**
+Plex/Emby/Jellyfin/Infuse torrent streaming through Debrid Services, using Plex Discover Watchlists, Trakt lists and Overseerr.
 
 ## In Action:
 
@@ -9,22 +7,22 @@ Plex torrent streaming through Debrid Services, using the new Plex Discover feat
 
 ## Description:
 
-*For this download automation to work, you need to mount your debrid service as a virtual drive. After creating a plex library of this virtual drive, you can stream torrents that are cached on your debrid service without the need to download them first.* 
-
-The plex watchlist (aswell as the trakt watchlist and overseer requests) of specified users are constantly checked for newly added movies/shows and newly released episodes of watchlisted shows.
+plex_debrid provides an easy way to add media content to your debrid service/s, which becomes instantly watchable when mounting your debrid service with a personal media server like plex/emby/jellyfin/infuse. The plex watchlists, trakt watchlists and overseer-requests of specified users are constantly checked for newly added movies/shows and newly released episodes of watchlisted shows.
 Once new content is found, torrent indexers are scraped for the best, cached release on selected debrid services. The torrent is then added to a suitable debrid service and a library refresh is performed to make the newly added content available. 
 
 **For any debrid-cached content (movies, one-season tv shows or even multi-season tv shows) the entire process from watchlisting content to watching it takes about 10-20 seconds.**
 
-This is a pre-alpha release. shits not ready! Feel free to check it out though, I will continously improve the speed, reliability and user-friendlyness.
+This is a work in progress, and im not a professional programmer. shits not ready! Feel free to check it out though, I will continously improve the speed, reliability and user-friendlyness.
 
 ## Features:
 - Compatible with any OS (Mac, Linux, Windows, Android, FreeBSD, ...)
-- Gathering Content from:
-  - <img src="https://app.plex.tv/desktop/favicon.ico" height="16"> **[Plex (updated every 5s)](https://plex.tv/)**
-  - <img src="https://hotio.dev/webhook-avatars/overseerr.png" height="16"> **[Overseerr (updated every 5s)](https://overseerr.dev/)**
-  - <img src="https://walter.trakt.tv/hotlink-ok/public/favicon.ico" height="16"> **[Trakt (updated every 5s)](https://trakt.tv/)**
-- Checking your Plex Library to avoid duplicate downloads
+- Gathering new content **every 5s** from:
+  - <img src="https://app.plex.tv/desktop/favicon.ico" height="16"> **[Plex Watchlists](https://plex.tv/)**
+  - <img src="https://hotio.dev/webhook-avatars/overseerr.png" height="16"> **[Overseerr Requests](https://overseerr.dev/)**
+  - <img src="https://walter.trakt.tv/hotlink-ok/public/favicon.ico" height="16"> **[Trakt public lists, watchlists and collections](https://trakt.tv/)**
+- Checking and maintaining your library for:
+  - <img src="https://app.plex.tv/desktop/favicon.ico" height="16"> **[Plex Library](https://plex.tv/)**
+  - <img src="https://walter.trakt.tv/hotlink-ok/public/favicon.ico" height="16"> **[Trakt Collection](https://trakt.tv/)**
 - Determining precise release dates and times, checking for early releases of movies
 - Scraping Releases from:
   - <img src="https://user-images.githubusercontent.com/27040483/28728094-99f3e3f6-73c7-11e7-8f8d-28912dc6ac0d.png" height="16"> **[Jackett](https://github.com/Jackett/Jackett)**
@@ -38,10 +36,11 @@ This is a pre-alpha release. shits not ready! Feel free to check it out though, 
   - <img src="https://cdn.alldebrid.com/lib/images/default/favicon.png" height="16"> **[AllDebrid](https://alldebrid.com/)**
   - <img src="https://cdn.debrid-link.com/favicon.ico?i=2" height="16"> **[DebridLink](https://debrid-link.com/)**
   - <img src="https://app.put.io/assets/favicon-32x32.png" height="16"> **[PUT.io (no check for cached releases)](https://put.io/)**
-- Performing a plex library refresh to make the content available on Plex
+- refreshing your personal media server libraries to make the content available to watch for:
+  - <img src="https://app.plex.tv/desktop/favicon.ico" height="16"> **[Plex](https://plex.tv/)**
 
 ### Upcoming Features:
-- 'local' downloading of content while streaming (optional)
+- Library refresh for emby and jellyfin
 - adding multiple versions of content (e.g. HDR and non-HDR versions or a version for each resolution etc) (optional)
 - tell me your ideas! :)
 
@@ -160,13 +159,20 @@ For linux, mac and windows, the setup process does not require any additional pr
   *You can run rclone as a background service by adding the mounting tag '--no-console' (Windows) or '--deamon' (Linux, Mac, etc)*
 </details>
 
-### 2) Setup Plex:
+### 2) Setup your personal media server:
 
-1. Create a plex 'movie' library of the mounted virtual drive or add the virtual drive to an existing 'movie' library.
-2. Create a plex 'shows' library of the mounted virtual drive or add the virtual drive to an existing 'shows' library.
-3. *If you are running rclone on a Linux based OS and Plex cant find your mounted virtual drive, try adding the mounting tag '--allow-other'*
-4. *Recommendation: disable 'video preview thumbnails', ~disable 'intro detection'~, disable the scheduled task 'perfom extensive media analysis' to reduce the download traffic*
-5. You and your home users can now stream cached torrents from your debrid service/s!
+*To stream content from your newly mounted virtual drive, its recommended to set up a personal media server like plex, emby or jellyfin. These services allow you to stream your content from outside your local network. Another option is to use media players like Infuse to access the mounted files.*
+
+<details>
+  <summary><b><u>Setting up Plex:</u></b></summary>
+  
+  1. Create a plex 'movie' library of the mounted virtual drive or add the virtual drive to an existing 'movie' library.
+  2. Create a plex 'shows' library of the mounted virtual drive or add the virtual drive to an existing 'shows' library.
+  3. *If you are running rclone on a Linux based OS and Plex cant find your mounted virtual drive, try adding the mounting tag '--allow-other'*
+  4. *Recommendation: disable 'video preview thumbnails', ~disable 'intro detection'~, disable the scheduled task 'perfom extensive media analysis' to reduce the download traffic*
+  5. You and your home users can now stream cached torrents from your debrid service/s!
+  
+  </details>
 
 ### 3) Setup plex_debrid:
 
@@ -175,8 +181,12 @@ For linux, mac and windows, the setup process does not require any additional pr
 <details>
   <summary><b><u>Standard Version:</u></b></summary>
   
-  1. Run the script! (google "how to run a python script" ;) )
-  2. The script will guide you through the initial setup.
+  0. Clone this repository with git or click on "code" (top right) and then "download zip" 
+  1. Run the script!
+  2. The script will guide you through the initial setup and the next steps. When setting up plex_debrid, you will be prompted to choose the 3 main services that this script connects:
+  3. Pick and setup at least one **content service** which plex_debrid should monitor for new content
+  4. Pick and setup a **library service**, which plex_debrid will use to determine if content has already been downloaded.
+  5. Pick and setup at least one **debrid service**, which plex_debrid will use to download content.
   3. You're done!
   4. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
   5. Read the rest of the README!
@@ -186,22 +196,26 @@ For linux, mac and windows, the setup process does not require any additional pr
 <details>
   <summary><b><u>Dockerized Version:</u></b></summary>
   
+  0. Clone this repository with git or click on "code" (top right) and then "download zip" 
   1. Run 'docker build -t plex_debrid .'
   2. Run 'docker run -ti plex_debrid'
-  3. The script will guide you through the initial setup.
-  4. You're done!
-  5. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
-  6. Read the rest of the README!
+  3. The script will guide you through the initial setup and the next steps. When setting up plex_debrid, you will be prompted to choose the 3 main services that this script connects:
+  4. Pick and setup at least one **content service** which plex_debrid should monitor for new content
+  5. Pick and setup a **library service**, which plex_debrid will use to determine if content has already been downloaded.
+  6. Pick and setup at least one **debrid service**, which plex_debrid will use to download content.
+  7. You're done!
+  8. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
+  9. Read the rest of the README!
   
 </details>
 
 ## Usage:
 
 <details>
-  <summary><b><u>Managing your Plex Content:</u></b></summary>
+  <summary><b><u>Integrating Plex:</u></b></summary>
   
   - The Plex Watchlist and the Discover feature are only available for accounts that are linked to an email address - so no managed accounts.
-  - You've already added one user in the initial setup. To allow content download by other users that youve invited to your Plex Home, create a new user by navigation to '/Settings/Content Services/Plex/Plex users/Edit/Add user'.
+  - To allow content download by other users that youve invited to your Plex Home, create a new user by navigation to '/Settings/Content Services/Plex/Plex users/Edit/Add user'.
   - You and the users you've added can now browse the Discover part of Plex and download content by adding it to the Plex Watchlist.
   - By default, your *entire* Plex Library (including shares) is checked before downloading anything and the script will avoid duplicate downloads. To limit this library check to specific library sections, navigate to '/Settings/Content Services/Plex/Plex library check/Edit'
   - If you want to delete something from your Plex server, make sure that you've removed it from your Watchlist first. Otherwise the script will see that its in your watchlist and not on your server and will simply download it again.
@@ -246,7 +260,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 </details>
 
 <details>
-  <summary><b><u>Download Automation Settings:</u></b></summary>
+  <summary><b><u>Debrid service and download automation settings:</u></b></summary>
   
   - You can add more than one debrid service and change the order in which they should be checked for cached releases by navigating to '/Settings/Debrid Services/Edit'.
   - In order to scrape for a movie/show, plex_debrid renames the movie/show title. by default, some special characters are removed and spaces are replaced with dots. You can edit the replacement of other special characters (for example replacing '&' with 'and', etc.) by navigating to '/Settings/Scraper/Special character renaming'
@@ -343,7 +357,6 @@ For linux, mac and windows, the setup process does not require any additional pr
 </details>
 
 ## Limitations:
-- The plex discover API only provides a release date, not a release time for new episodes. This makes it hard to determined when to start looking for releases and when to ignore an episode. This script will only download episodes when its been a day since the air-date or if plex shows the episode as availabe on streaming services. It is recommended to connect this script to trakt.tv, to allow for more accurate release dates and times.
 - This script is built around the Plex media type. In order to accurate match content from Overseerr and Trakt to Plex, its neccessary to have at least one movie and one show inside a library thats visible by plex_debrid. Thats because in order to accurately match content, a search by imdb/tmdb/tvdb ID is necessary - which currently only works by requesting a "Fix Match" call to an existing library item. Until Plex allows a universal search by ID, this is the best I can do.
 - plex_debrid cannot destinguish between a truly empty library and a library that couldnt be reached because its offline (or not reachable for any other reason). In order to avoid unwanted behaviour, the script simply stops running whenever an empty library is encountered. You will need to manually add at least one media item to the libraries visible by plex_debrid, before the download automation can run savely.
 
