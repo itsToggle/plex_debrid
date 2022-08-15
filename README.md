@@ -49,7 +49,7 @@ For linux, mac and windows, the setup process does not require any additional pr
   - **[Android](https://github.com/itsToggle/plex_debrid/tree/android)**
 </details>
 
-### 1) Mount your debrid services:
+### 1) :open_file_folder: Mount your debrid services:
 
 *For this download automation to work, you need to mount at least one debrid service as a virtual drive. I highly recommend using RealDebrid, as this service will recieve updates and new features from plex_debrid first.*
 >
@@ -158,7 +158,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 >  *You can run rclone as a background service by adding the mounting tag '--no-console' (Windows) or '--deamon' (Linux, Mac, etc)*
 ></details>
 
-### 2) Setup your personal media server:
+### 2) :tv: Setup your personal media server:
 
 *To stream content from your newly mounted virtual drive, its recommended to set up a personal media server like plex, emby or jellyfin. These services allow you to stream your content from outside your local network. You will have the best expirience when using plex, since you dont need any 3rd party website to download new content - you can simply add new movies/shows to your watchlist from inside any plex client app, wait a few seconds and then watch it (see the gif above). If you prefer emby or jellyfin as your personal media server, the only way to add new content is via trakt (for now). An entirely different approach is to use media players like Infuse to access the mounted files, which too relies on trakt to add new content.*
 
@@ -175,7 +175,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 
 more personal media server setup instructions to come soon.
 
-### 3) Setup plex_debrid:
+### 3) :page_facing_up: Setup plex_debrid:
 
 *The plex_debrid script can be run as a docker container (dockerized version) or by simply executing it with python 3 (standard version).*
 
@@ -214,7 +214,7 @@ more personal media server setup instructions to come soon.
 
 *plex_debrid can be setup in a bunch of different ways, which this readme wont be able to cover. Feel free to ask any questions in the "discussions" section of this respository.*
 
-### Content Services:
+### :tv: Content Services:
 
 ><details>
 >  <summary><b><u>Plex watchlists:</u></b></summary>
@@ -255,7 +255,7 @@ more personal media server setup instructions to come soon.
 >
 ></details>
 
-### Library Service
+### :open_file_folder: Library Service
 
 ><details>
 >  <summary><b><u>Plex library:</u></b></summary>
@@ -274,7 +274,7 @@ more personal media server setup instructions to come soon.
 >
 ></details>
 
-### Debrid Services and Scraper Settings
+### :magnet: Debrid Services and Scraper Settings
 
 ><details>
 >  <summary><b><u>Integrating your favorite torrent indexers:</u></b></summary>
