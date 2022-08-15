@@ -9,7 +9,7 @@ Using content services like plex discover, trakt and overseerr, your personal me
 
 ### Description:
 
-plex_debrid provides an easy way to add media content to your debrid service/s, which becomes instantly watchable when mounting your debrid service with a personal media server like plex/emby/jellyfin/infuse. The plex watchlists, trakt watchlists and overseer-requests of specified users are constantly checked for newly added movies/shows and newly released episodes of watchlisted shows.Once new content is found, torrent indexers are scraped for the best, cached release on selected debrid services. The torrent is then added to a suitable debrid service and a library refresh is performed to make the newly added content available. 
+plex_debrid provides an easy way to add media content to your debrid service/s, which becomes instantly watchable when mounting your debrid service with a personal media server like plex/emby/jellyfin/infuse. The plex watchlists, trakt watchlists and overseer-requests of specified users are constantly checked for newly added movies/shows and newly released episodes of watchlisted shows. Once new content is found, torrent indexers are scraped for the best, cached release on selected debrid services. The torrent is then added to a suitable debrid service and a library refresh is performed to make the newly added content available. 
 
 **For any debrid-cached content (movies, one-season tv shows or even multi-season tv shows) the entire process from watchlisting content to watching it takes about 10-20 seconds.**
 
@@ -220,16 +220,16 @@ more personal media server setup instructions to come soon.
 >  <summary><b><u>Plex watchlists:</u></b></summary>
 >  
 >  - The Plex Watchlist and the Discover feature are only available for accounts that are linked to an email address - so no managed accounts.
->  - To allow content download by yourself and other users that youve invited to your Plex Home, create a new user by navigation to '/Settings/Content Services/Plex/Plex users/Edit/Add user'.
+>  - To allow content download from inside any plex client by yourself and other users, create a new user by navigation to '/Settings/Content Services/Plex/Plex users/Edit/Add user'.
 >  - You and the users you've added can now browse the Discover part of Plex and download content by adding it to the Plex Watchlist.
->  - If you choose ypur plex library as your library service, your *entire* Plex Library (including shares) is checked before downloading anything and the script will avoid duplicate downloads. To limit this library check to specific library sections, navigate to '/Settings/Content Services/Plex/Plex library check/Edit'
 >  - If you want to delete something from your Plex server, make sure that you've removed it from your Watchlist first. Otherwise the script will see that its in your watchlist and not on your server and will simply download it again.
 >  - By default, movies that you add to your Plex Watchlist are removed automatically once they are downloaded and shows stay in the Watchlist, because only shows that are in the Watchlist are monitored for newly released episodes. You can change which media type/s should be automatically removed from your watchlist by navigating to '/Settings/Content Services/Plex/Plex auto remove'
 >  - The script tries its best to avoid downloading unwanted (e.g. sample) files. If samples still show up on plex, you can create a .plexignore file and add it to the mounts parent directory (more info [here](https://support.plex.tv/articles/201381883-special-keyword-file-folder-exclusion/)).
 >  - The Plex Watchlist of your specified users will polled for changes every 5 seconds, which is when it will try to find newly added content. 
 >  - The Plex Watchlist will be updated entirely every 30 minutes, which is when it will try to find newly released episodes from watchlisted series. This is only done every 30 minutes, because building the whole watchlist can take more than a minute, depending on the amount of shows you have in there.
->  - If you dont want to download a specific episode or season of a show, navigate to that show in the discovery feature and mark the episodes/seasons that you want to ignore as 'watched'. The watch status inside the discovery feature is not connected to the watch status inside your libraries.
->  - When some content could repeatedly not be downloaded, it will be marked as 'watched' in the Discovery feature of the first specified user. This will cause the scraper to ignore the content, until its marked as 'unwatched' again.
+>  - If you dont want to download a specific episode or season of a show, navigate to that show in the discovery feature and mark the episodes/seasons that you want to ignore as 'watched'. The watch status inside the discovery feature is not connected to the watch status inside your libraries (by default).
+>  - When some plex watchlisted content could repeatedly not be downloaded, it will be marked as 'watched' in the Discovery feature of the first specified user. This will cause the scraper to ignore the content, until its marked as 'unwatched' again.
+>  - You can connect plex_debrid to trakt.tv to get more accurate release dates and times for your content.
 >  - You can explore and remove ignored content in the main menu.
 >
 ></details>
@@ -237,10 +237,12 @@ more personal media server setup instructions to come soon.
 ><details>
 >  <summary><b><u>Trakt watchlists, collections and public lists:</u></b></summary>
 >  
->  - You can connect plex_debrid to trakt.tv to get more accurate release dates and times for your content. You can also add trakt watchlists from multiple users or public lists to be monitored for new content by plex_debrid.
 >  - To connect the script to trakt, navigate to '/Settings/Content Services/Trakt/Trakt users/Edit/Add user'. You can add an unlimited amount of users.
->  - To monitor and download your users trakt watchlists or public lists, navigate to '/Settings/Content Services/Trakt/Trakt lists'. By default, no trakt watchlist is monitored for new content. The lists will be checked for new content every 5 seconds.
->  - To match content from trakt to plex, its neccessary to have at least one movie and one show inside a library thats visible by plex_debrid. Thats because in order to accurately match content, a search by imdb/tmdb/tvdb ID is necessary - which currently only works by requesting a "Fix Match" call to an existing library item.
+>  - To monitor and download your users trakt watchlists, collections or public lists, navigate to '/Settings/Content Services/Trakt/Trakt lists'. By default, no trakt list is monitored for new content.
+>  - Only movies and entire shows in the watchlists, public lists and collections are downloaded. Not single seasons or episodes (for now).
+>  - The trakt watchlists of specified users is updated every 5s.
+>  - Shows in the trakt collections of specified users are checked for newly released episodes every 30min.
+>  - Public lists are updated every 30min.
 >
 ></details>
 >
@@ -250,7 +252,6 @@ more personal media server setup instructions to come soon.
 >  - You can connect plex_debrid to overseerr to instantly and automatically download approved requests from selected users.
 >  - To connect the script to overseerr, navigate to '/Settings/Content Services/Overseerr'. 
 >  - By default, all approved requests from all overseerr users are downloaded by plex_debrid. To limit this feature to specific users, navigate to '/Settings/Content Services/Overseerr/Overseerr users'
->  - To match requests from overseerr to plex, its neccessary to have at least one movie and one show inside a library thats visible by plex_debrid. Thats because in order to accurately match content, a search by imdb/tmdb/tvdb ID is necessary - which currently only works by requesting a "Fix Match" call to an existing library item.
 >
 ></details>
 
@@ -259,17 +260,17 @@ more personal media server setup instructions to come soon.
 ><details>
 >  <summary><b><u>Plex library:</u></b></summary>
 >  
->  - If you choose your plex library as your library service, your *entire* Plex Library (including shares) is checked before downloading anything and the script will avoid duplicate downloads. To limit this library check to specific library sections, navigate to '/Settings/Content Services/Plex/Plex library check/Edit'
+>  - To use your plex library as your library service, navigate to '/Settings/Library Service/Change library service/'
+>  - If you choose your plex library as your library service, your *entire* Plex Library (including shares) is checked before downloading anything and the script will avoid duplicate downloads. To limit this library check to specific library sections, navigate to '/Settings/Library Service/Edit library service/Plex library check/Edit'
 >
 ></details>
 >
 ><details>
 >  <summary><b><u>Trakt collection:</u></b></summary>
 >  
->  - You can connect plex_debrid to trakt.tv to get more accurate release dates and times for your content. You can also add trakt watchlists from multiple users or public lists to be monitored for new content by plex_debrid.
->  - To connect the script to trakt, navigate to '/Settings/Content Services/Trakt/Trakt users/Edit/Add user'. You can add an unlimited amount of users.
->  - To monitor and download your users trakt watchlists or public lists, navigate to '/Settings/Content Services/Trakt/Trakt lists'. By default, no trakt watchlist is monitored for new content. The lists will be checked for new content every 5 seconds.
->  - To match content from trakt to plex, its neccessary to have at least one movie and one show inside a library thats visible by plex_debrid. Thats because in order to accurately match content, a search by imdb/tmdb/tvdb ID is necessary - which currently only works by requesting a "Fix Match" call to an existing library item.
+>  - To use one of your trakt users collections as your library service, navigate to '/Settings/Library Service/Change library service/'
+>  - If you choose your trakt collection as your library service, your *entire* trakt collection is checked before downloading anything and the script will avoid duplicate downloads.
+>  - Once content is downloaded, plex_debrid will mark it as collected for the specified trakt user. 
 >
 ></details>
 
@@ -281,7 +282,7 @@ more personal media server setup instructions to come soon.
 >  - The only legacy scrapers currently integrated are for rarbg.to and 1337x.to 
 >  - Its recommended to install "jackett", a program that wraps a huge amount of torrent indexers (https://github.com/Jackett/Jackett). Once installed and setup, you can enable jackett by navigating to '/Settings/Scraper/Sources/Edit/Add source/jackett'. Once enabled, you can delete the legacy scrapers, since jackett can handle both 1337x and rarbg.
 >  - If you prefer Prowlarr over Jackett, you are able to integrate prowlarr in the same way as jackett. Prowlarr has stricted rate limits than jackett for some indexers (e.g. 1337x), which could cause plex_debrid to timeout the request to prowlarr and therefore find less releases than jackett.
->  - You can now choose to use a specific debrid service for a specific torrent tracker by navigating to "/Settings/Debrid Services/Tracker specific Debrid Services". This comes in handy if you are using a private tracker that forces you to use a debrid service that will seed your torrents (e.g. debridlink).
+>  - You can now choose to use a specific debrid service for a specific torrent tracker by navigating to "/Settings/Debrid Services/Tracker specific Debrid Services". This comes in handy if you are using a private tracker that forces you to use a debrid service that will seed your torrents (e.g. debridlink,put.io).
 >
 ></details>
 >
