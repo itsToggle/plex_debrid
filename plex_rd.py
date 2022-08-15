@@ -414,7 +414,7 @@ class plex(content.services):
         autoremove = "movie"
         def __init__(self) -> None:
             if len(plex.users) > 0:
-                ui.print('getting all plex watchlists ...')
+                ui.print('[plex] getting all watchlists ...')
             self.data = []
             try:
                 for user in plex.users:
@@ -435,27 +435,27 @@ class plex(content.services):
                                         element.user += [user]
             except Exception as e:
                 ui.print('done') 
-                ui.print("plex error: (watchlist exception): " + str(e),debug=ui_settings.debug)
-                ui.print('plex error: could not reach plex')
+                ui.print("[plex error]: (watchlist exception): " + str(e),debug=ui_settings.debug)
+                ui.print('[plex error]: could not reach plex')
             if len(plex.users) > 0:
                 ui.print('done')        
         def remove(self,item):
             if hasattr(item,'user'):
                 if isinstance(item.user[0],list):
                     for user in item.user:
-                        ui.print('item: "' + item.title + '" removed from '+ user[0] +'`s plex watchlist')
+                        ui.print('[plex] item: "' + item.title + '" removed from '+ user[0] +'`s watchlist')
                         url = 'https://metadata.provider.plex.tv/actions/removeFromWatchlist?ratingKey=' + item.ratingKey + '&X-Plex-Token=' + user[1]
                         response = plex.session.put(url,data={'ratingKey':item.ratingKey})
                     if not self == []:
                         self.data.remove(item)
                 else:
-                    ui.print('item: "' + item.title + '" removed from '+ item.user[0] +'`s plex watchlist')
+                    ui.print('[plex] item: "' + item.title + '" removed from '+ item.user[0] +'`s watchlist')
                     url = 'https://metadata.provider.plex.tv/actions/removeFromWatchlist?ratingKey=' + item.ratingKey + '&X-Plex-Token=' + item.user[1]
                     response = plex.session.put(url,data={'ratingKey':item.ratingKey})
                     if not self == []:
                         self.data.remove(item)
         def add(self,item,user):
-            ui.print('item: "' + item.title + '" added to '+ user[0] +'`s plex watchlist')
+            ui.print('[plex] item: "' + item.title + '" added to '+ user[0] +'`s watchlist')
             url = 'https://metadata.provider.plex.tv/actions/addToWatchlist?ratingKey=' + item.ratingKey + '&X-Plex-Token=' + user[1]
             response = plex.session.put(url,data={'ratingKey':item.ratingKey})
             if item.type == 'show':
@@ -464,7 +464,7 @@ class plex(content.services):
                 self.data.append(plex.movie(item.ratingKey))
         def update(self):
             if len(plex.users) > 0:
-                ui.print("updating all plex watchlists ...",debug=ui_settings.debug)
+                ui.print("[plex] updating all watchlists ...",debug=ui_settings.debug)
             update = False
             new_watchlist = []
             try:
@@ -476,7 +476,7 @@ class plex(content.services):
                             for entry in response.MediaContainer.Metadata:
                                 entry.user = [user]
                                 if not entry in self.data:
-                                    ui.print('item: "' + entry.title + '" found in '+ user[0] +'`s plex watchlist')
+                                    ui.print('[plex] item: "' + entry.title + '" found in '+ user[0] +'`s watchlist')
                                     update = True
                                     if entry.type == 'show':
                                         self.data += [plex.show(entry)]
@@ -492,8 +492,8 @@ class plex(content.services):
                         self.data.remove(entry)
             except Exception as e:
                 ui.print('done') 
-                ui.print("plex error: (watchlist exception): " + str(e),debug=ui_settings.debug)
-                ui.print('plex error: could not reach plex')
+                ui.print("[plex error]: (watchlist exception): " + str(e),debug=ui_settings.debug)
+                ui.print('[plex error]: could not reach plex')
             if len(plex.users) > 0:
                 ui.print('done') 
             return update       
@@ -688,7 +688,7 @@ class plex(content.services):
         def __new__(self):
             list = []
             if not plex.library.check == [['']] and not plex.library.check == []:
-                ui.print('getting plex library section/s "'+','.join(x[0] for x in plex.library.check) +'" ...')
+                ui.print('[plex] getting plex library section/s "'+','.join(x[0] for x in plex.library.check) +'" ...')
                 types = ['1','2','3','4']
                 for section in plex.library.check:
                     if section[0] == '':
@@ -702,12 +702,12 @@ class plex(content.services):
                                 for element in response.MediaContainer.Metadata:
                                     section_response += [plex.media(element)]
                     if len(section_response) == 0:
-                        ui.print("plex error: couldnt reach local plex library section '"+section[0]+"' at server address: " + plex.library.url + " - or this library really is empty.")  
+                        ui.print("[plex error]: couldnt reach local plex library section '"+section[0]+"' at server address: " + plex.library.url + " - or this library really is empty.")  
                     else:
                         list += section_response
                 ui.print('done')
             else:
-                ui.print('getting entire plex library ...')
+                ui.print('[plex] getting entire plex library ...')
                 url = plex.library.url + '/library/all?X-Plex-Token='+ plex.users[0][1]
                 response = plex.get(url)
                 ui.print('done')
@@ -716,9 +716,9 @@ class plex(content.services):
                         for element in response.MediaContainer.Metadata:
                             list += [plex.media(element)]
                 else:
-                    ui.print("plex error: couldnt reach local plex server at server address: " + plex.library.url + " - or this library really is empty.")    
+                    ui.print("[plex error]: couldnt reach local plex server at server address: " + plex.library.url + " - or this library really is empty.")    
             if len(list) == 0:
-                ui.print("plex error: Your library seems empty. To prevent unwanted behaviour, no further downloads will be started. If your library really is empty, please add at least one media item manually.") 
+                ui.print("[plex error]: Your library seems empty. To prevent unwanted behaviour, no further downloads will be started. If your library really is empty, please add at least one media item manually.") 
             return list
     def search(query,library=[]):
         query = query.replace(' ','%20')
@@ -735,7 +735,7 @@ class plex(content.services):
                     some_local_media = element
                     break
         else:
-            ui.print("plex error: couldnt match content to plex media type, because the plex library is empty. Please add at least one movie and one show!")
+            ui.print("[plex error]: couldnt match content to plex media type, because the plex library is empty. Please add at least one movie and one show!")
             return []
         if type == 'movie':
             agent = 'tv.plex.agents.movie'
@@ -900,7 +900,7 @@ class trakt(content.services):
         autoremove = "movie"
         def __init__(self):
             if len(trakt.lists) > 0:
-                ui.print('getting all trakt lists ...')
+                ui.print('[trakt] getting all trakt lists ...')
             self.data = []
             for list in trakt.lists:
                 list_type = "public"
@@ -929,7 +929,7 @@ class trakt(content.services):
                                 if not element.movie in self.data:
                                     self.data.append(trakt.movie(element.movie))
                     except Exception as e:
-                        ui.print("trakt error: (exception): " + str(e),debug=ui_settings.debug)
+                        ui.print("[trakt error]: (exception): " + str(e),debug=ui_settings.debug)
                         continue
                 elif list_type == "collection":
                     try:
@@ -946,7 +946,7 @@ class trakt(content.services):
                                 if not element.show in self.data and not collected_count == element.show.aired_episodes:
                                     self.data.append(trakt.show(element.show))
                     except Exception as e:
-                        ui.print("trakt error: (exception): " + str(e),debug=ui_settings.debug)
+                        ui.print("[trakt error]: (exception): " + str(e),debug=ui_settings.debug)
                         continue
                 else:
                     try:
@@ -965,12 +965,12 @@ class trakt(content.services):
                                 if not element.movie in self.data:
                                     self.data.append(trakt.movie(element.movie))
                     except Exception as e:
-                        ui.print("trakt error: (exception): " + str(e),debug=ui_settings.debug)
+                        ui.print("[trakt error]: (exception): " + str(e),debug=ui_settings.debug)
                         continue
             ui.print('done')
         def update(self):
             if len(trakt.lists) > 0:
-                ui.print('updating all trakt lists ...',debug=ui_settings.debug)
+                ui.print('[trakt] updating all trakt watchlists ...',debug=ui_settings.debug)
             refresh = False
             new_watchlist = []
             for list in trakt.lists:
@@ -990,7 +990,7 @@ class trakt(content.services):
                                 element.show.guid = element.show.ids.trakt
                                 if not element.show in self.data:
                                     refresh = True
-                                    ui.print('item: "' + element.show.title + '" found in ' + trakt.current_user[0]+ "'s trakt watchlist.")
+                                    ui.print('[trakt] item: "' + element.show.title + '" found in ' + trakt.current_user[0]+ "'s trakt watchlist.")
                                     self.data.append(trakt.show(element.show))
                                 new_watchlist += [element.show]
                             elif hasattr(element,'movie'):
@@ -999,36 +999,11 @@ class trakt(content.services):
                                 element.movie.guid = element.movie.ids.trakt
                                 if not element.movie in self.data:
                                     refresh = True
-                                    ui.print('item: "' + element.movie.title + '" found in ' + trakt.current_user[0]+ "'s trakt watchlist.")
+                                    ui.print('[trakt] item: "' + element.movie.title + '" found in ' + trakt.current_user[0]+ "'s trakt watchlist.")
                                     self.data.append(trakt.movie(element.movie))
                                 new_watchlist += [element.movie]
                     except Exception as e:
-                        ui.print("trakt error: (exception): " + str(e),debug=ui_settings.debug)
-                        continue
-                else:
-                    try:
-                        watchlist_items, header = trakt.get('https://api.trakt.tv'+list+'/items/movies,shows?extended=full')
-                        for element in watchlist_items:
-                            if hasattr(element,'show'):
-                                element.show.type = 'show'
-                                element.show.user = user
-                                element.show.guid = element.show.ids.trakt
-                                if not element.show in self.data:
-                                    refresh = True
-                                    ui.print('item: "' + element.show.title + '" found in ' + trakt.current_user[0]+ "'s trakt watchlist.")
-                                    self.data.append(trakt.show(element.show))
-                                new_watchlist += [element.show]
-                            elif hasattr(element,'movie'):
-                                element.movie.type = 'movie'
-                                element.movie.user = user
-                                element.movie.guid = element.movie.ids.trakt
-                                if not element.movie in self.data:
-                                    refresh = True
-                                    ui.print('item: "' + element.movie.title + '" found in ' + trakt.current_user[0]+ "'s trakt watchlist.")
-                                    self.data.append(trakt.movie(element.movie))
-                                new_watchlist += [element.movie]
-                    except Exception as e:
-                        ui.print("trakt error: (exception): " + str(e),debug=ui_settings.debug)
+                        ui.print("[trakt error]: (exception): " + str(e),debug=ui_settings.debug)
                         continue
             for element in self.data[:]:
                 if not element in new_watchlist:
@@ -1052,7 +1027,7 @@ class trakt(content.services):
                 for attribute in element.__dict__.copy():
                     if not (attribute == 'ids' or attribute == 'seasons' or attribute == 'title' or attribute == 'year'):
                         delattr(element,attribute)
-                ui.print('item: "' + element.title + '" removed from '+user[0]+'`s trakt watchlist')
+                ui.print('[trakt] item: "' + element.title + '" removed from '+user[0]+'`s watchlist')
                 shows += [element]
             elif element.type == 'movie':
                 for ids in element.ids.__dict__.copy():
@@ -1062,7 +1037,7 @@ class trakt(content.services):
                 for attribute in element.__dict__.copy():
                     if not (attribute == 'ids' or attribute == 'title' or attribute == 'year'):
                         delattr(element,attribute)
-                ui.print('item: "' + element.title + '" removed from '+user[0]+'`s trakt watchlist')
+                ui.print('[trakt] item: "' + element.title + '" removed from '+user[0]+'`s watchlist')
                 movies += [element]
             data = {'movies':movies,'shows':shows}
             trakt.current_user = user
@@ -1220,7 +1195,7 @@ class trakt(content.services):
                     back = True
         def __new__(self):
             trakt.current_user = trakt.library.user
-            ui.print('getting '+trakt.current_user[0]+ "'s" + ' entire trakt collection ...')
+            ui.print('[trakt] getting '+trakt.current_user[0]+ "'s" + ' entire trakt collection ...')
             watchlist_items = []
             collection = []
             collection_movies,header = trakt.get('https://api.trakt.tv/sync/collection/movies?extended=metadata')
@@ -1320,7 +1295,7 @@ class trakt(content.services):
             #add element to collection
             data = {'movies':movies,'shows':shows}
             response = trakt.post('https://api.trakt.tv/sync/collection',json.dumps(data, default=lambda o: o.__dict__))
-            ui.print('item: ' + element.title + ' added to ' + trakt.library.user[0] + "'s trakt collection")
+            ui.print('[trakt] item: ' + element.title + ' added to ' + trakt.library.user[0] + "'s collection")
             sys.stdout.flush()
     def search(query,type):
         trakt.current_user = trakt.users[0]
@@ -1525,7 +1500,7 @@ class overseerr(content.services):
         def __init__(self):
             self.data = []
             if len(overseerr.users) > 0 and len(overseerr.api_key) > 0:
-                ui.print('getting all overseerr requests ...')
+                ui.print('[overseerr] getting all overseerr requests ...')
                 try:
                     response = overseerr.get(overseerr.base_url + '/api/v1/request')
                     for element in response.results:
@@ -1556,13 +1531,13 @@ class overseerr(content.services):
                     other.data.append(element)
         def update(self):
             if len(overseerr.users) > 0 and len(overseerr.api_key) > 0:
-                ui.print('updating all overseerr requests ...',debug=ui_settings.debug)
+                ui.print('[overseerr] updating all overseerr requests ...',debug=ui_settings.debug)
                 refresh = False
                 try:
                     response = overseerr.get(overseerr.base_url + '/api/v1/request')
                     for element in response.results:
                         if not element in self.data and (element.requestedBy.displayName in overseerr.users or overseerr.users == ['all']) and [str(element.status)] in overseerr.allowed_status:
-                            ui.print('found new overseerr request by user "' + element.requestedBy.displayName + '".')
+                            ui.print('[overseerr] found new overseerr request by user "' + element.requestedBy.displayName + '".')
                             refresh = True
                             self.data.append(element)
                     for element in self.data[:]:
