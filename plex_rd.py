@@ -1768,6 +1768,7 @@ class debrid:
                                 except:
                                     continue
                                 response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/selectFiles/' + torrent_id , {'files' : str(','.join(cached_ids))})    
+                                time.sleep(0.5)
                                 response = debrid.realdebrid.get('https://api.real-debrid.com/rest/1.0/torrents/info/' + torrent_id)
                                 if len(response.links) == len(cached_ids):
                                     release.download = response.links
@@ -2286,7 +2287,7 @@ class debrid:
 #Release Class
 class releases:   
     #Define release attributes
-    def __init__(self, source, type, title, files, size, download):
+    def __init__(self, source, type, title, files, size, download,seeders=0):
         self.source     = source
         self.type       = type
         self.title      = title
@@ -2301,6 +2302,7 @@ class releases:
         self.title_deviation = 0
         self.wanted = 0
         self.unwanted = 0
+        self.seeders = seeders
     #Define when releases are Equal 
     def __eq__(self, other):
         return self.title == other.title
@@ -2330,10 +2332,10 @@ class releases:
                 "0"
             ],
             [
-                "(1337x)",
-                "source",
-                "text",
-                "0"
+                "(.*)",
+                "seeders",
+                "number",
+                "1"
             ],
             [
                 "(EXTENDED|REMASTERED)",
@@ -2531,6 +2533,7 @@ class releases:
             longest_title = 0
             longest_size = 0
             longest_index = 0
+            longest_seeders = 0
             for index,release in enumerate(scraped_releases):
                 release.printsize = str(round(release.size, 2))
                 release.file = '+' + str(release.wanted) + '/-' + str(release.unwanted)
@@ -2542,10 +2545,12 @@ class releases:
                     longest_title = len(release.title)
                 if len(str(release.printsize)) > longest_size:
                     longest_size = len(str(release.printsize))
+                if len(str(release.seeders)) > longest_seeders:
+                    longest_seeders = len(str(release.seeders))
                 if len(str(index+1)) > longest_index:
                     longest_index = len(str(index+1))
             for index,release in enumerate(scraped_releases):
-                print(str(index+1)+") "+' ' * (longest_index-len(str(index+1)))+"title: " + release.title + ' ' * (longest_title-len(release.title)) + " | size: " + str(release.printsize) + ' ' * (longest_size-len(str(release.printsize))) + " | cached: " + '/'.join(release.cached) + ' ' * (longest_cached-len('/'.join(release.cached))) + " | files: " + release.file + ' ' * (longest_file-len(release.file)) + " | source: " + release.source )
+                print(str(index+1)+") "+' ' * (longest_index-len(str(index+1)))+"title: " + release.title + ' ' * (longest_title-len(release.title)) + " | size: " + str(release.printsize) + ' ' * (longest_size-len(str(release.printsize))) + " | cached: " + '/'.join(release.cached) + ' ' * (longest_cached-len('/'.join(release.cached))) + " | seeders: " + str(release.seeders) + ' ' * (longest_seeders-len(str(release.seeders))) + " | files: " + release.file + ' ' * (longest_file-len(release.file)) + " | source: " + release.source )
 #Scraper Class
 class scraper: 
     #Service Class:
@@ -2682,7 +2687,7 @@ class scraper:
                 if hasattr(response, "torrent_results"):
                     for result in response.torrent_results:
                         if regex.match(r'('+ altquery.replace('.','\.').replace("\.*",".*") + ')',result.title,regex.I):
-                            release = releases('[rarbg]','torrent',result.title,[],float(result.size)/1000000000,[result.download])
+                            release = releases('[rarbg]','torrent',result.title,[],float(result.size)/1000000000,[result.download],seeders=result.seeders)
                             scraped_releases += [release]   
             return scraped_releases 
     class x1337(services):
@@ -2702,6 +2707,7 @@ class scraper:
                     soup = BeautifulSoup(response.content, 'html.parser')
                     torrentList = soup.select('a[href*="/torrent/"]')
                     sizeList = soup.select('td.coll-4')
+                    seederList = soup.select('td.coll-2')
                     if torrentList:
                         for count,torrent in enumerate(torrentList):
                             title = torrent.getText().strip()
@@ -2713,6 +2719,7 @@ class scraper:
                                 soup = BeautifulSoup(response.content, 'html.parser')
                                 download = soup.select('a[href^="magnet"]')[0]['href']
                                 size = sizeList[count].contents[0]
+                                seeders = seederList[count].contents[0]
                                 if regex.search(r'([0-9]*?\.[0-9])(?= MB)',size,regex.I):
                                     size = regex.search(r'([0-9]*?\.[0-9])(?= MB)',size,regex.I).group()
                                     size = float(float(size) / 1000)
@@ -2721,7 +2728,7 @@ class scraper:
                                     size = float(size)
                                 else:
                                     size = float(size)
-                                scraped_releases += [releases('[1337x]','torrent',title,[],size,[download])]
+                                scraped_releases += [releases('[1337x]','torrent',title,[],size,[download],seeders=int(seeders))]
                 except:
                     response = None
                     ui.print('1337x error: exception')
@@ -2769,11 +2776,11 @@ class scraper:
                         if regex.match(r'('+ altquery.replace('.','\.').replace("\.*",".*") + ')',result.Title,regex.I):
                             if not result.MagnetUri == None:
                                 if not result.Tracker == None and not result.Size == None:
-                                    scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],float(result.Size)/1000000000,[result.MagnetUri])]
+                                    scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],float(result.Size)/1000000000,[result.MagnetUri],seeders=result.Seeders)]
                                 elif not result.Tracker == None:
-                                    scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],1,[result.MagnetUri])]
+                                    scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],1,[result.MagnetUri],seeders=result.Seeders)]
                                 elif not result.Size == None:
-                                    scraped_releases += [releases('[jackett: unnamed]','torrent',result.Title,[],float(result.Size)/1000000000,[result.MagnetUri])]
+                                    scraped_releases += [releases('[jackett: unnamed]','torrent',result.Title,[],float(result.Size)/1000000000,[result.MagnetUri],seeders=result.Seeders)]
                                 response.Results.remove(result)
                         else:
                             response.Results.remove(result)
@@ -2799,20 +2806,20 @@ class scraper:
                 if 'Location' in link.headers:
                     if regex.search(r'(?<=btih:).*?(?=&)',str(link.headers['Location']),regex.I):
                         if not result.Tracker == None and not result.Size == None:
-                            scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],float(result.Size)/1000000000,[link.headers['Location']])]
+                            scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],float(result.Size)/1000000000,[link.headers['Location']],seeders=result.Seeders)]
                         elif not result.Tracker == None:
-                            scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],1,[link.headers['Location']])]
+                            scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],1,[link.headers['Location']],seeders=result.Seeders)]
                         elif not result.Size == None:
-                            scraped_releases += [releases('[jackett: unnamed]','torrent',result.Title,[],float(result.Size)/1000000000,[link.headers['Location']])]
+                            scraped_releases += [releases('[jackett: unnamed]','torrent',result.Title,[],float(result.Size)/1000000000,[link.headers['Location']],seeders=result.Seeders)]
                     return scraped_releases
                 elif link.headers['Content-Type'] == "application/x-bittorrent":
                     magnet = releases.torrent2magnet(link.content)
                     if not result.Tracker == None and not result.Size == None:
-                        scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],float(result.Size)/1000000000,[magnet])]
+                        scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],float(result.Size)/1000000000,[magnet],seeders=result.Seeders)]
                     elif not result.Tracker == None:
-                        scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],1,[magnet])]
+                        scraped_releases += [releases('[jackett: '+str(result.Tracker)+']','torrent',result.Title,[],1,[magnet],seeders=result.Seeders)]
                     elif not result.Size == None:
-                        scraped_releases += [releases('[jackett: unnamed]','torrent',result.Title,[],float(result.Size)/1000000000,[magnet])]
+                        scraped_releases += [releases('[jackett: unnamed]','torrent',result.Title,[],float(result.Size)/1000000000,[magnet],seeders=result.Seeders)]
                     return scraped_releases
             except:
                 return scraped_releases
@@ -2839,11 +2846,11 @@ class scraper:
                             if hasattr(result,'magnetUrl'):
                                 if not result.magnetUrl == None:
                                     if not result.indexer == None and not result.size == None:
-                                        scraped_releases += [releases('[prowlarr: '+str(result.indexer)+']','torrent',result.title,[],float(result.size)/1000000000,[result.magnetUrl])]
+                                        scraped_releases += [releases('[prowlarr: '+str(result.indexer)+']','torrent',result.title,[],float(result.size)/1000000000,[result.magnetUrl],seeders=result.seeders)]
                                     elif not result.indexer == None:
-                                        scraped_releases += [releases('[prowlarr: '+str(result.indexer)+']','torrent',result.title,[],1,[result.magnetUrl])]
+                                        scraped_releases += [releases('[prowlarr: '+str(result.indexer)+']','torrent',result.title,[],1,[result.magnetUrl],seeders=result.seeders)]
                                     elif not result.size == None:
-                                        scraped_releases += [releases('[prowlarr: unnamed]','torrent',result.title,[],float(result.size)/1000000000,[result.magnetUrl])]
+                                        scraped_releases += [releases('[prowlarr: unnamed]','torrent',result.title,[],float(result.size)/1000000000,[result.magnetUrl],seeders=result.seeders)]
                                     response.remove(result)
                         else:
                             response.remove(result)
@@ -2869,20 +2876,20 @@ class scraper:
                 if 'Location' in link.headers:
                     if regex.search(r'(?<=btih:).*?(?=&)',str(link.headers['Location']),regex.I):
                         if not result.indexer == None and not result.size == None:
-                            scraped_releases += [releases('[prowlarr: '+str(result.indexer)+']','torrent',result.title,[],float(result.size)/1000000000,[link.headers['Location']])]
+                            scraped_releases += [releases('[prowlarr: '+str(result.indexer)+']','torrent',result.title,[],float(result.size)/1000000000,[link.headers['Location']],seeders=result.seeders)]
                         elif not result.indexer == None:
-                            scraped_releases += [releases('[prowlarr: '+str(result.indexer)+']','torrent',result.title,[],1,[link.headers['Location']])]
+                            scraped_releases += [releases('[prowlarr: '+str(result.indexer)+']','torrent',result.title,[],1,[link.headers['Location']],seeders=result.seeders)]
                         elif not result.size == None:
-                            scraped_releases += [releases('[prowlarr: unnamed]','torrent',result.title,[],float(result.size)/1000000000,[link.headers['Location']])]
+                            scraped_releases += [releases('[prowlarr: unnamed]','torrent',result.title,[],float(result.size)/1000000000,[link.headers['Location']],seeders=result.seeders)]
                     return scraped_releases
                 elif link.headers['Content-Type'] == "application/x-bittorrent":
                     magnet = releases.torrent2magnet(link.content)
                     if not result.indexer == None and not result.size == None:
-                        scraped_releases += [releases('[prowlarr: '+str(result.indexer)+']','torrent',result.title,[],float(result.size)/1000000000,[magnet])]
+                        scraped_releases += [releases('[prowlarr: '+str(result.indexer)+']','torrent',result.title,[],float(result.size)/1000000000,[magnet],seeders=result.seeders)]
                     elif not result.indexer == None:
-                        scraped_releases += [releases('[prowlarr: '+str(result.indexer)+']','torrent',result.title,[],1,[magnet])]
+                        scraped_releases += [releases('[prowlarr: '+str(result.indexer)+']','torrent',result.title,[],1,[magnet],seeders=result.seeders)]
                     elif not result.size == None:
-                        scraped_releases += [releases('[prowlarr: unnamed]','torrent',result.title,[],float(result.size)/1000000000,[magnet])]
+                        scraped_releases += [releases('[prowlarr: unnamed]','torrent',result.title,[],float(result.size)/1000000000,[magnet],seeders=result.seeders)]
                     return scraped_releases
             except:
                 return scraped_releases
