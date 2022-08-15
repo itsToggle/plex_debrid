@@ -3270,7 +3270,7 @@ class ui:
                 'Release sorting',
                 [
                     'Please specify what this sorting rule should to look for by providing one or more regex match group(s): ',
-                    'Please specify in which release attribute ("title","source" or "size") this sorting rule should search: ',
+                    'Please specify in which release attribute ("title","source","size" or "seeders") this sorting rule should search: ',
                     'Please specify if the match should be interpreted as a number or as text ("number" or "text"): ',
                     'Please specify in which order the releases should be by ranked by this sorting rule ("0" = ascending or "1" = descending): ',
                 ],
