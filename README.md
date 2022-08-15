@@ -160,7 +160,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 
 ### 2) Setup your personal media server:
 
-*To stream content from your newly mounted virtual drive, its recommended to set up a personal media server like plex, emby or jellyfin. These services allow you to stream your content from outside your local network. Another option is to use media players like Infuse to access the mounted files.*
+*To stream content from your newly mounted virtual drive, its recommended to set up a personal media server like plex, emby or jellyfin. These services allow you to stream your content from outside your local network. You will have the best expirience when using plex, since you dont need any 3rd party website to download new content - you can simply add new movies/shows to your watchlist from inside any plex client app, wait a few seconds and then watch it (see the gif above). If you prefer emby or jellyfin as your personal media server, the only way to add new content is via trakt (for now). An entirely different approach is to use media players like Infuse to access the mounted files, which too relies on trakt to add new content.*
 
 ><details>
 >  <summary><b><u>Setting up Plex:</u></b></summary>
@@ -172,6 +172,8 @@ For linux, mac and windows, the setup process does not require any additional pr
 >  5. You and your home users can now stream cached torrents from your debrid service/s!
 >  
 >  </details>
+
+more personal media server setup instructions to come soon.
 
 ### 3) Setup plex_debrid:
 
@@ -210,10 +212,12 @@ For linux, mac and windows, the setup process does not require any additional pr
 
 ## Usage:
 
+*plex_debrid can be setup in a bunch of different ways, which this readme wont be able to cover. Feel free to ask any questions in the "discussions" section of this respository.*
+
 ### Content Services:
 
 ><details>
->  <summary><b><u>Integrating Plex:</u></b></summary>
+>  <summary><b><u>Plex watchlists:</u></b></summary>
 >  
 >  - The Plex Watchlist and the Discover feature are only available for accounts that are linked to an email address - so no managed accounts.
 >  - To allow content download by yourself and other users that youve invited to your Plex Home, create a new user by navigation to '/Settings/Content Services/Plex/Plex users/Edit/Add user'.
@@ -231,7 +235,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 ></details>
 >
 ><details>
->  <summary><b><u>Integrating Trakt:</u></b></summary>
+>  <summary><b><u>Trakt watchlists, collections and public lists:</u></b></summary>
 >  
 >  - You can connect plex_debrid to trakt.tv to get more accurate release dates and times for your content. You can also add trakt watchlists from multiple users or public lists to be monitored for new content by plex_debrid.
 >  - To connect the script to trakt, navigate to '/Settings/Content Services/Trakt/Trakt users/Edit/Add user'. You can add an unlimited amount of users.
@@ -241,7 +245,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 ></details>
 >
 ><details>
->  <summary><b><u>Integrating Overseerr:</u></b></summary>
+>  <summary><b><u>Overseerr requests:</u></b></summary>
 > 
 >  - You can connect plex_debrid to overseerr to instantly and automatically download approved requests from selected users.
 >  - To connect the script to overseerr, navigate to '/Settings/Content Services/Overseerr'. 
@@ -251,6 +255,23 @@ For linux, mac and windows, the setup process does not require any additional pr
 ></details>
 
 ### Library Service
+
+><details>
+>  <summary><b><u>Plex library:</u></b></summary>
+>  
+>  - If you choose your plex library as your library service, your *entire* Plex Library (including shares) is checked before downloading anything and the script will avoid duplicate downloads. To limit this library check to specific library sections, navigate to '/Settings/Content Services/Plex/Plex library check/Edit'
+>
+></details>
+>
+><details>
+>  <summary><b><u>Trakt collection:</u></b></summary>
+>  
+>  - You can connect plex_debrid to trakt.tv to get more accurate release dates and times for your content. You can also add trakt watchlists from multiple users or public lists to be monitored for new content by plex_debrid.
+>  - To connect the script to trakt, navigate to '/Settings/Content Services/Trakt/Trakt users/Edit/Add user'. You can add an unlimited amount of users.
+>  - To monitor and download your users trakt watchlists or public lists, navigate to '/Settings/Content Services/Trakt/Trakt lists'. By default, no trakt watchlist is monitored for new content. The lists will be checked for new content every 5 seconds.
+>  - To match content from trakt to plex, its neccessary to have at least one movie and one show inside a library thats visible by plex_debrid. Thats because in order to accurately match content, a search by imdb/tmdb/tvdb ID is necessary - which currently only works by requesting a "Fix Match" call to an existing library item.
+>
+></details>
 
 ### Debrid Services and Scraper Settings
 
