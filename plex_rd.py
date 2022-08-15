@@ -180,17 +180,7 @@ class content:
         def collected(self,list):
             if self.watchlist == plex.watchlist and content.libraries.active == ['Plex Library']:
                 try:
-                    if self.type == 'show' or self.type == 'season':
-                        match = next((x for x in list if x == self),None)
-                        if not hasattr(match,'leafCount'):
-                            return False
-                        if match.leafCount == self.leafCount:
-                            return True
-                        return False
-                    else:
-                        if self in list:
-                            return True
-                        return False
+                    return self in list
                 except Exception as e:
                     ui.print("plex error: (plex to plex library check exception): " + str(e),debug=ui_settings.debug)
                     return False
@@ -203,10 +193,11 @@ class content:
                             result = plex.match("tmdb-"+str(self.ids.tmdb),self.type,library=list)
                         elif hasattr(self.ids,'tvdb'):
                             result = plex.match("tvdb-"+str(self.ids.tvdb),self.type,library=list)
-                        for season in self.Seasons:
-                            season.parentGuid = result[0].guid
-                            for episode in season.Episodes:
-                                episode.grandparentGuid = result[0].guid
+                        if hasattr(self,'Seasons'):
+                            for season in self.Seasons:
+                                season.parentGuid = result[0].guid
+                                for episode in season.Episodes:
+                                    episode.grandparentGuid = result[0].guid
                         return content.media.collected(result[0],list)
                     else:
                         return self in list
@@ -214,39 +205,33 @@ class content:
                     ui.print("trakt error: (trakt to plex library check exception): " + str(e),debug=ui_settings.debug)
                     return False
             elif self.watchlist == trakt.watchlist and content.libraries.active == ['Trakt Collection']:
-                if self.type == 'show' or self.type == 'season':
-                    match = next((x for x in list if x == self),None)
-                    if not hasattr(match,'leafCount'):
-                        return False
-                    if match.leafCount == self.leafCount:
-                        return True
-                    return False
-                else:
-                    if self in list:
-                        return True
+                try:
+                    return self in list
+                except Exception as e:
+                    ui.print("trakt error: (trakt to trakt library check exception): " + str(e),debug=ui_settings.debug)
                     return False
             elif self.watchlist == plex.watchlist and content.libraries.active == ['Trakt Collection']:
                 try:
-                    for guid in self.Guid:
-                        service,guid = guid.id.split('://')
-                        trakt_match = trakt.match(guid,service,self.type)
-                        if not trakt_match == None:
-                            break
-                    if not trakt_match == None:
-                        if self.type == 'show' or self.type == 'season':
-                            match = next((x for x in list if x == trakt_match),None)
-                            if not hasattr(match,'leafCount'):
-                                return False
-                            if match.leafCount == trakt_match.leafCount:
-                                return True
-                            return False
-                        else:
-                            if trakt_match in list:
-                                return True
-                            return False
+                    if self.type in ['movie','show']:
+                        for guid in self.Guid:
+                            service,guid = guid.id.split('://')
+                            trakt_match = trakt.match(guid,service,self.type)
+                            if trakt_match:
+                                break
+                        if hasattr(self,'Seasons'):
+                            for season in self.Seasons:
+                                season.parentGuid = trakt_match.guid
+                                for episode in season.Episodes:
+                                    episode.grandparentGuid = trakt_match.guid
+                        return content.media.collected(trakt_match,list)        
+                    else:
+                        return self in list
                 except Exception as e:
                     ui.print("trakt error: (plex to trakt library check exception): " + str(e),debug=ui_settings.debug)
                     return False
+            else:
+                ui.print("library check error: (no library check performed): " + str(e),debug=ui_settings.debug)
+                return False
         def uncollected(self,list):
             if self.type == 'movie':
                 if not self.collected(list):
@@ -1664,9 +1649,9 @@ class debrid:
                         if service.short in release.cached:
                             if service.download(element,stream=stream,query=query,force=force):
                                 return True
-                for service in debrid.services():
-                    if service.download(element,stream=stream,query=query,force=force):
-                        return True
+                    else:
+                        if service.download(element,stream=stream,query=query,force=force):
+                            return True
         return False
     #Check Method:
     def check(element:plex.media,force=False):
