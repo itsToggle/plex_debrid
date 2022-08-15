@@ -19,8 +19,8 @@ This is a work in progress, and im not a professional programmer. shits not read
 - Compatible with any OS (Mac, Linux, Windows, Android, FreeBSD, ...)
 - Gathering new content **every 5s** from:
    - <img src="https://app.plex.tv/desktop/favicon.ico" height="16"> **[Plex Watchlists](https://plex.tv/)**
-   - <img src="https://hotio.dev/webhook-avatars/overseerr.png" height="16"> **[Overseerr Requests](https://overseerr.dev/)**
    - <img src="https://walter.trakt.tv/hotlink-ok/public/favicon.ico" height="16"> **[Trakt public lists, watchlists and collections](https://trakt.tv/)**
+   - <img src="https://hotio.dev/webhook-avatars/overseerr.png" height="16"> **[Overseerr Requests](https://overseerr.dev/)**
 - Checking and maintaining your library for:
    - <img src="https://app.plex.tv/desktop/favicon.ico" height="16"> **[Plex Library](https://plex.tv/)**
    - <img src="https://walter.trakt.tv/hotlink-ok/public/favicon.ico" height="16"> **[Trakt Collection](https://trakt.tv/)**
