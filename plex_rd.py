@@ -180,7 +180,15 @@ class content:
         def collected(self,list):
             if self.watchlist == plex.watchlist and content.libraries.active == ['Plex Library']:
                 try:
-                    return self in list
+                    if self.type == 'show' or self.type == 'season':
+                        match = next((x for x in list if x == self),None)
+                        if not hasattr(match,'leafCount'):
+                            return False
+                        if match.leafCount == self.leafCount:
+                            return True
+                        return False
+                    else:
+                        return self in list
                 except Exception as e:
                     ui.print("plex error: (plex to plex library check exception): " + str(e),debug=ui_settings.debug)
                     return False
@@ -199,6 +207,13 @@ class content:
                                 for episode in season.Episodes:
                                     episode.grandparentGuid = result[0].guid
                         return content.media.collected(result[0],list)
+                    elif self.type == 'season':
+                        match = next((x for x in list if x == self),None)
+                        if not hasattr(match,'leafCount'):
+                            return False
+                        if match.leafCount == self.leafCount:
+                            return True
+                        return False
                     else:
                         return self in list
                 except Exception as e:
@@ -206,7 +221,15 @@ class content:
                     return False
             elif self.watchlist == trakt.watchlist and content.libraries.active == ['Trakt Collection']:
                 try:
-                    return self in list
+                    if self.type == 'show' or self.type == 'season':
+                        match = next((x for x in list if x == self),None)
+                        if not hasattr(match,'leafCount'):
+                            return False
+                        if match.leafCount == self.leafCount:
+                            return True
+                        return False
+                    else:
+                        return self in list
                 except Exception as e:
                     ui.print("trakt error: (trakt to trakt library check exception): " + str(e),debug=ui_settings.debug)
                     return False
@@ -226,6 +249,13 @@ class content:
                             self.seasons = trakt_match.Seasons
                         self.ids = trakt_match.ids
                         return content.media.collected(trakt_match,list)        
+                    elif self.type == 'season':
+                        match = next((x for x in list if x == self),None)
+                        if not hasattr(match,'leafCount'):
+                            return False
+                        if match.leafCount == self.leafCount:
+                            return True
+                        return False
                     else:
                         return self in list
                 except Exception as e:
