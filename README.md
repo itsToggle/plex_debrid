@@ -280,7 +280,7 @@ more personal media server setup instructions to come soon.
 
 ### :magnet: Debrid Services and Scraper Settings
 
-*The services that plex_debrid can use to find torrents and download torrents.*
+*The services that plex_debrid can use to find and download torrents.*
 
 ><details>
 >  <summary><b><u>Integrating your favorite torrent indexers:</u></b></summary>
