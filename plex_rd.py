@@ -223,7 +223,7 @@ class content:
                                 season.parentGuid = trakt_match.guid
                                 for episode in season.Episodes:
                                     episode.grandparentGuid = trakt_match.guid
-                            self.seasons = trakt_match.seasons
+                            self.seasons = trakt_match.Seasons
                         self.ids = trakt_match.ids
                         return content.media.collected(trakt_match,list)        
                     else:
@@ -1259,8 +1259,11 @@ class trakt(content.services):
                 hdr = 'hdr10'
             #add release quality to element
             if element.type == 'show':
-                for season in element.Seasons:
-                    for episode in season.Episodes:
+                for season in element.seasons:
+                    for attribute in season.__dict__.copy():
+                        if not (attribute == 'ids' or attribute == 'episodes' or attribute == 'number'):
+                            delattr(season,attribute)
+                    for episode in season.episodes:
                         if hdr:
                             episode.media_type = 'digital'
                             episode.resolution = resolution
@@ -1484,9 +1487,15 @@ class overseerr(content.services):
                 back = True
             elif choice == '0':
                 back = True
+    def logerror(response):
+        if not response.status_code == 200:
+            ui.print("[overseerr] error: " + str(response.content),debug=ui_settings.debug)
+        if response.status_code == 401:
+            ui.print("[overseerr] error: (401 unauthorized): overserr api key does not seem to work.")
     def get(url): 
         try :
             response = overseerr.session.get(url, headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'Content-type' : "application/json", "X-Api-Key" : overseerr.api_key})
+            overseerr.logerror(response)
             response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
         except :
             response = None
@@ -1494,6 +1503,7 @@ class overseerr(content.services):
     def post(url, data):
         try :
             response = overseerr.session.post(url, headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'Content-type' : "application/json", "X-Api-Key" : overseerr.api_key}, data = data)
+            overseerr.logerror(response)
             response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
         except :
             response = None
@@ -1509,6 +1519,7 @@ class overseerr(content.services):
                         if not element in self.data and (element.requestedBy.displayName in overseerr.users or overseerr.users == ['all']) and [str(element.status)] in overseerr.allowed_status:
                             self.data.append(element)
                 except:
+                    ui.print('[overseerr] error: looks like overseerr couldnt be reached. Turn on debug printing for more info.')
                     self.data = []
                 ui.print('done')
         def sync(self,other:plex.watchlist,library):
@@ -1745,7 +1756,6 @@ class debrid:
                                 except:
                                     continue
                                 response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/selectFiles/' + torrent_id , {'files' : str(','.join(cached_ids))})    
-                                time.sleep(0.5)
                                 response = debrid.realdebrid.get('https://api.real-debrid.com/rest/1.0/torrents/info/' + torrent_id)
                                 if len(response.links) == len(cached_ids):
                                     release.download = response.links
