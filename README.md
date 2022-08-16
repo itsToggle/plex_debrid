@@ -54,7 +54,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 *For this download automation to work, you need to mount at least one debrid service as a virtual drive. I highly recommend using RealDebrid, as this service will recieve updates and new features from plex_debrid first.*
 >
 ><details>
->  <summary><b><u>Mounting RealDebrid</u></b></summary>
+>  <summary><b><u><img src="https://fcdn.real-debrid.com/0818/favicons/favicon.ico" height="16"> Mounting RealDebrid</u></b></summary>
 >  
 >  Realdebrid has now implement support for WebDav, which means there is technically no need for my rclone fork anymore :)
 >  
@@ -93,7 +93,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 ></details>
 >
 ><details>
->  <summary><b><u>Mounting Premiumize</u></b></summary>
+>  <summary><b><u><img src="https://www.premiumize.me/favicon-16x16.png" height="16"> Mounting Premiumize</u></b></summary>
 >  
 >  1. Install the official rclone software: https://github.com/rclone/rclone or my fork: https://github.com/itsToggle/rclone_rd
 >  2. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
@@ -108,7 +108,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 ></details>
 >
 ><details>
->  <summary><b><u>Mounting AllDebrid</u></b></summary>
+>  <summary><b><u><img src="https://cdn.alldebrid.com/lib/images/default/favicon.png" height="16"> Mounting AllDebrid</u></b></summary>
 >  
 >  1. Install the official rclone software: https://github.com/rclone/rclone or my fork: https://github.com/itsToggle/rclone_rd
 >  2. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
@@ -128,7 +128,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 ></details>
 >
 ><details>
->  <summary><b><u>Mounting DebridLink</u></b></summary>
+>  <summary><b><u><img src="https://cdn.debrid-link.com/favicon.ico?i=2" height="16"> Mounting DebridLink</u></b></summary>
 >  
 >  1. Install the official rclone software: https://github.com/rclone/rclone or my fork: https://github.com/itsToggle/rclone_rd
 >  2. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
@@ -147,7 +147,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 ></details>
 >
 ><details>
->  <summary><b><u>Mounting PUT.io</u></b></summary>
+>  <summary><b><u><img src="https://app.put.io/assets/favicon-32x32.png" height="16"> Mounting PUT.io</u></b></summary>
 >  
 >  Here is a nicely written article from the put.io team on how to mount put.io using rclone:
 >  
@@ -163,7 +163,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 *To stream content from your newly mounted virtual drive, its recommended to set up a personal media server like plex, emby or jellyfin. These services allow you to stream your content from outside your local network. You will have the best expirience when using plex, since you dont need any 3rd party website to download new content - you can simply add new movies/shows to your watchlist from inside any plex client app, wait a few seconds and then watch it (see the gif above). If you prefer emby or jellyfin as your personal media server, the only way to add new content is via trakt (for now). A different approach is to use media players like Infuse to access the mounted files, which too relies on trakt to add new content.*
 
 ><details>
->  <summary><b><u>Setting up Plex:</u></b></summary>
+>  <summary><b><u><img src="https://app.plex.tv/desktop/favicon.ico" height="16"> Setting up Plex:</u></b></summary>
 >  
 >  1. Create a plex 'movie' library of the mounted virtual drive or add the virtual drive to an existing 'movie' library.
 >  2. Create a plex 'shows' library of the mounted virtual drive or add the virtual drive to an existing 'shows' library.
@@ -219,7 +219,7 @@ more personal media server setup instructions to come soon.
 *The services that plex_debrid can monitor for new content.*
 
 ><details>
->  <summary><b><u>Plex watchlists:</u></b></summary>
+>  <summary><b><u><img src="https://app.plex.tv/desktop/favicon.ico" height="16"> Plex watchlists:</u></b></summary>
 >  
 >  - The Plex Watchlist and the Discover feature are only available for accounts that are linked to an email address - so no managed accounts.
 >  - To allow content download from inside any plex client by yourself and other users, create a new user by navigation to '/Settings/Content Services/Plex/Plex users/Edit/Add user'.
@@ -237,7 +237,7 @@ more personal media server setup instructions to come soon.
 ></details>
 >
 ><details>
->  <summary><b><u>Trakt watchlists, collections and public lists:</u></b></summary>
+>  <summary><b><u><img src="https://walter.trakt.tv/hotlink-ok/public/favicon.ico" height="16"> Trakt watchlists, collections and public lists:</u></b></summary>
 >  
 >  - To connect the script to trakt, navigate to '/Settings/Content Services/Trakt/Trakt users/Edit/Add user'. You can add an unlimited amount of users.
 >  - To monitor and download your users trakt watchlists, collections or public lists, navigate to '/Settings/Content Services/Trakt/Trakt lists'. By default, no trakt list is monitored for new content.
@@ -249,7 +249,7 @@ more personal media server setup instructions to come soon.
 ></details>
 >
 ><details>
->  <summary><b><u>Overseerr requests:</u></b></summary>
+>  <summary><b><u><img src="https://hotio.dev/webhook-avatars/overseerr.png" height="16"> Overseerr requests:</u></b></summary>
 > 
 >  - You can connect plex_debrid to overseerr to instantly and automatically download approved requests from selected users.
 >  - To connect the script to overseerr, navigate to '/Settings/Content Services/Overseerr'. 
@@ -262,7 +262,7 @@ more personal media server setup instructions to come soon.
 *The services that plex_debrid can use to determine your current media collection.*
 
 ><details>
->  <summary><b><u>Plex library:</u></b></summary>
+>  <summary><b><u><img src="https://app.plex.tv/desktop/favicon.ico" height="16"> Plex library:</u></b></summary>
 >  
 >  - To use your plex library as your library service, navigate to '/Settings/Library Service/Change library service/'
 >  - If you choose your plex library as your library service, your *entire* Plex Library (including shares) is checked before downloading anything and the script will avoid duplicate downloads. To limit this library check to specific library sections, navigate to '/Settings/Library Service/Edit library service/Plex library check/Edit'
@@ -270,7 +270,7 @@ more personal media server setup instructions to come soon.
 ></details>
 >
 ><details>
->  <summary><b><u>Trakt collection:</u></b></summary>
+>  <summary><b><u><img src="https://walter.trakt.tv/hotlink-ok/public/favicon.ico" height="16"> Trakt collection:</u></b></summary>
 >  
 >  - To use one of your trakt users collections as your library service, navigate to '/Settings/Library Service/Change library service/'
 >  - If you choose your trakt collection as your library service, your *entire* trakt collection is checked before downloading anything and the script will avoid duplicate downloads.
@@ -401,7 +401,7 @@ more personal media server setup instructions to come soon.
 >
 ></details>
 
-### Limitations:
+## Limitations:
 - If plex is chosen as the library service, trakt and overseerr content needs to be matched to the plex media type. In order to accurate match content from Overseerr and Trakt to Plex, its neccessary to have at least one movie and one show inside a library thats visible by plex_debrid. Thats because in order to accurately match content, a search by imdb/tmdb/tvdb ID is necessary - which currently only works by requesting a "Fix Match" call to an existing library item. Until Plex allows a universal search by ID, this is the best I can do.
 - plex_debrid cannot destinguish between a truly empty library and a library that couldnt be reached because its offline (or not reachable for any other reason). In order to avoid unwanted behaviour, the script simply stops running whenever an empty library is encountered. You will need to manually add at least one media item to the libraries visible by plex_debrid, before the download automation can run savely.
 
