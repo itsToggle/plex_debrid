@@ -223,6 +223,8 @@ class content:
                                 season.parentGuid = trakt_match.guid
                                 for episode in season.Episodes:
                                     episode.grandparentGuid = trakt_match.guid
+                            self.seasons = trakt_match.seasons
+                        self.ids = trakt_match.ids
                         return content.media.collected(trakt_match,list)        
                     else:
                         return self in list
