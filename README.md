@@ -316,6 +316,7 @@ more personal media server setup instructions to come soon.
 >    - If there are still episodes missing, the scraper will look for the individual episodes with the following query: 'some.show.S0XE0X.'
 >  
 >  All that is done to minimize the amount of calls made to torrent indexers and to fetch the most episodes at once. The process is done via multiprosing to speed things up.
+>  plex_debrid accepts releases whos title deviates a bit from the original search-query. This allows plex_debrid to download a release named "some.show.2018.season.1.S01", when the original search query was "some.show.S01". This usually works fine, but it does lead to problems when downloading shows which have similar titles like "NCIS" and "NCIS: Los Angeles". Im not sure how to find a good compromise solution.
 ></details>
 ><details>
 >  <summary><b><u>Sorting and selecting scraped releases:</u></b></summary>
@@ -402,8 +403,22 @@ more personal media server setup instructions to come soon.
 ></details>
 
 ## Limitations:
-- If plex is chosen as the library service, trakt and overseerr content needs to be matched to the plex media type. In order to accurate match content from Overseerr and Trakt to Plex, its neccessary to have at least one movie and one show inside a library thats visible by plex_debrid. Thats because in order to accurately match content, a search by imdb/tmdb/tvdb ID is necessary - which currently only works by requesting a "Fix Match" call to an existing library item. Until Plex allows a universal search by ID, this is the best I can do.
-- plex_debrid cannot destinguish between a truly empty library and a library that couldnt be reached because its offline (or not reachable for any other reason). In order to avoid unwanted behaviour, the script simply stops running whenever an empty library is encountered. You will need to manually add at least one media item to the libraries visible by plex_debrid, before the download automation can run savely.
+
+><details>
+>  <summary><b><u>Plex Limitations:</u></b></summary>
+>  
+>  - If plex is chosen as the library service, trakt and overseerr content needs to be matched to the plex media type. In order to accurate match content from Overseerr and Trakt to Plex, its neccessary to have at least one movie and one show inside a library thats visible by plex_debrid. Thats because in order to accurately match content, a search by imdb/tmdb/tvdb ID is necessary - which currently only works by requesting a "Fix Match" call to an existing library item. Until Plex allows a universal search by ID, this is the best I can do.
+>  - plex_debrid cannot destinguish between a truly empty library and a library that couldnt be reached because its offline (or not reachable for any other reason). In order to avoid unwanted behaviour, the script simply stops running whenever an empty library is encountered. You will need to manually add at least one media item to the libraries visible by plex_debrid, before the download automation can run savely.
+>  - The plex discover api only provides release dates, not precise release times. Its recommended to connect the script to trakt.tv, which enables plex_debrid to find more accurate release dates and even find out if movies can be downloaded before their actual release date.
+>
+></details>
+>
+><details>
+>  <summary><b><u>Scraping Limitations:</u></b></summary>
+>  
+>  - plex_debrid accepts releases whos title deviates a bit from the original search-query. This allows plex_debrid to download a release named "some.show.2018.season.1.S01", when the original search query was "some.show.S01". This usually works fine, but it does lead to problems when downloading shows which have similar titles like "NCIS" and "NCIS: Los Angeles". Im not sure how to find a good compromise solution.
+>
+></details>
 
 ## Buy me a beer/coffee? :)
 
