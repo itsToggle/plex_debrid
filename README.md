@@ -5,7 +5,8 @@ Using content services like plex discover, trakt and overseerr, your personal me
 
 ### In Action:
 
-![nice](https://user-images.githubusercontent.com/71379623/178955976-cfd4b7b1-63c8-4940-8f4e-a4d5ebeaeaee.gif)
+![ezgif com-gif-maker](https://user-images.githubusercontent.com/71379623/185643627-45217303-75d8-4c9d-8c8b-41bb2e27fd87.gif)
+
 
 ### Description:
 
@@ -425,8 +426,3 @@ more personal media server setup instructions to come soon.
 I've written this automation because it's a hell of a lot of fun and because I've wanted a setup like this for a while. The continuation of this project does **not**, in any way, depend on monetary contributions. If you do want to buy me a beer/coffee, feel free to use my real-debrid [affiliate link](http://real-debrid.com/?id=5708990) or send a virtual beverage via [PayPal](https://www.paypal.com/paypalme/oidulibbe) :)
 
 If you are thinking of moving your plex server to a VPS or dedicated remote server, consider checking out netcup.de - if you contact me, I can provide you with an affiliate coupon that will get you (and me ;) ) up to 3 months free hosting.
-
-## Side Project/s:
-Ive been working on a little side project that allows you to mock a plex server and fake its responses to your Plex clients. One use-case for this is adding download options to content from plex discover, making the download process even faster than the current plex_debrid script. Other way of downloading content is scraping for releases from the search bar, which allows you to add content thats not on Plex Discover. The initial setup process for this is very complicated and requires 2 PCs (or a VM / VPS), so I wont be releasing this any time soon. I did want to document that this is possible however, if you are interested in how this works let me know.
-
-https://user-images.githubusercontent.com/71379623/178101695-30c2e960-05e0-4af6-b6a4-00af1d13032f.mp4
