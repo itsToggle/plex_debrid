@@ -86,7 +86,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 >  8. enter your realdebrid user name as your user name
 >  9. choose option 'y) yes, enter in my own password'
 >  10. enter your webdav password (available in your account settings) as the password
->  11. You can mount your newly created remote by running the command 'rclone mount your-remote X: --dir-cache-time 10s --vfs-cache-mode full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
+>  11. You can mount your newly created remote by running the command 'rclone mount your-remote:torrents X: --dir-cache-time 10s --vfs-cache-mode full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
 >  12. You've successfuly created a virtual drive of your debrid service!
 > 
 >  *You can run rclone as a background service by adding the mounting tag '--no-console' (Windows) or '--deamon' (Linux, Mac, etc)*
