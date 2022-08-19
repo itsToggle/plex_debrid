@@ -10,4 +10,6 @@ RUN pip install bs4
 
 RUN pip install regex
 
+RUN pip install six
+
 CMD [ "python", "./plex_rd.py", "-e", "TERM=xterm"]
