@@ -159,18 +159,25 @@ class content:
                 return title + '.S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index))+ '.'
         def watch(self):
             if content.libraries.active == ['Plex Library']:
-                ui.print('ignoring item: ' + self.query())
-                url = 'https://metadata.provider.plex.tv/actions/scrobble?identifier=tv.plex.provider.metadata&key='+self.ratingKey+'&X-Plex-Token='+ plex.users[0][1]
-                plex.get(url)
-                if not self in plex.ignored:
-                    plex.ignored += [self]
+                try:
+                    ui.print('[plex] ignoring item: ' + self.query())
+                    url = 'https://metadata.provider.plex.tv/actions/scrobble?identifier=tv.plex.provider.metadata&key='+self.ratingKey+'&X-Plex-Token='+ plex.users[0][1]
+                    plex.get(url)
+                    if not self in plex.ignored:
+                        plex.ignored += [self]
+                except Exception as e:
+                    ui.print("plex error: couldnt ignore item: " + str(e),debug=ui_settings.debug)
+
             elif content.libraries.active == ['Trakt Collection']:
                 pass
         def unwatch(self):
             if content.libraries.active == ['Plex Library']:
-                url = 'https://metadata.provider.plex.tv/actions/unscrobble?identifier=tv.plex.provider.metadata&key='+self.ratingKey+'&X-Plex-Token='+ plex.users[0][1]
-                plex.get(url)
-                plex.ignored.remove(self)
+                try:
+                    url = 'https://metadata.provider.plex.tv/actions/unscrobble?identifier=tv.plex.provider.metadata&key='+self.ratingKey+'&X-Plex-Token='+ plex.users[0][1]
+                    plex.get(url)
+                    plex.ignored.remove(self)
+                except Exception as e:
+                    ui.print("plex error: couldnt un-ignore item: " + str(e),debug=ui_settings.debug)
             elif content.libraries.active == ['Trakt Collection']:
                 pass
         def released(self):
@@ -243,17 +250,23 @@ class content:
                                 matching_season = next((x for x in result[0].Seasons if x.index == season.index),None)
                                 if hasattr(matching_season,'viewedLeafCount'):
                                     season.viewedLeafCount = matching_season.viewedLeafCount
+                                if hasattr(matching_season,'ratingKey'):
+                                    season.ratingKey = matching_season.ratingKey
                                 season.parentGuid = result[0].guid
                                 for episode in season.Episodes:
                                     if hasattr(matching_season,'Episodes'):
                                         matching_episode = next((x for x in matching_season.Episodes if x.index == episode.index),None)
                                         if hasattr(matching_episode,'viewCount'):
                                             episode.viewCount = matching_episode.viewCount
+                                        if hasattr(matching_episode,'ratingKey'):
+                                            episode.ratingKey = matching_episode.ratingKey
                                     episode.grandparentGuid = result[0].guid
                         if hasattr(result[0],'viewCount'):
                             self.viewCount = result[0].viewCount
                         if hasattr(result[0],'viewedLeafCount'):
                             self.viewedLeafCount = result[0].viewedLeafCount
+                        if hasattr(result[0],'ratingKey'):
+                            self.ratingKey = result[0].ratingKey
                         return content.media.collected(result[0],list)
                     elif self.type == 'season':
                         match = next((x for x in list if x == self),None)
@@ -3411,10 +3424,17 @@ class ui:
     def ignored():
         ui.cls('Options/Ignored Media/')
         if len(plex.ignored) == 0:
-            watchlist = plex.watchlist()
-            library = plex.library()
-            for element in watchlist:
-                element.uncollected(library)
+            library = content.libraries()[0]()
+            if len(library) > 0:
+                #get entire plex_watchlist
+                plex_watchlist = plex.watchlist()
+                #get entire trakt_watchlist
+                trakt_watchlist = trakt.watchlist()
+                ui.print('checking new content ...')
+                for iterator in itertools.zip_longest(plex_watchlist,trakt_watchlist):
+                    for element in iterator:
+                        if hasattr(element,'uncollected'):
+                            element.uncollected(library)
             print()
         print('0) Back')
         indices = []
