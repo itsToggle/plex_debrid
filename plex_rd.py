@@ -157,6 +157,29 @@ class content:
                 title = releases.rename(self.grandparentTitle) 
                 title = title.replace('.'+str(self.grandparentYear),'')
                 return title + '.S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index))+ '.'
+        def watch(self):
+            if content.libraries.active == ['Plex Library']:
+                try:
+                    ui.print('[plex] ignoring item: ' + self.query())
+                    url = 'https://metadata.provider.plex.tv/actions/scrobble?identifier=tv.plex.provider.metadata&key='+self.ratingKey+'&X-Plex-Token='+ plex.users[0][1]
+                    plex.get(url)
+                    if not self in plex.ignored:
+                        plex.ignored += [self]
+                except Exception as e:
+                    ui.print("plex error: couldnt ignore item: " + str(e),debug=ui_settings.debug)
+
+            elif content.libraries.active == ['Trakt Collection']:
+                pass
+        def unwatch(self):
+            if content.libraries.active == ['Plex Library']:
+                try:
+                    url = 'https://metadata.provider.plex.tv/actions/unscrobble?identifier=tv.plex.provider.metadata&key='+self.ratingKey+'&X-Plex-Token='+ plex.users[0][1]
+                    plex.get(url)
+                    plex.ignored.remove(self)
+                except Exception as e:
+                    ui.print("plex error: couldnt un-ignore item: " + str(e),debug=ui_settings.debug)
+            elif content.libraries.active == ['Trakt Collection']:
+                pass
         def released(self):
             try:
                 released = datetime.datetime.today() - datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
@@ -177,10 +200,39 @@ class content:
             except Exception as e:
                 ui.print("media error: (attr exception): " + str(e),debug=ui_settings.debug)
                 return False
+        def watched(self):
+            if content.libraries.active == ['Plex Library']:
+                try:
+                    if self.type == 'movie' or self.type == 'episode':
+                        if hasattr(self,'viewCount'):
+                            if self.viewCount > 0:
+                                if not self in plex.ignored:
+                                    plex.ignored += [self]
+                                return True
+                    else:
+                        if hasattr(self,'viewedLeafCount'):
+                            if self.viewedLeafCount >= self.leafCount:
+                                if not self in plex.ignored:
+                                    plex.ignored += [self]
+                                return True
+                    return False
+                except Exception as e:
+                    ui.print("plex error: (attr exception): " + str(e),debug=ui_settings.debug)
+                    return False
+            elif content.libraries.active == ['Trakt Collection']:
+                return False
         def collected(self,list):
             if self.watchlist == plex.watchlist and content.libraries.active == ['Plex Library']:
                 try:
-                    return self in list
+                    if self.type == 'show' or self.type == 'season':
+                        match = next((x for x in list if x == self),None)
+                        if not hasattr(match,'leafCount'):
+                            return False
+                        if match.leafCount == self.leafCount:
+                            return True
+                        return False
+                    else:
+                        return self in list
                 except Exception as e:
                     ui.print("plex error: (plex to plex library check exception): " + str(e),debug=ui_settings.debug)
                     return False
@@ -195,18 +247,50 @@ class content:
                             result = plex.match("tvdb-"+str(self.ids.tvdb),self.type,library=list)
                         if hasattr(self,'Seasons'):
                             for season in self.Seasons:
+                                matching_season = next((x for x in result[0].Seasons if x.index == season.index),None)
+                                if hasattr(matching_season,'viewedLeafCount'):
+                                    season.viewedLeafCount = matching_season.viewedLeafCount
+                                if hasattr(matching_season,'ratingKey'):
+                                    season.ratingKey = matching_season.ratingKey
                                 season.parentGuid = result[0].guid
                                 for episode in season.Episodes:
+                                    if hasattr(matching_season,'Episodes'):
+                                        matching_episode = next((x for x in matching_season.Episodes if x.index == episode.index),None)
+                                        if hasattr(matching_episode,'viewCount'):
+                                            episode.viewCount = matching_episode.viewCount
+                                        if hasattr(matching_episode,'ratingKey'):
+                                            episode.ratingKey = matching_episode.ratingKey
                                     episode.grandparentGuid = result[0].guid
+                        if hasattr(result[0],'viewCount'):
+                            self.viewCount = result[0].viewCount
+                        if hasattr(result[0],'viewedLeafCount'):
+                            self.viewedLeafCount = result[0].viewedLeafCount
+                        if hasattr(result[0],'ratingKey'):
+                            self.ratingKey = result[0].ratingKey
                         return content.media.collected(result[0],list)
-                    else:
+                    elif self.type == 'season':
+                        match = next((x for x in list if x == self),None)
+                        if not hasattr(match,'leafCount'):
+                            return False
+                        if match.leafCount == self.leafCount:
+                            return True
+                        return False
+                    elif self.type == 'episode':
                         return self in list
                 except Exception as e:
                     ui.print("trakt error: (trakt to plex library check exception): " + str(e),debug=ui_settings.debug)
                     return False
             elif self.watchlist == trakt.watchlist and content.libraries.active == ['Trakt Collection']:
                 try:
-                    return self in list
+                    if self.type == 'show' or self.type == 'season':
+                        match = next((x for x in list if x == self),None)
+                        if not hasattr(match,'leafCount'):
+                            return False
+                        if match.leafCount == self.leafCount:
+                            return True
+                        return False
+                    else:
+                        return self in list
                 except Exception as e:
                     ui.print("trakt error: (trakt to trakt library check exception): " + str(e),debug=ui_settings.debug)
                     return False
@@ -223,7 +307,16 @@ class content:
                                 season.parentGuid = trakt_match.guid
                                 for episode in season.Episodes:
                                     episode.grandparentGuid = trakt_match.guid
+                            self.seasons = trakt_match.Seasons
+                        self.ids = trakt_match.ids
                         return content.media.collected(trakt_match,list)        
+                    elif self.type == 'season':
+                        match = next((x for x in list if x == self),None)
+                        if not hasattr(match,'leafCount'):
+                            return False
+                        if match.leafCount == self.leafCount:
+                            return True
+                        return False
                     else:
                         return self in list
                 except Exception as e:
@@ -258,8 +351,8 @@ class content:
             refresh = False
             self.Releases = []
             if self.type == 'movie':
-                if self.released() and not self.watched() and not self.downloading():
-                    if len(self.uncollected(library)) > 0:
+                if len(self.uncollected(library)) > 0:
+                    if self.released() and not self.watched() and not self.downloading():
                         tic = time.perf_counter()
                         while len(self.Releases) == 0 and i <= retries:
                             self.Releases += scraper(self.query())
@@ -273,7 +366,7 @@ class content:
                         else:
                             self.watch()
             elif self.type == 'show':
-                if self.released() and not self.watched():
+                if self.released() and not self.collected(library) and not self.watched():
                     self.Seasons = self.uncollected(library)
                     if len(self.Seasons) > 0:
                         tic = time.perf_counter()
@@ -286,9 +379,10 @@ class content:
                                     for season in self.Seasons[:]:
                                         for episode in season.Episodes[:]:
                                             for file in self.Releases[0].files:
-                                                if file.match == episode.files()[0]:
-                                                    season.Episodes.remove(episode)
-                                                    break
+                                                if hasattr(file,'match'):
+                                                    if file.match == episode.files()[0]:
+                                                        season.Episodes.remove(episode)
+                                                        break
                                         if len(season.Episodes) == 0:
                                             self.Seasons.remove(season)
                         results = [None] * len(self.Seasons)
@@ -523,32 +617,6 @@ class plex(content.services):
                     if response.MediaContainer.size > 0:
                         return True
             return False
-        def watch(self):
-            ui.print('ignoring item: ' + self.query())
-            url = 'https://metadata.provider.plex.tv/actions/scrobble?identifier=tv.plex.provider.metadata&key='+self.ratingKey+'&X-Plex-Token='+ plex.users[0][1]
-            plex.get(url)
-            if not self in plex.ignored:
-                plex.ignored += [self]
-        def unwatch(self):
-            url = 'https://metadata.provider.plex.tv/actions/unscrobble?identifier=tv.plex.provider.metadata&key='+self.ratingKey+'&X-Plex-Token='+ plex.users[0][1]
-            plex.get(url)
-            plex.ignored.remove(self)
-        def watched(self):
-            try:
-                if self.type == 'movie' or self.type == 'episode':
-                    if self.viewCount > 0:
-                        if not self in plex.ignored:
-                            plex.ignored += [self]
-                        return True
-                else:
-                    if self.viewedLeafCount == self.leafCount:
-                        if not self in plex.ignored:
-                            plex.ignored += [self]
-                        return True
-                return False
-            except Exception as e:
-                ui.print("plex error: (attr exception): " + str(e),debug=ui_settings.debug)
-                return False
     class season(media):
         def __init__(self,other):
             self.watchlist = plex.watchlist
@@ -1080,12 +1148,6 @@ class trakt(content.services):
                     return datetime.datetime.utcnow() > datetime.datetime.strptime(self.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')
             except:
                 return False
-        def watch(self):
-            pass
-        def unwatch(self):
-            pass
-        def watched(self):
-            return False
     class season(media):
         def __init__(self,other):
             self.watchlist = trakt.watchlist
@@ -1257,15 +1319,21 @@ class trakt(content.services):
                 hdr = 'hdr10'
             #add release quality to element
             if element.type == 'show':
-                for season in element.Seasons:
-                    for episode in season.Episodes:
-                        if hdr:
-                            episode.media_type = 'digital'
-                            episode.resolution = resolution
-                            episode.hdr = hdr
-                        else:
-                            episode.media_type = 'digital'
-                            episode.resolution = resolution
+                if hasattr(element,'seasons'):
+                    for season in element.seasons:
+                        for attribute in season.__dict__.copy():
+                            if not (attribute == 'ids' or attribute == 'episodes' or attribute == 'number'):
+                                delattr(season,attribute)
+                        for episode in season.episodes:
+                            if hdr:
+                                episode.media_type = 'digital'
+                                episode.resolution = resolution
+                                episode.hdr = hdr
+                            else:
+                                episode.media_type = 'digital'
+                                episode.resolution = resolution
+                else:
+                    ui.print("[trakt] error: couldnt find seasons in show object",debug=ui_settings.debug)
                 #remove unwanted attributes from element
                 for ids in element.ids.__dict__.copy():
                     value = getattr(element.ids,ids)
@@ -1482,9 +1550,15 @@ class overseerr(content.services):
                 back = True
             elif choice == '0':
                 back = True
+    def logerror(response):
+        if not response.status_code == 200:
+            ui.print("[overseerr] error: " + str(response.content),debug=ui_settings.debug)
+        if response.status_code == 401:
+            ui.print("[overseerr] error: (401 unauthorized): overserr api key does not seem to work.")
     def get(url): 
         try :
             response = overseerr.session.get(url, headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'Content-type' : "application/json", "X-Api-Key" : overseerr.api_key})
+            overseerr.logerror(response)
             response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
         except :
             response = None
@@ -1492,6 +1566,7 @@ class overseerr(content.services):
     def post(url, data):
         try :
             response = overseerr.session.post(url, headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', 'Content-type' : "application/json", "X-Api-Key" : overseerr.api_key}, data = data)
+            overseerr.logerror(response)
             response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
         except :
             response = None
@@ -1507,6 +1582,7 @@ class overseerr(content.services):
                         if not element in self.data and (element.requestedBy.displayName in overseerr.users or overseerr.users == ['all']) and [str(element.status)] in overseerr.allowed_status:
                             self.data.append(element)
                 except:
+                    ui.print('[overseerr] error: looks like overseerr couldnt be reached. Turn on debug printing for more info.')
                     self.data = []
                 ui.print('done')
         def sync(self,other:plex.watchlist,library):
@@ -1743,7 +1819,6 @@ class debrid:
                                 except:
                                     continue
                                 response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/selectFiles/' + torrent_id , {'files' : str(','.join(cached_ids))})    
-                                time.sleep(0.5)
                                 response = debrid.realdebrid.get('https://api.real-debrid.com/rest/1.0/torrents/info/' + torrent_id)
                                 if len(response.links) == len(cached_ids):
                                     release.download = response.links
@@ -3349,10 +3424,17 @@ class ui:
     def ignored():
         ui.cls('Options/Ignored Media/')
         if len(plex.ignored) == 0:
-            watchlist = plex.watchlist()
-            library = plex.library()
-            for element in watchlist:
-                element.uncollected(library)
+            library = content.libraries()[0]()
+            if len(library) > 0:
+                #get entire plex_watchlist
+                plex_watchlist = plex.watchlist()
+                #get entire trakt_watchlist
+                trakt_watchlist = trakt.watchlist()
+                ui.print('checking new content ...')
+                for iterator in itertools.zip_longest(plex_watchlist,trakt_watchlist):
+                    for element in iterator:
+                        if hasattr(element,'uncollected'):
+                            element.uncollected(library)
             print()
         print('0) Back')
         indices = []

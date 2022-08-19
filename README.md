@@ -5,7 +5,8 @@ Using content services like plex discover, trakt and overseerr, your personal me
 
 ### In Action:
 
-![nice](https://user-images.githubusercontent.com/71379623/178955976-cfd4b7b1-63c8-4940-8f4e-a4d5ebeaeaee.gif)
+![ezgif com-gif-maker](https://user-images.githubusercontent.com/71379623/185643627-45217303-75d8-4c9d-8c8b-41bb2e27fd87.gif)
+
 
 ### Description:
 
@@ -54,11 +55,11 @@ For linux, mac and windows, the setup process does not require any additional pr
 *For this download automation to work, you need to mount at least one debrid service as a virtual drive. I highly recommend using RealDebrid, as this service will recieve updates and new features from plex_debrid first.*
 >
 ><details>
->  <summary><b><u>Mounting RealDebrid</u></b></summary>
+>  <summary><b><u><img src="https://fcdn.real-debrid.com/0818/favicons/favicon.ico" height="16"> Mounting RealDebrid</u></b></summary>
 >  
 >  Realdebrid has now implement support for WebDav, which means there is technically no need for my rclone fork anymore :)
 >  
->  I do still recomend using my fork, since realdebrids WebDav does not (yet) allow for torrent file deletion through rclone, They do claim the torrent file deletion works with other webdav mount programs, which i have not been able to test yet. They did fix all other issues I mentioned in this repository though, and their WebDav is now just as fast if not faster than my fork. 
+>  I do still recomend using my fork, since realdebrids WebDav does not (yet) allow for torrent file deletion through rclone, They do claim the torrent file deletion works with other webdav mount programs, which i have not been able to test yet. It also seems that the official realdebrid webdav is still slower and more bandwidth heavy than my rclone fork, because mounting the webdav leads to frequent re-discovering of already downloaded content. 
 >  
 >  **Mounting with my fork:**
 >  
@@ -86,14 +87,14 @@ For linux, mac and windows, the setup process does not require any additional pr
 >  8. enter your realdebrid user name as your user name
 >  9. choose option 'y) yes, enter in my own password'
 >  10. enter your webdav password (available in your account settings) as the password
->  11. You can mount your newly created remote by running the command 'rclone mount your-remote X: --dir-cache-time 10s --vfs-cache-mode full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
+>  11. You can mount your newly created remote by running the command 'rclone mount your-remote:torrents X: --dir-cache-time 10s --vfs-cache-mode full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
 >  12. You've successfuly created a virtual drive of your debrid service!
 > 
 >  *You can run rclone as a background service by adding the mounting tag '--no-console' (Windows) or '--deamon' (Linux, Mac, etc)*
 ></details>
 >
 ><details>
->  <summary><b><u>Mounting Premiumize</u></b></summary>
+>  <summary><b><u><img src="https://www.premiumize.me/favicon-16x16.png" height="16"> Mounting Premiumize</u></b></summary>
 >  
 >  1. Install the official rclone software: https://github.com/rclone/rclone or my fork: https://github.com/itsToggle/rclone_rd
 >  2. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
@@ -108,7 +109,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 ></details>
 >
 ><details>
->  <summary><b><u>Mounting AllDebrid</u></b></summary>
+>  <summary><b><u><img src="https://cdn.alldebrid.com/lib/images/default/favicon.png" height="16"> Mounting AllDebrid</u></b></summary>
 >  
 >  1. Install the official rclone software: https://github.com/rclone/rclone or my fork: https://github.com/itsToggle/rclone_rd
 >  2. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
@@ -128,7 +129,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 ></details>
 >
 ><details>
->  <summary><b><u>Mounting DebridLink</u></b></summary>
+>  <summary><b><u><img src="https://cdn.debrid-link.com/favicon.ico?i=2" height="16"> Mounting DebridLink</u></b></summary>
 >  
 >  1. Install the official rclone software: https://github.com/rclone/rclone or my fork: https://github.com/itsToggle/rclone_rd
 >  2. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
@@ -147,7 +148,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 ></details>
 >
 ><details>
->  <summary><b><u>Mounting PUT.io</u></b></summary>
+>  <summary><b><u><img src="https://app.put.io/assets/favicon-32x32.png" height="16"> Mounting PUT.io</u></b></summary>
 >  
 >  Here is a nicely written article from the put.io team on how to mount put.io using rclone:
 >  
@@ -163,7 +164,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 *To stream content from your newly mounted virtual drive, its recommended to set up a personal media server like plex, emby or jellyfin. These services allow you to stream your content from outside your local network. You will have the best expirience when using plex, since you dont need any 3rd party website to download new content - you can simply add new movies/shows to your watchlist from inside any plex client app, wait a few seconds and then watch it (see the gif above). If you prefer emby or jellyfin as your personal media server, the only way to add new content is via trakt (for now). A different approach is to use media players like Infuse to access the mounted files, which too relies on trakt to add new content.*
 
 ><details>
->  <summary><b><u>Setting up Plex:</u></b></summary>
+>  <summary><b><u><img src="https://app.plex.tv/desktop/favicon.ico" height="16"> Setting up Plex:</u></b></summary>
 >  
 >  1. Create a plex 'movie' library of the mounted virtual drive or add the virtual drive to an existing 'movie' library.
 >  2. Create a plex 'shows' library of the mounted virtual drive or add the virtual drive to an existing 'shows' library.
@@ -216,8 +217,10 @@ more personal media server setup instructions to come soon.
 
 ### :tv: Content Services:
 
+*The services that plex_debrid can monitor for new content.*
+
 ><details>
->  <summary><b><u>Plex watchlists:</u></b></summary>
+>  <summary><b><u><img src="https://app.plex.tv/desktop/favicon.ico" height="16"> Plex watchlists:</u></b></summary>
 >  
 >  - The Plex Watchlist and the Discover feature are only available for accounts that are linked to an email address - so no managed accounts.
 >  - To allow content download from inside any plex client by yourself and other users, create a new user by navigation to '/Settings/Content Services/Plex/Plex users/Edit/Add user'.
@@ -235,7 +238,7 @@ more personal media server setup instructions to come soon.
 ></details>
 >
 ><details>
->  <summary><b><u>Trakt watchlists, collections and public lists:</u></b></summary>
+>  <summary><b><u><img src="https://walter.trakt.tv/hotlink-ok/public/favicon.ico" height="16"> Trakt watchlists, collections and public lists:</u></b></summary>
 >  
 >  - To connect the script to trakt, navigate to '/Settings/Content Services/Trakt/Trakt users/Edit/Add user'. You can add an unlimited amount of users.
 >  - To monitor and download your users trakt watchlists, collections or public lists, navigate to '/Settings/Content Services/Trakt/Trakt lists'. By default, no trakt list is monitored for new content.
@@ -247,7 +250,7 @@ more personal media server setup instructions to come soon.
 ></details>
 >
 ><details>
->  <summary><b><u>Overseerr requests:</u></b></summary>
+>  <summary><b><u><img src="https://hotio.dev/webhook-avatars/overseerr.png" height="16"> Overseerr requests:</u></b></summary>
 > 
 >  - You can connect plex_debrid to overseerr to instantly and automatically download approved requests from selected users.
 >  - To connect the script to overseerr, navigate to '/Settings/Content Services/Overseerr'. 
@@ -257,8 +260,10 @@ more personal media server setup instructions to come soon.
 
 ### :open_file_folder: Library Service
 
+*The services that plex_debrid can use to determine your current media collection.*
+
 ><details>
->  <summary><b><u>Plex library:</u></b></summary>
+>  <summary><b><u><img src="https://app.plex.tv/desktop/favicon.ico" height="16"> Plex library:</u></b></summary>
 >  
 >  - To use your plex library as your library service, navigate to '/Settings/Library Service/Change library service/'
 >  - If you choose your plex library as your library service, your *entire* Plex Library (including shares) is checked before downloading anything and the script will avoid duplicate downloads. To limit this library check to specific library sections, navigate to '/Settings/Library Service/Edit library service/Plex library check/Edit'
@@ -266,7 +271,7 @@ more personal media server setup instructions to come soon.
 ></details>
 >
 ><details>
->  <summary><b><u>Trakt collection:</u></b></summary>
+>  <summary><b><u><img src="https://walter.trakt.tv/hotlink-ok/public/favicon.ico" height="16"> Trakt collection:</u></b></summary>
 >  
 >  - To use one of your trakt users collections as your library service, navigate to '/Settings/Library Service/Change library service/'
 >  - If you choose your trakt collection as your library service, your *entire* trakt collection is checked before downloading anything and the script will avoid duplicate downloads.
@@ -275,6 +280,8 @@ more personal media server setup instructions to come soon.
 ></details>
 
 ### :magnet: Debrid Services and Scraper Settings
+
+*The services that plex_debrid can use to find and download torrents.*
 
 ><details>
 >  <summary><b><u>Integrating your favorite torrent indexers:</u></b></summary>
@@ -310,6 +317,7 @@ more personal media server setup instructions to come soon.
 >    - If there are still episodes missing, the scraper will look for the individual episodes with the following query: 'some.show.S0XE0X.'
 >  
 >  All that is done to minimize the amount of calls made to torrent indexers and to fetch the most episodes at once. The process is done via multiprosing to speed things up.
+>  plex_debrid accepts releases whos title deviates a bit from the original search-query. This allows plex_debrid to download a release named "some.show.2018.season.1.S01", when the original search query was "some.show.S01". This usually works fine, but it does lead to problems when downloading shows which have similar titles like "NCIS" and "NCIS: Los Angeles". Im not sure how to find a good compromise solution.
 ></details>
 ><details>
 >  <summary><b><u>Sorting and selecting scraped releases:</u></b></summary>
@@ -395,17 +403,26 @@ more personal media server setup instructions to come soon.
 >
 ></details>
 
-### Limitations:
-- This script is built around the Plex media type. In order to accurate match content from Overseerr and Trakt to Plex, its neccessary to have at least one movie and one show inside a library thats visible by plex_debrid. Thats because in order to accurately match content, a search by imdb/tmdb/tvdb ID is necessary - which currently only works by requesting a "Fix Match" call to an existing library item. Until Plex allows a universal search by ID, this is the best I can do.
-- plex_debrid cannot destinguish between a truly empty library and a library that couldnt be reached because its offline (or not reachable for any other reason). In order to avoid unwanted behaviour, the script simply stops running whenever an empty library is encountered. You will need to manually add at least one media item to the libraries visible by plex_debrid, before the download automation can run savely.
+## Limitations:
+
+><details>
+>  <summary><b><u>Plex Limitations:</u></b></summary>
+>  
+>  - If plex is chosen as the library service, trakt and overseerr content needs to be matched to the plex media type. In order to accurate match content from Overseerr and Trakt to Plex, its neccessary to have at least one movie and one show inside a library thats visible by plex_debrid. Thats because in order to accurately match content, a search by imdb/tmdb/tvdb ID is necessary - which currently only works by requesting a "Fix Match" call to an existing library item. Until Plex allows a universal search by ID, this is the best I can do.
+>  - plex_debrid cannot destinguish between a truly empty library and a library that couldnt be reached because its offline (or not reachable for any other reason). In order to avoid unwanted behaviour, the script simply stops running whenever an empty library is encountered. You will need to manually add at least one media item to the libraries visible by plex_debrid, before the download automation can run savely.
+>  - The plex discover api only provides release dates, not precise release times. Its recommended to connect the script to trakt.tv, which enables plex_debrid to find more accurate release dates and even find out if movies can be downloaded before their actual release date.
+>
+></details>
+>
+><details>
+>  <summary><b><u>Scraping Limitations:</u></b></summary>
+>  
+>  - plex_debrid accepts releases whos title deviates a bit from the original search-query. This allows plex_debrid to download a release named "some.show.2018.season.1.S01", when the original search query was "some.show.S01". This usually works fine, but it does lead to problems when downloading shows which have similar titles like "NCIS" and "NCIS: Los Angeles". Im not sure how to find a good compromise solution.
+>
+></details>
 
 ## Buy me a beer/coffee? :)
 
 I've written this automation because it's a hell of a lot of fun and because I've wanted a setup like this for a while. The continuation of this project does **not**, in any way, depend on monetary contributions. If you do want to buy me a beer/coffee, feel free to use my real-debrid [affiliate link](http://real-debrid.com/?id=5708990) or send a virtual beverage via [PayPal](https://www.paypal.com/paypalme/oidulibbe) :)
 
 If you are thinking of moving your plex server to a VPS or dedicated remote server, consider checking out netcup.de - if you contact me, I can provide you with an affiliate coupon that will get you (and me ;) ) up to 3 months free hosting.
-
-## Side Project/s:
-Ive been working on a little side project that allows you to mock a plex server and fake its responses to your Plex clients. One use-case for this is adding download options to content from plex discover, making the download process even faster than the current plex_debrid script. Other way of downloading content is scraping for releases from the search bar, which allows you to add content thats not on Plex Discover. The initial setup process for this is very complicated and requires 2 PCs (or a VM / VPS), so I wont be releasing this any time soon. I did want to document that this is possible however, if you are interested in how this works let me know.
-
-https://user-images.githubusercontent.com/71379623/178101695-30c2e960-05e0-4af6-b6a4-00af1d13032f.mp4
