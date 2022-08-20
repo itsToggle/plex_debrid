@@ -1674,36 +1674,88 @@ class debrid:
             return activeservices
     #Download Method:
     def download(element:plex.media,stream=True,query='',force=False):
+        if len(releases.sort.multiple_versions) == 0 or len(element.Releases) <=1:
+            versions = [['(.*)'],]
+        else:
+            versions = releases.sort.multiple_versions
         if stream:
             debrid.check(element,force=force)
             cached_releases = copy.deepcopy(element.Releases)
-            for release in cached_releases:
-                element.Releases = [release,]
-                if len(debrid.tracker) > 0:
-                    for t,s in debrid.tracker:
-                        if regex.search(t,release.source,regex.I):
-                            release.cached = s
-                for service in debrid.services():
-                    if service.short in release.cached:
-                        if service.download(element,stream=stream,query=query,force=force):
-                            return True
+            downloaded = False
+            for index,version in enumerate(versions):
+                if not version == ['(.*)']:
+                    ui.print('attempting to download version ' + str(index+1) + '/' + str(len(versions)) + ': "' + version[0] + '" ...')
+                for release in cached_releases:
+                    if version[0].startswith('!'):
+                        try:
+                            match = regex.search(version[0][1:],release.title,regex.I)
+                            match = not match
+                        except:
+                            ui.print('multiple versions error: check your multiple versions settings.',debug=ui_settings.debug)
+                            match = True
+                    else:
+                        try:
+                            match = regex.search(version[0],release.title,regex.I)
+                        except:
+                            ui.print('multiple versions error: check your multiple versions settings.',debug=ui_settings.debug)
+                            match = True
+                    if match:
+                        element.Releases = [release,]
+                        if len(debrid.tracker) > 0:
+                            for t,s in debrid.tracker:
+                                if regex.search(t,release.source,regex.I):
+                                    release.cached = s
+                        for service in debrid.services():
+                            if service.short in release.cached:
+                                if service.download(element,stream=stream,query=query,force=force):
+                                    downloaded = True
+                                    break
+                    if downloaded:
+                        break
+                if not version == ['(.*)'] and not downloaded:
+                    ui.print('done')
+            return downloaded
         else:
             scraped_releases = copy.deepcopy(element.Releases)
-            for release in scraped_releases:
-                element.Releases = [release,]
-                if len(debrid.tracker) > 0:
-                    for t,s in debrid.tracker:
-                        if regex.search(t,release.source,regex.I):
-                            release.cached = s
-                for service in debrid.services():
-                    if len(release.cached) > 0:
-                        if service.short in release.cached:
-                            if service.download(element,stream=stream,query=query,force=force):
-                                return True
+            downloaded = False
+            for index,version in enumerate(versions):
+                if not version == ['(.*)']:
+                    ui.print('attempting to download version ' + str(index+1) + '/' + str(len(versions)) + ': "' + version[0] + '" ...')
+                for release in scraped_releases:
+                    if version[0].startswith('!'):
+                        try:
+                            match = regex.search(version[0][1:],release.title,regex.I)
+                            match = not match
+                        except:
+                            ui.print('multiple versions error: check your multiple versions settings.',debug=ui_settings.debug)
+                            match = True
                     else:
-                        if service.download(element,stream=stream,query=query,force=force):
-                            return True
-        return False
+                        try:
+                            match = regex.search(version[0],release.title,regex.I)
+                        except:
+                            ui.print('multiple versions error: check your multiple versions settings.',debug=ui_settings.debug)
+                            match = True
+                    if match:
+                        element.Releases = [release,]
+                        if len(debrid.tracker) > 0:
+                            for t,s in debrid.tracker:
+                                if regex.search(t,release.source,regex.I):
+                                    release.cached = s
+                        for service in debrid.services():
+                            if len(release.cached) > 0:
+                                if service.short in release.cached:
+                                    if service.download(element,stream=stream,query=query,force=force):
+                                        downloaded = True
+                                        break
+                            else:
+                                if service.download(element,stream=stream,query=query,force=force):
+                                    downloaded = True
+                                    break
+                    if downloaded:
+                        break
+                if not version == ['(.*)'] and not downloaded:
+                    ui.print('done')
+            return downloaded
     #Check Method:
     def check(element:plex.media,force=False):
         for service in debrid.services():
@@ -2361,7 +2413,7 @@ class releases:
         size_min = '0.1'
         size_max = ''
         unwanted = ['sample']
-        multiple_versions_trigger = ""
+        multiple_versions = []
         ranking= [
             [
                 "(1080|720|480)(?=p|i)",
@@ -3352,10 +3404,10 @@ class ui:
                 releases.sort,'ranking',
                 entry="rule",
             ),
+            setting('Multiple versions',['Please specify a version by entering a regex match group: '],releases.sort,'multiple_versions',entry='version',help='This setting allows plex_debrid to download more than one version of your requested content. For each version you specify, plex_debrid will try to download the best release that matches your version definition. You can negate version rules by adding a "!" as the first character. (Example: download an HDR and a non-HDR version: add "(\.HDR\.)" and "!(\.HDR\.)" as your rules.)'),
             setting('Maximum release size (Gb)','Please enter a maximum release size in Gb (e.g. enter 0.1 for 100Mb): ',releases.sort,'size_max'),
             setting('Minimum release size (Gb)','Please enter a minimum release size in Gb (e.g. enter 0.1 for 100Mb): ',releases.sort,'size_min'),
             setting('Special character renaming',['Please specify a character or string that should be replaced: ','Please specify with what character or string it should be replaced: '],releases.rename,'replaceChars',entry="rule",help='In this setting you can specify a character or a string that should be replaced by nothing, some other character or a string.'),
-            #setting('Multiple versions trigger','Please specify your multiple versions trigger: ',releases.sort,'multiple_versions_trigger',help='This setting allows you to download more than one release every time you add a movie or show. If the selected release regex-matches the specified trigger, the next, best release that doesnt match this trigger will be downloaded aswell. Example: You want to download both HDR and non-HDR versions of your content - type "(HDR)."'),
             setting('Rarbg API Key','The Rarbg API Key gets refreshed automatically, enter the default value: ',scraper.rarbg,'token',hidden=True),
             setting('Jackett Base URL','Please specify your Jackett base URL: ',scraper.jackett,'base_url',hidden=True),
             setting('Jackett API Key','Please specify your Jackett API Key: ',scraper.jackett,'api_key',hidden=True),
@@ -3415,11 +3467,20 @@ class ui:
             elif ui.sameline and string.startswith('done'):
                 print(string)
                 ui.sameline = False
-            elif string.endswith('...') and __name__ == "__main__":
+            elif ui.sameline and string.endswith('...'):
+                print('done')
                 print('[' + str(datetime.datetime.now()) + '] ' + string, end=' ')
                 ui.sameline = True
+            elif string.endswith('...'):
+                print('[' + str(datetime.datetime.now()) + '] ' + string, end=' ')
+                ui.sameline = True
+            elif not string.startswith('done') and ui.sameline:
+                print('done')
+                print('[' + str(datetime.datetime.now()) + '] ' + string)
+                ui.sameline = False
             elif not string.startswith('done'):
                 print('[' + str(datetime.datetime.now()) + '] ' + string)
+                ui.sameline = False
             sys.stdout.flush()
     def ignored():
         ui.cls('Options/Ignored Media/')
