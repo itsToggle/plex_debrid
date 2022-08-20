@@ -368,23 +368,79 @@ class content:
             elif self.type == 'show':
                 if self.released() and not self.collected(library) and not self.watched():
                     self.Seasons = self.uncollected(library)
+                    #if there are uncollected episodes
                     if len(self.Seasons) > 0:
                         tic = time.perf_counter()
+                        #if there is more than one uncollected season
                         if len(self.Seasons) > 1:
                             self.Releases += scraper(self.query())
                             parentReleases = copy.deepcopy(self.Releases)
+                            #if there are more than 3 uncollected seasons, look for multi-season releases before downloading single-season releases
                             if len(self.Seasons) > 3:
-                                if self.debrid_download():
-                                    refresh = True
-                                    for season in self.Seasons[:]:
-                                        for episode in season.Episodes[:]:
-                                            for file in self.Releases[0].files:
-                                                if hasattr(file,'match'):
-                                                    if file.match == episode.files()[0]:
-                                                        season.Episodes.remove(episode)
-                                                        break
-                                        if len(season.Episodes) == 0:
-                                            self.Seasons.remove(season)
+                                #gather file information on scraped, cached releases
+                                debrid.check(self)
+                                multi_season_releases = []
+                                season_releases = [None] * len(self.Seasons)
+                                minimum_episodes = len(self.files())/2
+                                season_queries = []
+                                for season in self.Seasons:
+                                    altquery = regex.split(r'(S[0-9]+)',season.query()) 
+                                    altquery = altquery[0] + '[0-9]*.*' + altquery[1] + altquery[2]
+                                    season_queries += [altquery]
+                                season_queries_str = '(' + ')|('.join(season_queries) + ')'
+                                for release in self.Releases:
+                                    match = regex.match(season_queries_str,release.title,regex.I)
+                                    for version in release.files:
+                                        if isinstance(version.wanted,int):
+                                            #if a multi season pack contains more than half of all uncollected episodes, accept it as a multi-season-pack.
+                                            if version.wanted > minimum_episodes:
+                                                multi_season_releases += [release]
+                                                break   
+                                            #if the release is a single-season pack, find out the quality
+                                            if match:
+                                                for index,season_query in enumerate(season_queries):
+                                                    if regex.match(season_query,release.title,regex.I):
+                                                        if version.wanted >= len(self.Seasons[index].files()) and season_releases[index] == None:
+                                                            quality = regex.search('(2160|1080|720|480)(?=p|i)',release.title,regex.I)
+                                                            if quality:
+                                                                quality = int(quality.group())
+                                                            else:
+                                                                quality = 0
+                                                            season_releases[index] = quality
+                                                            break
+                                #if there are eligible multi-season packs
+                                if len(multi_season_releases) > 0:
+                                    download_multi_season_release = False
+                                    #if one of the shows seasons cant be downloaded as a single-season pack, download the multi-season pack.
+                                    for season_release in season_releases:
+                                        if season_release == None:
+                                            download_multi_season_release = True
+                                            break
+                                    #if all seasons of the show could also be downloaded as single-season packs, compare the quality of the best ranking multi season pack with the lowest quality of the single season packs.
+                                    if not download_multi_season_release:
+                                        season_quality = min(season_releases)
+                                        quality = regex.search('(2160|1080|720|480)(?=p|i)',multi_season_releases[0].title,regex.I)
+                                        if quality:
+                                            quality = int(quality.group())
+                                        else:
+                                            quality = 0
+                                        if quality >= season_quality:
+                                            download_multi_season_release = True
+                                    #if either not all seasons can be downloaded as single-season packs or the single season packs are of equal or lower quality compared to the multi-season packs, download the multi season packs.
+                                    if download_multi_season_release:
+                                        self.Releases = multi_season_releases
+                                        if self.debrid_download():
+                                            refresh = True
+                                            for season in self.Seasons[:]:
+                                                for episode in season.Episodes[:]:
+                                                    for file in self.Releases[0].files:
+                                                        if hasattr(file,'match'):
+                                                            if file.match == episode.files()[0]:
+                                                                season.Episodes.remove(episode)
+                                                                break
+                                                if len(season.Episodes) == 0:
+                                                    self.Seasons.remove(season)
+                        #Download all remaining seasons by starting a thread for each season.
                         results = [None] * len(self.Seasons)
                         threads = []
                         #start thread for each season
@@ -1678,6 +1734,7 @@ class debrid:
             versions = [['(.*)'],]
         else:
             versions = releases.sort.multiple_versions
+        downloaded_files = []
         if stream:
             debrid.check(element,force=force)
             cached_releases = copy.deepcopy(element.Releases)
@@ -1709,11 +1766,13 @@ class debrid:
                             if service.short in release.cached:
                                 if service.download(element,stream=stream,query=query,force=force):
                                     downloaded = True
+                                    downloaded_files += element.Releases[0].files
                                     break
                     if downloaded:
                         break
                 if not version == ['(.*)'] and not downloaded:
                     ui.print('done')
+            element.Releases[0].files = downloaded_files
             return downloaded
         else:
             scraped_releases = copy.deepcopy(element.Releases)
@@ -1746,15 +1805,18 @@ class debrid:
                                 if service.short in release.cached:
                                     if service.download(element,stream=stream,query=query,force=force):
                                         downloaded = True
+                                        downloaded_files += element.Releases[0].files
                                         break
                             else:
                                 if service.download(element,stream=stream,query=query,force=force):
                                     downloaded = True
+                                    downloaded_files += element.Releases[0].files
                                     break
                     if downloaded:
                         break
                 if not version == ['(.*)'] and not downloaded:
                     ui.print('done')
+            element.Releases[0].files = downloaded_files
             return downloaded
     #Check Method:
     def check(element:plex.media,force=False):
