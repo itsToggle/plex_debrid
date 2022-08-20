@@ -32,6 +32,7 @@ This is a work in progress, and im not a professional programmer. shits not read
    - <img src="https://progsoft.net/images/rarbg-icon-648af4dcc6ec63ee49d6c050af63d2547c74d46c.png" height="16"> **[RARBG](https://rarbg.to/)**
    - <img src="https://1337x.to/favicon.ico" height="16"> **[1337X](https://1337x.to/)**
 - Sorting and selecting scraped releases by completely customizable rules
+- Selecting multiple versions of your requested content (e.g. HDR and SDR versions) by completely customizable rules
 - Checking for cached releases and adding them to:
    - <img src="https://fcdn.real-debrid.com/0818/favicons/favicon.ico" height="16"> **[RealDebrid](https://real-debrid.com/)**
    - <img src="https://www.premiumize.me/favicon-16x16.png" height="16"> **[Premiumize](https://www.premiumize.me/)**
@@ -57,14 +58,14 @@ For linux, mac and windows, the setup process does not require any additional pr
 ><details>
 >  <summary><b><u><img src="https://fcdn.real-debrid.com/0818/favicons/favicon.ico" height="16"> Mounting RealDebrid</u></b></summary>
 >  
->  Realdebrid has now implement support for WebDav, which means there is technically no need for my rclone fork anymore :)
+>  Realdebrid has now implement support for WebDav, which makes it mountable with official rclone software.
 >  
->  I do still recomend using my fork, since realdebrids WebDav does not (yet) allow for torrent file deletion through rclone, They do claim the torrent file deletion works with other webdav mount programs, which i have not been able to test yet. It also seems that the official realdebrid webdav is still slower and more bandwidth heavy than my rclone fork, because mounting the webdav leads to frequent re-discovering of already downloaded content. 
+>  I do still recomend using my fork, since realdebrids WebDav does not allow for torrent file deletion through rclone and they limit the amount of torrents displayed to 200. They do claim the torrent file deletion works with other webdav mount programs, but i have not been able to test this yet. It also seems that the official realdebrid webdav is still slower and more bandwidth heavy than my rclone fork, because mounting the webdav leads to frequent re-discovering of already downloaded content. 
 >  
 >  **Mounting with my fork:**
 >  
 >  1. Install my rclone fork: https://github.com/itsToggle/rclone_rd
->  2. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
+>  2. configure rclone by running the command 'rclone config' (could be './rclone config' and depending on your os, the filename could be './rclone-linux' or similar. If you get a permission denied error (linux & macos), run 'sudo chmod u+x rclone-linux', adjusted to the filename.)
 >  3. create a new remote by typing 'n'
 >  4. give your remote a name (e.g. 'your-remote')
 >  5. choose '47) realdebrid' as your remote type
@@ -303,6 +304,17 @@ more personal media server setup instructions to come soon.
 ></details>
 >
 ><details>
+>  <summary><b><u>Downloading multiple versions:</u></b></summary>
+>  
+>  - You can download multiple versions of your requested content (e.g. HDR and SDR versions, or a version for each resolution) by adding an unlimited amount of completely customizable version definitions
+>  - You can add these version definition by navigating to "/Settings/Scraper Settings/Multiple Versions/Edit"
+>  - You can negate the version definitions by adding a "!" as the first character
+>  - Example: to download 2160p, 1080p and 720p releases, add the following versions: "(2160p)", "(1080p)" and "(720p)"
+>  - Example: to download HDR and non-HDR releases, add the following versions: "(\.HDR\.)" and "!(\.HDR\.)"
+>
+></details>
+>
+><details>
 >  <summary><b><u>How releases are scraped</u></b></summary>
 >  
 >  The scraping of movies is pretty simple, there is not a lot to explain.
@@ -395,8 +407,8 @@ more personal media server setup instructions to come soon.
 >  We want to sort or releases by the number of seeders.
 >  For this, we will choose the following setup:
 >  - regex definition: "(.*)" - This is one match group that simply matches everything.
->  - attribute definition: "seeders" - we want to look for this inside the release size
->  - interpretation method: "number" - by choosing number, we define that the release size should be interpreted as a number.
+>  - attribute definition: "seeders" - we want to look for this inside the releases seeders attribute
+>  - interpretation method: "number" - by choosing number, we define that the releases number of seeders should be interpreted as a number.
 >  - ascending/descending: "1" - 0 means descending. We want to select the release with the most seeders.
 >
 >  </details>
