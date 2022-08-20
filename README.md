@@ -407,8 +407,8 @@ more personal media server setup instructions to come soon.
 >  We want to sort or releases by the number of seeders.
 >  For this, we will choose the following setup:
 >  - regex definition: "(.*)" - This is one match group that simply matches everything.
->  - attribute definition: "seeders" - we want to look for this inside the release size
->  - interpretation method: "number" - by choosing number, we define that the release size should be interpreted as a number.
+>  - attribute definition: "seeders" - we want to look for this inside the releases seeders attribute
+>  - interpretation method: "number" - by choosing number, we define that the releases number of seeders should be interpreted as a number.
 >  - ascending/descending: "1" - 0 means descending. We want to select the release with the most seeders.
 >
 >  </details>
