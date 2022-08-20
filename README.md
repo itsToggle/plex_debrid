@@ -65,7 +65,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 >  **Mounting with my fork:**
 >  
 >  1. Install my rclone fork: https://github.com/itsToggle/rclone_rd
->  2. configure rclone by running the command 'rclone config' (could be './rclone config' depending on your os)
+>  2. configure rclone by running the command 'rclone config' (could be './rclone config' and depending on your os, the filename could be './rclone-linux' or similar. If you get a permission denied error (linux & macos), run 'sudo chmod u+x rclone-linux', adjusted to the filename.)
 >  3. create a new remote by typing 'n'
 >  4. give your remote a name (e.g. 'your-remote')
 >  5. choose '47) realdebrid' as your remote type
