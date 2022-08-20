@@ -32,6 +32,7 @@ This is a work in progress, and im not a professional programmer. shits not read
    - <img src="https://progsoft.net/images/rarbg-icon-648af4dcc6ec63ee49d6c050af63d2547c74d46c.png" height="16"> **[RARBG](https://rarbg.to/)**
    - <img src="https://1337x.to/favicon.ico" height="16"> **[1337X](https://1337x.to/)**
 - Sorting and selecting scraped releases by completely customizable rules
+- Selecting multiple versions of your requested content (e.g. HDR and SDR versions) by completely customizable rules
 - Checking for cached releases and adding them to:
    - <img src="https://fcdn.real-debrid.com/0818/favicons/favicon.ico" height="16"> **[RealDebrid](https://real-debrid.com/)**
    - <img src="https://www.premiumize.me/favicon-16x16.png" height="16"> **[Premiumize](https://www.premiumize.me/)**
@@ -299,6 +300,17 @@ more personal media server setup instructions to come soon.
 >  - You can add more than one debrid service and change the order in which they should be checked for cached releases by navigating to '/Settings/Debrid Services/Edit'.
 >  - In order to scrape for a movie/show, plex_debrid renames the movie/show title. by default, some special characters are removed and spaces are replaced with dots. You can edit the replacement of other special characters (for example replacing '&' with 'and', etc.) by navigating to '/Settings/Scraper/Special character renaming'
 >  - If you don't want the main menu to show when you start the script and run the download automation right away, you can define this in the 'UI Settings' section of the 'Settings' menu. You can return to the main menu at any time by typing 'exit'.
+>
+></details>
+>
+><details>
+>  <summary><b><u>Downloading multiple versions:</u></b></summary>
+>  
+>  - You can download multiple versions of your requested content (e.g. HDR and SDR versions, or a version for each resolution) by adding an unlimited amount of completely customizable version definitions
+>  - You can add these version definition by navigating to "/Settings/Scraper Settings/Multiple Versions/Edit"
+>  - You can negate the version definitions by adding a "!" as the first character
+>  - Example: to download 2160p, 1080p and 720p releases, add the following versions: "(2160p)", "(1080p)" and "(720p)"
+>  - Example: to download HDR and non-HDR releases, add the following versions: "(\.HDR\.)" and "!(\.HDR\.)"
 >
 ></details>
 >
