@@ -1860,32 +1860,33 @@ class debrid:
                     if stream:
                         release.size = 0
                         for version in release.files:
-                            if len(version.files) > 0 and version.wanted > len(wanted)/2 or force:
-                                cached_ids = []
-                                for file in version.files:
-                                    cached_ids += [file.id]
-                                #post magnet to real debrid
-                                try:
-                                    response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/addMagnet',{'magnet' : str(release.download[0])})
-                                    torrent_id = str(response.id)
-                                except:
-                                    continue
-                                response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/selectFiles/' + torrent_id , {'files' : str(','.join(cached_ids))})    
-                                response = debrid.realdebrid.get('https://api.real-debrid.com/rest/1.0/torrents/info/' + torrent_id)
-                                if len(response.links) == len(cached_ids):
-                                    release.download = response.links
-                                else:
-                                    debrid.realdebrid.delete('https://api.real-debrid.com/rest/1.0/torrents/delete/' + torrent_id)
-                                    continue
-                                if len(release.download) > 0:
-                                    for link in release.download:
-                                        try:
-                                            response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/unrestrict/link', {'link' : link})
-                                        except:
-                                            break
-                                    release.files = version.files
-                                    ui.print('[realdebrid] adding cached release: ' + release.title)
-                                    return True
+                            if hasattr(version,'files'):
+                                if len(version.files) > 0 and version.wanted > len(wanted)/2 or force:
+                                    cached_ids = []
+                                    for file in version.files:
+                                        cached_ids += [file.id]
+                                    #post magnet to real debrid
+                                    try:
+                                        response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/addMagnet',{'magnet' : str(release.download[0])})
+                                        torrent_id = str(response.id)
+                                    except:
+                                        continue
+                                    response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/torrents/selectFiles/' + torrent_id , {'files' : str(','.join(cached_ids))})    
+                                    response = debrid.realdebrid.get('https://api.real-debrid.com/rest/1.0/torrents/info/' + torrent_id)
+                                    if len(response.links) == len(cached_ids):
+                                        release.download = response.links
+                                    else:
+                                        debrid.realdebrid.delete('https://api.real-debrid.com/rest/1.0/torrents/delete/' + torrent_id)
+                                        continue
+                                    if len(release.download) > 0:
+                                        for link in release.download:
+                                            try:
+                                                response = debrid.realdebrid.post('https://api.real-debrid.com/rest/1.0/unrestrict/link', {'link' : link})
+                                            except:
+                                                break
+                                        release.files = version.files
+                                        ui.print('[realdebrid] adding cached release: ' + release.title)
+                                        return True
                         ui.print('done')
                         return False
                     else:
