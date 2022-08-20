@@ -58,9 +58,9 @@ For linux, mac and windows, the setup process does not require any additional pr
 ><details>
 >  <summary><b><u><img src="https://fcdn.real-debrid.com/0818/favicons/favicon.ico" height="16"> Mounting RealDebrid</u></b></summary>
 >  
->  Realdebrid has now implement support for WebDav, which means there is technically no need for my rclone fork anymore :)
+>  Realdebrid has now implement support for WebDav, which makes it mountable with official rclone software.
 >  
->  I do still recomend using my fork, since realdebrids WebDav does not (yet) allow for torrent file deletion through rclone, They do claim the torrent file deletion works with other webdav mount programs, which i have not been able to test yet. It also seems that the official realdebrid webdav is still slower and more bandwidth heavy than my rclone fork, because mounting the webdav leads to frequent re-discovering of already downloaded content. 
+>  I do still recomend using my fork, since realdebrids WebDav does not allow for torrent file deletion through rclone and they limit the amount of torrents displayed to 200. They do claim the torrent file deletion works with other webdav mount programs, but i have not been able to test this yet. It also seems that the official realdebrid webdav is still slower and more bandwidth heavy than my rclone fork, because mounting the webdav leads to frequent re-discovering of already downloaded content. 
 >  
 >  **Mounting with my fork:**
 >  
