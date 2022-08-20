@@ -1740,6 +1740,7 @@ class debrid:
             cached_releases = copy.deepcopy(element.Releases)
             downloaded = False
             for index,version in enumerate(versions):
+                version_done = False
                 if not version == ['(.*)']:
                     ui.print('attempting to download version ' + str(index+1) + '/' + str(len(versions)) + ': "' + version[0] + '" ...')
                 for release in cached_releases:
@@ -1765,10 +1766,11 @@ class debrid:
                         for service in debrid.services():
                             if service.short in release.cached:
                                 if service.download(element,stream=stream,query=query,force=force):
+                                    version_done = True
                                     downloaded = True
                                     downloaded_files += element.Releases[0].files
                                     break
-                    if downloaded:
+                    if version_done:
                         break
                 if not version == ['(.*)'] and not downloaded:
                     ui.print('done')
@@ -1778,6 +1780,7 @@ class debrid:
             scraped_releases = copy.deepcopy(element.Releases)
             downloaded = False
             for index,version in enumerate(versions):
+                version_done = False
                 if not version == ['(.*)']:
                     ui.print('attempting to download version ' + str(index+1) + '/' + str(len(versions)) + ': "' + version[0] + '" ...')
                 for release in scraped_releases:
@@ -1805,14 +1808,16 @@ class debrid:
                                 if service.short in release.cached:
                                     if service.download(element,stream=stream,query=query,force=force):
                                         downloaded = True
+                                        version_done = True
                                         downloaded_files += element.Releases[0].files
                                         break
                             else:
                                 if service.download(element,stream=stream,query=query,force=force):
                                     downloaded = True
+                                    version_done = True
                                     downloaded_files += element.Releases[0].files
                                     break
-                    if downloaded:
+                    if version_done:
                         break
                 if not version == ['(.*)'] and not downloaded:
                     ui.print('done')
