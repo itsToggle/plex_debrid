@@ -124,6 +124,7 @@ class content:
             self.data.append(item)
     #Media Class
     class media:
+        ignore_queue = []
         def __init__(self,other):
             self.__dict__.update(other.__dict__)
         def __eq__(self, other) -> bool:
@@ -158,18 +159,28 @@ class content:
                 title = title.replace('.'+str(self.grandparentYear),'')
                 return title + '.S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index))+ '.'
         def watch(self):
-            if content.libraries.active == ['Plex Library']:
-                try:
-                    ui.print('[plex] ignoring item: ' + self.query())
-                    url = 'https://metadata.provider.plex.tv/actions/scrobble?identifier=tv.plex.provider.metadata&key='+self.ratingKey+'&X-Plex-Token='+ plex.users[0][1]
-                    plex.get(url)
-                    if not self in plex.ignored:
-                        plex.ignored += [self]
-                except Exception as e:
-                    ui.print("plex error: couldnt ignore item: " + str(e),debug=ui_settings.debug)
+            if not self in content.media.ignore_queue:
+                self.ignored_count = 1
+                content.media.ignore_queue += [self]
+                ui.print('retrying download in 30min for item: ' + self.query() + ' - attempt '+str(self.ignored_count)+'/6')
+            else:
+                match = next((x for x in content.media.ignore_queue if self == x),None)
+                if match.ignored_count < 6:
+                    match.ignored_count += 1
+                    ui.print('retrying download in 30min for item: ' + self.query() + ' - attempt '+str(match.ignored_count)+'/6')
+                else:
+                    if content.libraries.active == ['Plex Library']:
+                        try:
+                            ui.print('[plex] ignoring item: ' + self.query())
+                            url = 'https://metadata.provider.plex.tv/actions/scrobble?identifier=tv.plex.provider.metadata&key='+self.ratingKey+'&X-Plex-Token='+ plex.users[0][1]
+                            plex.get(url)
+                            if not self in plex.ignored:
+                                plex.ignored += [self]
+                        except Exception as e:
+                            ui.print("plex error: couldnt ignore item: " + str(e),debug=ui_settings.debug)
 
-            elif content.libraries.active == ['Trakt Collection']:
-                pass
+                    elif content.libraries.active == ['Trakt Collection']:
+                        pass
         def unwatch(self):
             if content.libraries.active == ['Plex Library']:
                 try:
@@ -2940,7 +2951,11 @@ class scraper:
                     altquery = regex.split(r'(S[0-9]+)',altquery) 
                     altquery = altquery[0] + '[0-9]*.*' + altquery[1] + altquery[2]
                 url = scraper.jackett.base_url + '/api/v2.0/indexers/' + filter + '/results?apikey=' + scraper.jackett.api_key + '&Query=' + query + tags
-                response = scraper.jackett.session.get(url)
+                try:
+                    response = scraper.jackett.session.get(url,timeout=25)
+                except:
+                    ui.print('jackett error: jackett request timed out.',debug=ui_settings.debug)
+                    return []
                 if response.status_code == 200:
                     response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
                     for result in response.Results[:]:
