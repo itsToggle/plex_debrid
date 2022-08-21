@@ -1774,7 +1774,8 @@ class debrid:
                         break
                 if not version == ['(.*)'] and not downloaded:
                     ui.print('done')
-            element.Releases[0].files = downloaded_files
+            if len(element.Releases) > 0:
+                element.Releases[0].files = downloaded_files
             return downloaded
         else:
             scraped_releases = copy.deepcopy(element.Releases)
@@ -1821,7 +1822,8 @@ class debrid:
                         break
                 if not version == ['(.*)'] and not downloaded:
                     ui.print('done')
-            element.Releases[0].files = downloaded_files
+            if len(element.Releases) > 0:
+                element.Releases[0].files = downloaded_files
             return downloaded
     #Check Method:
     def check(element:plex.media,force=False):
