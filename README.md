@@ -437,4 +437,4 @@ more personal media server setup instructions to come soon.
 
 I've written this automation because it's a hell of a lot of fun and because I've wanted a setup like this for a while. The continuation of this project does **not**, in any way, depend on monetary contributions. If you do want to buy me a beer/coffee, feel free to use my real-debrid [affiliate link](http://real-debrid.com/?id=5708990) or send a virtual beverage via [PayPal](https://www.paypal.com/paypalme/oidulibbe) :)
 
-If you are thinking of moving your plex server to a VPS or dedicated remote server, consider checking out netcup.de - if you contact me, I can provide you with an affiliate coupon that will get you (and me ;) ) up to 3 months free hosting.
+If you are thinking of moving your plex server to a VPS or dedicated remote server, consider checking out netcup.de - You can get 5€ off any purchase using my affiliate coupon code `36nc16612918700` and if you contact me, I can provide you with other coupons that will get you (and me ;) ) up to 3 months free hosting.
