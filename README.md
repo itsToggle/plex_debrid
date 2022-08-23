@@ -34,7 +34,7 @@ This is a work in progress, and im not a professional programmer. shits not read
 - Sorting and selecting scraped releases by completely customizable rules
 - Selecting multiple versions of your requested content (e.g. HDR and SDR versions) by completely customizable rules
 - Checking for cached releases and adding them to:
-   - <img src="https://fcdn.real-debrid.com/0818/favicons/favicon.ico" height="16"> **[RealDebrid](https://real-debrid.com/)**
+   - <img src="https://fcdn.real-debrid.com/0818/favicons/favicon.ico" height="16"> **[RealDebrid](http://real-debrid.com/?id=5708990)**
    - <img src="https://www.premiumize.me/favicon-16x16.png" height="16"> **[Premiumize](https://www.premiumize.me/)**
    - <img src="https://cdn.alldebrid.com/lib/images/default/favicon.png" height="16"> **[AllDebrid](https://alldebrid.com/)**
    - <img src="https://cdn.debrid-link.com/favicon.ico?i=2" height="16"> **[DebridLink](https://debrid-link.com/)**
