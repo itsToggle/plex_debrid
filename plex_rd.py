@@ -2702,10 +2702,9 @@ class releases:
             metadata = releases.torrent2magnet.bdecode(x)
             subj = metadata[b'info']
             hashcontents = releases.torrent2magnet.bencode(subj)
-            digest = hashlib.sha1(hashcontents).digest()
-            b32hash = base64.b32encode(digest).decode()
+            digest = hashlib.sha1(hashcontents).hexdigest()
             return 'magnet:?'\
-                    + 'xt=urn:btih:' + b32hash\
+                    + 'xt=urn:btih:' + digest\
                     + '&dn=' + metadata[b'info'][b'name'].decode()\
                     + '&tr=' + metadata[b'announce'].decode()\
     #Print Method
