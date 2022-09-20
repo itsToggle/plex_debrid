@@ -208,7 +208,7 @@ class content:
                             return True
                         else:
                             return False
-                    return released.days > 0
+                    return released.days >= 0
             except Exception as e:
                 ui.print("media error: (attr exception): " + str(e),debug=ui_settings.debug)
                 return False
@@ -669,12 +669,7 @@ class plex(content.services):
                         if not trakt_match == None:
                             break
                     if not trakt_match == None:
-                        if self.type == 'movie':
-                            return trakt.media.available(trakt_match)
-                        elif self.type == 'episode':
-                            trakt_match.next_season = self.parentIndex
-                            trakt_match.next_episode = self.index
-                            return trakt.media.available(trakt_match)
+                        return trakt.media.available(trakt_match)
                 except Exception as e:
                     ui.print("plex error: (attr exception): " + str(e),debug=ui_settings.debug)
                     return False
