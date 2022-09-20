@@ -212,6 +212,59 @@ class content:
             except Exception as e:
                 ui.print("media error: (attr exception): " + str(e),debug=ui_settings.debug)
                 return False
+        def available(self):
+            if (self.watchlist == plex.watchlist and len(trakt.users) > 0) or self.watchlist == trakt.watchlist :
+                if self.watchlist == plex.watchlist:
+                    try:
+                        for guid in self.Guid:
+                            service,guid = guid.id.split('://')
+                            trakt_match = trakt.match(guid,service,self.type)
+                            if not trakt_match == None:
+                                break
+                    except Exception as e:
+                        ui.print("plex error: (attr exception): " + str(e),debug=ui_settings.debug)
+                        return True
+                else:
+                    trakt_match = self
+                if not trakt_match == None:
+                    trakt.current_user = trakt.users[0]
+                    try:
+                        if trakt_match.type == 'show':
+                            return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')
+                        elif trakt_match.type == 'movie':
+                            release_date = None
+                            releases, header = trakt.get('https://api.trakt.tv/movies/'+ str(trakt_match.ids.trakt) +'/releases/')
+                            for release in releases:
+                                if release.release_type == 'digital' or release.release_type == 'physical' or release.release_type == 'tv':
+                                    if release_date == None:
+                                        release_date = release.release_date
+                                    elif datetime.datetime.strptime(release_date,'%Y-%m-%d') > datetime.datetime.strptime(release.release_date,'%Y-%m-%d'):
+                                        release_date = release.release_date
+                            #If no release date was found, select the theatrical release date + 2 Month delay
+                            if release_date == None:
+                                for release in releases:
+                                    if release_date == None:
+                                        release_date = release.release_date
+                                    elif datetime.datetime.strptime(release_date,'%Y-%m-%d') > datetime.datetime.strptime(release.release_date,'%Y-%m-%d'):
+                                        release_date = release.release_date
+                                release_date = datetime.datetime.strptime(release_date,'%Y-%m-%d') + datetime.timedelta(days=60)
+                                release_date = release_date.strftime("%Y-%m-%d")
+                            #Get trakt 'Latest HD/4k Releases' Lists to accept early releases
+                            trakt_lists, header = trakt.get('https://api.trakt.tv/movies/'+ str(trakt_match.ids.trakt) +'/lists/personal/popular')
+                            match = False
+                            for trakt_list in trakt_lists:
+                                if regex.search(r'(latest|new).*?(releases)',trakt_list.name,regex.I):
+                                    match = True
+                            #if release_date and delay have passed or the movie was released early
+                            return datetime.datetime.utcnow() > datetime.datetime.strptime(release_date,'%Y-%m-%d') or match
+                        elif trakt_match.type == 'season':
+                            return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')
+                        elif trakt_match.type == 'episode':
+                            return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')
+                    except:
+                        return True
+            return True
+            
         def watched(self):
             if content.libraries.active == ['Plex Library']:
                 try:
@@ -659,28 +712,7 @@ class plex(content.services):
             if len(plex.users) > 0:
                 ui.print('done') 
             return update       
-    class media(content.media):
-        def available(self):
-            if len(trakt.users) > 0:
-                try:
-                    for guid in self.Guid:
-                        service,guid = guid.id.split('://')
-                        trakt_match = trakt.match(guid,service,self.type)
-                        if not trakt_match == None:
-                            break
-                    if not trakt_match == None:
-                        return trakt.media.available(trakt_match)
-                except Exception as e:
-                    ui.print("plex error: (attr exception): " + str(e),debug=ui_settings.debug)
-                    return False
-            url = 'https://metadata.provider.plex.tv/library/metadata/'+self.ratingKey+'/availabilities?X-Plex-Token='+plex.users[0][1]
-            response = plex.get(url)
-            if not response == None:
-                if hasattr(response,'MediaContainer'):
-                    if response.MediaContainer.size > 0:
-                        return True
-            return False
-    class season(media):
+    class season(content.media):
         def __init__(self,other):
             self.watchlist = plex.watchlist
             self.__dict__.update(other.__dict__)
@@ -697,11 +729,11 @@ class plex(content.services):
                         self.leafCount = response.MediaContainer.totalSize
                 else: 
                     time.sleep(1)       
-    class episode(media):
+    class episode(content.media):
         def __init__(self,other):
             self.watchlist = plex.watchlist
             self.__dict__.update(other.__dict__)
-    class show(media):
+    class show(content.media):
         def __init__(self, ratingKey):
             self.watchlist = plex.watchlist
             if not isinstance(ratingKey,str):
@@ -747,7 +779,7 @@ class plex(content.services):
                         time.sleep(1)
                 else:
                     time.sleep(1)
-    class movie(media):
+    class movie(content.media):
         def __init__(self, ratingKey):
             self.watchlist = plex.watchlist
             if not isinstance(ratingKey,str):
@@ -831,7 +863,7 @@ class plex(content.services):
                         if hasattr(response,'MediaContainer'):
                             if hasattr(response.MediaContainer,'Metadata'):
                                 for element in response.MediaContainer.Metadata:
-                                    section_response += [plex.media(element)]
+                                    section_response += [content.media(element)]
                     if len(section_response) == 0:
                         ui.print("[plex error]: couldnt reach local plex library section '"+section[0]+"' at server address: " + plex.library.url + " - or this library really is empty.")  
                     else:
@@ -845,7 +877,7 @@ class plex(content.services):
                 if hasattr(response,'MediaContainer'):
                     if hasattr(response.MediaContainer,'Metadata'):
                         for element in response.MediaContainer.Metadata:
-                            list += [plex.media(element)]
+                            list += [content.media(element)]
                 else:
                     ui.print("[plex error]: couldnt reach local plex server at server address: " + plex.library.url + " - or this library really is empty.")    
             if len(list) == 0:
@@ -1173,45 +1205,7 @@ class trakt(content.services):
             data = {'movies':movies,'shows':shows}
             trakt.current_user = user
             trakt.post('https://api.trakt.tv/sync/watchlist/remove',json.dumps(data, default=lambda o: o.__dict__))
-    class media(content.media):
-        def available(self):
-            trakt.current_user = trakt.users[0]
-            try:
-                if self.type == 'show':
-                    return datetime.datetime.utcnow() > datetime.datetime.strptime(self.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')
-                elif self.type == 'movie':
-                    release_date = None
-                    releases, header = trakt.get('https://api.trakt.tv/movies/'+ str(self.ids.trakt) +'/releases/')
-                    for release in releases:
-                        if release.release_type == 'digital' or release.release_type == 'physical' or release.release_type == 'tv':
-                            if release_date == None:
-                                release_date = release.release_date
-                            elif datetime.datetime.strptime(release_date,'%Y-%m-%d') > datetime.datetime.strptime(release.release_date,'%Y-%m-%d'):
-                                release_date = release.release_date
-                    #If no release date was found, select the theatrical release date + 2 Month delay
-                    if release_date == None:
-                        for release in releases:
-                            if release_date == None:
-                                release_date = release.release_date
-                            elif datetime.datetime.strptime(release_date,'%Y-%m-%d') > datetime.datetime.strptime(release.release_date,'%Y-%m-%d'):
-                                release_date = release.release_date
-                        release_date = datetime.datetime.strptime(release_date,'%Y-%m-%d') + datetime.timedelta(days=60)
-                        release_date = release_date.strftime("%Y-%m-%d")
-                    #Get trakt 'Latest HD/4k Releases' Lists to accept early releases
-                    trakt_lists, header = trakt.get('https://api.trakt.tv/movies/'+ str(self.ids.trakt) +'/lists/personal/popular')
-                    match = False
-                    for trakt_list in trakt_lists:
-                        if regex.search(r'(latest|new).*?(releases)',trakt_list.name,regex.I):
-                            match = True
-                    #if release_date and delay have passed or the movie was released early
-                    return datetime.datetime.utcnow() > datetime.datetime.strptime(release_date,'%Y-%m-%d') or match
-                elif self.type == 'season':
-                    return datetime.datetime.utcnow() > datetime.datetime.strptime(self.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')
-                elif self.type == 'episode':
-                    return datetime.datetime.utcnow() > datetime.datetime.strptime(self.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')
-            except:
-                return False
-    class season(media):
+    class season(content.media):
         def __init__(self,other):
             self.watchlist = trakt.watchlist
             self.__dict__.update(other.__dict__)
@@ -1239,7 +1233,7 @@ class trakt(content.services):
                 episode.parentIndex = self.index
                 self.Episodes += [trakt.episode(episode)]
             self.leafCount = len(self.Episodes)
-    class episode(media):
+    class episode(content.media):
         def __init__(self,other):
             self.watchlist = trakt.watchlist
             self.__dict__.update(other.__dict__)
@@ -1259,7 +1253,7 @@ class trakt(content.services):
                 self.originallyAvailableAt = datetime.datetime.utcnow().strftime('%Y-%m-%d')
             self.index = self.number
             self.type = 'episode'
-    class show(media):
+    class show(content.media):
         def __init__(self,other):
             self.watchlist = trakt.watchlist
             self.__dict__.update(other.__dict__)
@@ -1280,7 +1274,7 @@ class trakt(content.services):
             for season in self.Seasons:
                 leafCount += season.leafCount
             self.leafCount = leafCount
-    class movie(media):
+    class movie(content.media):
         def __init__(self,other):
             self.watchlist = trakt.watchlist
             try:
@@ -1736,7 +1730,7 @@ class debrid:
                         activeservices += [service]
             return activeservices
     #Download Method:
-    def download(element:plex.media,stream=True,query='',force=False):
+    def download(element:content.media,stream=True,query='',force=False):
         if len(releases.sort.multiple_versions) == 0 or len(element.Releases) <=1:
             versions = [['(.*)'],]
         else:
@@ -1833,7 +1827,7 @@ class debrid:
                 element.Releases[0].files = downloaded_files
             return downloaded
     #Check Method:
-    def check(element:plex.media,force=False):
+    def check(element:content.media,force=False):
         for service in debrid.services():
             service.check(element,force=force)
         releases.sort(element.Releases)
@@ -1918,7 +1912,7 @@ class debrid:
                     if file.unwanted:
                         self.unwanted += 1
         #(required) Download Function. 
-        def download(element:plex.media,stream=True,query='',force=False):
+        def download(element:content.media,stream=True,query='',force=False):
             cached = element.Releases
             if query == '':
                 query = element.query()
@@ -2057,7 +2051,7 @@ class debrid:
                 response = None
             return response
         #(required) Download Function. 
-        def download(element:plex.media,stream=True,query='',force=False):
+        def download(element:content.media,stream=True,query='',force=False):
             cached = element.Releases
             if query == '':
                 query = element.query()
@@ -2185,7 +2179,7 @@ class debrid:
                 response = None
             return response
         #(required) Download Function. 
-        def download(element:plex.media,stream=True,query='',force=False):
+        def download(element:content.media,stream=True,query='',force=False):
             cached = element.Releases
             if query == '':
                 query = element.query()
@@ -2301,7 +2295,7 @@ class debrid:
                     time.sleep(1)
                 return response.access_token
         #(required) Download Function. 
-        def download(element:plex.media,stream=True,query='',force=False):
+        def download(element:content.media,stream=True,query='',force=False):
             cached = element.Releases
             if query == '':
                 query = element.query()
@@ -2422,7 +2416,7 @@ class debrid:
                     time.sleep(1)
                 return response.oauth_token
         #(required) Download Function. 
-        def download(element:plex.media,stream=True,query='',force=False):
+        def download(element:content.media,stream=True,query='',force=False):
             cached = element.Releases
             if query == '':
                 query = element.query()
@@ -3079,7 +3073,7 @@ class scraper:
 def scrape(cls:scraper,query,result,index):
     result[index] = cls(query)
 #Multiprocessing download method
-def download(cls:plex.media,library,parentReleases,result,index):
+def download(cls:content.media,library,parentReleases,result,index):
     result[index] = cls.download(library=library,parentReleases=parentReleases)
 #Multiprocessing watchlist method
 def multi_init(cls,obj,result,index):
