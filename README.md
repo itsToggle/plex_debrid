@@ -3,12 +3,6 @@ Plex/Emby/Jellyfin/Infuse torrent streaming through Debrid Services, using Plex 
 
 Using content services like plex discover, trakt and overseerr, your personal media server users can add movies/shows to their watchlist and they become available to stream in seconds.
 
-### Community
-
-Feel free to ask any questions on github [discussions](https://github.com/itsToggle/plex_debrid/discussions) or create a new [issue](https://github.com/itsToggle/plex_debrid/issues) if you find a bug or have an idea for an improvement.
-
-If github is not your cup of tee, join the plex_debrid [discord server](https://discord.gg/Q8Q7z3kk) or find me on [reddit](https://www.reddit.com/user/itsToggle)
-
 ### In Action:
 
 ![ezgif com-gif-maker](https://user-images.githubusercontent.com/71379623/185643627-45217303-75d8-4c9d-8c8b-41bb2e27fd87.gif)
@@ -47,6 +41,12 @@ This is a work in progress, and im not a professional programmer. shits not read
    - <img src="https://app.put.io/assets/favicon-32x32.png" height="16"> **[PUT.io (no check for cached releases)](https://put.io/)**
 - Refreshing your personal media server libraries to make the content available to watch for:
    - <img src="https://app.plex.tv/desktop/favicon.ico" height="16"> **[Plex](https://plex.tv/)**
+
+### Community
+
+Feel free to ask any questions on github [discussions](https://github.com/itsToggle/plex_debrid/discussions) or create a new [issue](https://github.com/itsToggle/plex_debrid/issues) if you find a bug or have an idea for an improvement.
+
+If github is not your cup of tee, join the plex_debrid [discord server](https://discord.gg/Q8Q7z3kk) or find me on [reddit](https://www.reddit.com/user/itsToggle)
 
 ## Setup:
 For linux, mac and windows, the setup process does not require any additional preparation. For different operating systems, check out the information the fine people linked here have gathered:
