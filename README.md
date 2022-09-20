@@ -3,6 +3,12 @@ Plex/Emby/Jellyfin/Infuse torrent streaming through Debrid Services, using Plex 
 
 Using content services like plex discover, trakt and overseerr, your personal media server users can add movies/shows to their watchlist and they become available to stream in seconds.
 
+### Community
+
+Feel free to ask any questions on github [discussions](https://github.com/itsToggle/plex_debrid/discussions) or create a new [issue](https://github.com/itsToggle/plex_debrid/issues) if you find a bug or have an idea for an improvement.
+
+If github is not your cup of tee, join the plex_debrid [discord server](https://discord.gg/Q8Q7z3kk) or find me on [reddit](https://www.reddit.com/user/itsToggle)
+
 ### In Action:
 
 ![ezgif com-gif-maker](https://user-images.githubusercontent.com/71379623/185643627-45217303-75d8-4c9d-8c8b-41bb2e27fd87.gif)
