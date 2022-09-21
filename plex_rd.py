@@ -263,6 +263,10 @@ class content:
                             return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')
                     except:
                         return False
+            elif self.type == 'movie':
+                released = datetime.datetime.today() - datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
+                if released.days < 0:
+                    return False
             return True  
         def watched(self):
             if content.libraries.active == ['Plex Library']:
