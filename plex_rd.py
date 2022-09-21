@@ -162,12 +162,12 @@ class content:
             if not self in content.media.ignore_queue:
                 self.ignored_count = 1
                 content.media.ignore_queue += [self]
-                ui.print('retrying download in 30min for item: ' + self.query() + ' - attempt '+str(self.ignored_count)+'/24')
+                ui.print('retrying download in 30min for item: ' + self.query() + ' - attempt '+str(self.ignored_count)+'/48')
             else:
                 match = next((x for x in content.media.ignore_queue if self == x),None)
-                if match.ignored_count < 24:
+                if match.ignored_count < 48:
                     match.ignored_count += 1
-                    ui.print('retrying download in 30min for item: ' + self.query() + ' - attempt '+str(match.ignored_count)+'/24')
+                    ui.print('retrying download in 30min for item: ' + self.query() + ' - attempt '+str(match.ignored_count)+'/48')
                 else:
                     content.media.ignore_queue.remove(match)
                     if content.libraries.active == ['Plex Library']:
@@ -179,7 +179,6 @@ class content:
                                 plex.ignored += [self]
                         except Exception as e:
                             ui.print("plex error: couldnt ignore item: " + str(e),debug=ui_settings.debug)
-
                     elif content.libraries.active == ['Trakt Collection']:
                         pass
         def unwatch(self):
