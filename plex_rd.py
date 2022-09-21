@@ -262,9 +262,8 @@ class content:
                         elif trakt_match.type == 'episode':
                             return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')
                     except:
-                        return True
-            return True
-            
+                        return False
+            return True  
         def watched(self):
             if content.libraries.active == ['Plex Library']:
                 try:
