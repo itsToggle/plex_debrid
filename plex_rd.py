@@ -162,12 +162,12 @@ class content:
             if not self in content.media.ignore_queue:
                 self.ignored_count = 1
                 content.media.ignore_queue += [self]
-                ui.print('retrying download in 30min for item: ' + self.query() + ' - attempt '+str(self.ignored_count)+'/12')
+                ui.print('retrying download in 30min for item: ' + self.query() + ' - attempt '+str(self.ignored_count)+'/24')
             else:
                 match = next((x for x in content.media.ignore_queue if self == x),None)
-                if match.ignored_count < 12:
+                if match.ignored_count < 24:
                     match.ignored_count += 1
-                    ui.print('retrying download in 30min for item: ' + self.query() + ' - attempt '+str(match.ignored_count)+'/12')
+                    ui.print('retrying download in 30min for item: ' + self.query() + ' - attempt '+str(match.ignored_count)+'/24')
                 else:
                     content.media.ignore_queue.remove(match)
                     if content.libraries.active == ['Plex Library']:
@@ -262,9 +262,12 @@ class content:
                         elif trakt_match.type == 'episode':
                             return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')
                     except:
-                        return True
-            return True
-            
+                        return False
+            elif self.type == 'movie':
+                released = datetime.datetime.today() - datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
+                if released.days < 0:
+                    return False
+            return True  
         def watched(self):
             if content.libraries.active == ['Plex Library']:
                 try:
