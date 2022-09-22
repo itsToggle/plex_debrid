@@ -229,6 +229,7 @@ class content:
                     trakt.current_user = trakt.users[0]
                     try:
                         if trakt_match.type == 'show':
+                            ui.print("release time: " + str(datetime.datetime.utcnow() - datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')),debug=ui_settings.debug)
                             return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')
                         elif trakt_match.type == 'movie':
                             release_date = None
@@ -257,9 +258,10 @@ class content:
                             #if release_date and delay have passed or the movie was released early
                             return datetime.datetime.utcnow() > datetime.datetime.strptime(release_date,'%Y-%m-%d') or match
                         elif trakt_match.type == 'season':
+                            ui.print("release time: " + str(datetime.datetime.utcnow() - datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')),debug=ui_settings.debug)
                             return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')
                         elif trakt_match.type == 'episode':
-                            ui.print("trakt episode release time: " + str(datetime.datetime.utcnow() - datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')),debug=ui_settings.debug)
+                            ui.print("release time: " + str(datetime.datetime.utcnow() - datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')),debug=ui_settings.debug)
                             return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')
                     except:
                         return False
@@ -267,6 +269,7 @@ class content:
                 released = datetime.datetime.today() - datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
                 if released.days < 0:
                     return False
+            ui.print("release time: defaulting to available = True",debug=ui_settings.debug)
             return True  
         def watched(self):
             if content.libraries.active == ['Plex Library']:
