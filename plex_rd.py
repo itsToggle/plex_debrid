@@ -222,7 +222,7 @@ class content:
                                 break
                     except Exception as e:
                         ui.print("plex error: (attr exception): " + str(e),debug=ui_settings.debug)
-                        return True
+                        return False
                 else:
                     trakt_match = self
                 if not trakt_match == None:
