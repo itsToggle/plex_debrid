@@ -259,6 +259,7 @@ class content:
                         elif trakt_match.type == 'season':
                             return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')
                         elif trakt_match.type == 'episode':
+                            ui.print("trakt episode release time: " + str(datetime.datetime.utcnow() - datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')),debug=ui_settings.debug)
                             return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')
                     except:
                         return False
