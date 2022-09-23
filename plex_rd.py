@@ -415,6 +415,7 @@ class content:
             return self in debrid.downloading
         def download(self,retries=1,library=[],parentReleases=[]):
             refresh = False
+            i=0
             self.Releases = []
             if self.type == 'movie':
                 if len(self.uncollected(library)) > 0:
