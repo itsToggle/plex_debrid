@@ -414,16 +414,21 @@ class content:
         def downloading(self):
             return self in debrid.downloading
         def download(self,retries=1,library=[],parentReleases=[]):
-            i = 0
             refresh = False
             self.Releases = []
             if self.type == 'movie':
                 if len(self.uncollected(library)) > 0:
                     if self.released() and not self.watched() and not self.downloading():
                         tic = time.perf_counter()
-                        while len(self.Releases) == 0 and i <= retries:
-                            self.Releases += scraper(self.query())
-                            i += 1
+                        alternate_years = [self.year, self.year - 1, self.year + 1]
+                        for year in alternate_years:
+                            i = 0
+                            while len(self.Releases) == 0 and i <= retries:
+                                self.Releases += scraper(self.query().replace(str(self.year),str(year)))
+                                i += 1
+                            if not len(self.Releases) == 0:
+                                self.year = year
+                                break
                         if self.debrid_download():
                             refresh = True
                             if self.watchlist.autoremove == "both" or self.watchlist.autoremove == "movie":
