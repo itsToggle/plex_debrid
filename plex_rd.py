@@ -222,14 +222,13 @@ class content:
                                 break
                     except Exception as e:
                         ui.print("plex error: (attr exception): " + str(e),debug=ui_settings.debug)
-                        return False
+                        return True
                 else:
                     trakt_match = self
                 if not trakt_match == None:
                     trakt.current_user = trakt.users[0]
                     try:
                         if trakt_match.type == 'show':
-                            ui.print("release time: " + str(datetime.datetime.utcnow() - datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')),debug=ui_settings.debug)
                             return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')
                         elif trakt_match.type == 'movie':
                             release_date = None
@@ -258,10 +257,8 @@ class content:
                             #if release_date and delay have passed or the movie was released early
                             return datetime.datetime.utcnow() > datetime.datetime.strptime(release_date,'%Y-%m-%d') or match
                         elif trakt_match.type == 'season':
-                            ui.print("release time: " + str(datetime.datetime.utcnow() - datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')),debug=ui_settings.debug)
                             return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')
                         elif trakt_match.type == 'episode':
-                            ui.print("release time: " + str(datetime.datetime.utcnow() - datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')),debug=ui_settings.debug)
                             return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')
                     except:
                         return False
@@ -269,7 +266,6 @@ class content:
                 released = datetime.datetime.today() - datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
                 if released.days < 0:
                     return False
-            ui.print("release time: defaulting to available = True",debug=ui_settings.debug)
             return True  
         def watched(self):
             if content.libraries.active == ['Plex Library']:
@@ -1456,10 +1452,18 @@ class trakt(content.services):
                 response[0].movie.type = 'movie'
                 response[0].movie.guid = response[0].movie.ids.trakt
                 return trakt.movie(response[0].movie)
-            else:
+            elif type == 'show':
                 response[0].show.type = 'show'
                 response[0].show.guid = response[0].show.ids.trakt
                 return trakt.show(response[0].show)
+            elif type == 'season':
+                response[0].season.type = 'season'
+                response[0].season.guid = response[0].season.ids.trakt
+                return trakt.season(response[0].season)
+            elif type == 'episode':
+                response[0].episode.type = 'episode'
+                response[0].episode.guid = response[0].episode.ids.trakt
+                return trakt.episode(response[0].episode)
         except:
             return None
 #Overseer Class
