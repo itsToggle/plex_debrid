@@ -2800,6 +2800,8 @@ class scraper:
         for result in results:
             if not result == []:
                 scraped_releases += result
+        for release in scraped_releases:
+            release.title = ''.join([i if ord(i) < 128 else '' for i in release.title])  
         if regex.search(r'(S[0-9]+)',query) or not query.endswith('.'):
             if not query.endswith('.'):
                 altquery = [query,'(S[0-9]+|Season.[0-9]+)','']
