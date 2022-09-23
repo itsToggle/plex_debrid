@@ -414,16 +414,21 @@ class content:
         def downloading(self):
             return self in debrid.downloading
         def download(self,retries=1,library=[],parentReleases=[]):
-            i = 0
             refresh = False
             self.Releases = []
             if self.type == 'movie':
                 if len(self.uncollected(library)) > 0:
                     if self.released() and not self.watched() and not self.downloading():
                         tic = time.perf_counter()
-                        while len(self.Releases) == 0 and i <= retries:
-                            self.Releases += scraper(self.query())
-                            i += 1
+                        alternate_years = [self.year, self.year - 1, self.year + 1]
+                        for year in alternate_years:
+                            i = 0
+                            while len(self.Releases) == 0 and i <= retries:
+                                self.Releases += scraper(self.query().replace(str(self.year),str(year)))
+                                i += 1
+                            if not len(self.Releases) == 0:
+                                self.year = year
+                                break
                         if self.debrid_download():
                             refresh = True
                             if self.watchlist.autoremove == "both" or self.watchlist.autoremove == "movie":
@@ -1452,10 +1457,18 @@ class trakt(content.services):
                 response[0].movie.type = 'movie'
                 response[0].movie.guid = response[0].movie.ids.trakt
                 return trakt.movie(response[0].movie)
-            else:
+            elif type == 'show':
                 response[0].show.type = 'show'
                 response[0].show.guid = response[0].show.ids.trakt
                 return trakt.show(response[0].show)
+            elif type == 'season':
+                response[0].season.type = 'season'
+                response[0].season.guid = response[0].season.ids.trakt
+                return trakt.season(response[0].season)
+            elif type == 'episode':
+                response[0].episode.type = 'episode'
+                response[0].episode.guid = response[0].episode.ids.trakt
+                return trakt.episode(response[0].episode)
         except:
             return None
 #Overseer Class
@@ -2792,6 +2805,8 @@ class scraper:
         for result in results:
             if not result == []:
                 scraped_releases += result
+        for release in scraped_releases:
+            release.title = ''.join([i if ord(i) < 128 else '' for i in release.title])  
         if regex.search(r'(S[0-9]+)',query) or not query.endswith('.'):
             if not query.endswith('.'):
                 altquery = [query,'(S[0-9]+|Season.[0-9]+)','']
