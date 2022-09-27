@@ -170,11 +170,11 @@ class content:
             elif self.type == 'season':
                 title = releases.rename(self.parentTitle) 
                 title = title.replace('.'+str(self.parentYear),'')
-                return '(' + title + '.)(' + str(self.year) + '.)?(season.[0-9]+.)?' + '(S' + str("{:02d}".format(self.index)) + '.)'
+                return '(' + title + '.)(' + str(self.parentYear) + '.)?(season.[0-9]+.)?' + '(S' + str("{:02d}".format(self.index)) + '.)'
             elif self.type == 'episode': 
                 title = releases.rename(self.grandparentTitle) 
                 title = title.replace('.'+str(self.grandparentYear),'')
-                return '(' + title + '.)(' + str(self.year) + '.)?(S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index))+ '.)'
+                return '(' + title + '.)(' + str(self.grandparentYear) + '.)?(S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index))+ '.)'
         def watch(self):
             if not self in content.media.ignore_queue:
                 self.ignored_count = 1
