@@ -2804,7 +2804,7 @@ class scraper:
         for t in threads:
             t.join()
         for result in results:
-            if not result == []:
+            if not result == [] and not result == None:
                 scraped_releases += result
         for release in scraped_releases:
             release.title = ''.join([i if ord(i) < 128 else '' for i in release.title])  
@@ -2961,10 +2961,14 @@ class scraper:
                 try:
                     response = scraper.jackett.session.get(url,timeout=25)
                 except:
-                    ui.print('jackett error: jackett request timed out.',debug=ui_settings.debug)
+                    ui.print('jackett error: jackett request timed out.')
                     return []
                 if response.status_code == 200:
-                    response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
+                    try:
+                        response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
+                    except:
+                        ui.print('jackett error: jackett didnt return any data.')
+                        return []
                     for result in response.Results[:]:
                         result.Title = result.Title.replace(' ','.')
                         if regex.match(r'('+ altquery.replace('.','\.').replace("\.*",".*") + ')',result.Title,regex.I):
@@ -2990,7 +2994,7 @@ class scraper:
                     for t in threads:
                         t.join()
                     for result in results:
-                        if not result == []:
+                        if not result == [] and not result == None:
                             scraped_releases += result
             return scraped_releases
         def resolve(result):
@@ -3107,6 +3111,15 @@ def run(stop):
     if len(library) > 0:
         #get entire plex_watchlist
         plex_watchlist = plex.watchlist()
+        for element in plex_watchlist:
+            element.watchlist = ""
+            if hasattr(element,'Seasons'):
+                for season in element.Seasons:
+                    season.watchlist = ""
+                    for episode in season.Episodes:
+                        episode.watchlist = ""
+        with open('plex_watchlist.json', 'w') as f:
+            json.dump(plex_watchlist.data,f, default=lambda o: o.__dict__,indent=4)
         #get entire trakt_watchlist
         trakt_watchlist = trakt.watchlist()
         #get all overseerr request, match content to plex media type and add to monitored list
@@ -3818,6 +3831,6 @@ class ui:
                         settings[setting.name] = setting.get()
                     elif setting.name == 'version':
                         settings[setting.name] = setting.get()
-     
+
 if __name__ == "__main__":
     ui.run()
