@@ -158,6 +158,23 @@ class content:
                 title = releases.rename(self.grandparentTitle) 
                 title = title.replace('.'+str(self.grandparentYear),'')
                 return title + '.S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index))+ '.'
+        def deviation(self):
+            if self.type == 'movie':
+                title = releases.rename(self.title)
+                title = title.replace('.'+str(self.year),'')
+                return '(' + title + '.)(' + str(self.year) + '|' + str(self.year - 1) + '|' + str(self.year + 1) + ')'
+            elif self.type == 'show':
+                title = releases.rename(self.title)
+                title = title.replace('.'+str(self.year),'')
+                return '(' + title + '.)(' + str(self.year) + '.)?'
+            elif self.type == 'season':
+                title = releases.rename(self.parentTitle) 
+                title = title.replace('.'+str(self.parentYear),'')
+                return '(' + title + '.)(' + str(self.year) + '.)?(season.[0-9]+.)?' + '(S' + str("{:02d}".format(self.index)) + '.)'
+            elif self.type == 'episode': 
+                title = releases.rename(self.grandparentTitle) 
+                title = title.replace('.'+str(self.grandparentYear),'')
+                return '(' + title + '.)(' + str(self.year) + '.)?(S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index))+ '.)'
         def watch(self):
             if not self in content.media.ignore_queue:
                 self.ignored_count = 1
@@ -425,7 +442,7 @@ class content:
                         for year in alternate_years:
                             i = 0
                             while len(self.Releases) == 0 and i <= retries:
-                                self.Releases += scraper(self.query().replace(str(self.year),str(year)))
+                                self.Releases += scraper(self.query().replace(str(self.year),str(year)),self.deviation())
                                 i += 1
                             if not len(self.Releases) == 0:
                                 self.year = year
@@ -446,7 +463,7 @@ class content:
                         tic = time.perf_counter()
                         #if there is more than one uncollected season
                         if len(self.Seasons) > 1:
-                            self.Releases += scraper(self.query())
+                            self.Releases += scraper(self.query(),self.deviation())
                             parentReleases = copy.deepcopy(self.Releases)
                             #if there are more than 3 uncollected seasons, look for multi-season releases before downloading single-season releases
                             if len(self.Seasons) > 3:
@@ -457,9 +474,7 @@ class content:
                                 minimum_episodes = len(self.files())/2
                                 season_queries = []
                                 for season in self.Seasons:
-                                    altquery = regex.split(r'(S[0-9]+)',season.query()) 
-                                    altquery = altquery[0] + '[0-9]*.*' + altquery[1] + altquery[2]
-                                    season_queries += [altquery]
+                                    season_queries += [season.deviation()]
                                 season_queries_str = '(' + ')|('.join(season_queries) + ')'
                                 for release in self.Releases:
                                     match = regex.match(season_queries_str,release.title,regex.I)
@@ -532,10 +547,7 @@ class content:
                         toc = time.perf_counter()
                         ui.print('took ' + str(round(toc-tic,2)) + 's')
             elif self.type == 'season':
-                altquery = self.query()
-                if regex.search(r'(S[0-9]+)',altquery):
-                    altquery = regex.split(r'(S[0-9]+)',altquery) 
-                    altquery = altquery[0] + '[0-9]*.*' + altquery[1] + altquery[2]
+                altquery = self.deviation()
                 for release in parentReleases:
                     if regex.match(r'('+altquery+')',release.title,regex.I):
                         self.Releases += [release]
@@ -545,7 +557,7 @@ class content:
                     else:
                         self.Releases = []
                     while len(self.Releases) == 0 and i <= retries:
-                        self.Releases += scraper(self.query())
+                        self.Releases += scraper(self.query(),self.deviation())
                         i += 1
                 if not self.debrid_download():
                     self.Releases += scraper(self.query()[:-1])
@@ -560,17 +572,14 @@ class content:
                     return True
             elif self.type == 'episode':
                 while len(self.Releases) == 0 and i <= retries:
-                    altquery = self.query()
-                    if regex.search(r'(S[0-9]+)',altquery):
-                        altquery = regex.split(r'(S[0-9]+)',altquery) 
-                        altquery = altquery[0] + '[0-9]*.*' + altquery[1] + altquery[2]
+                    altquery = self.deviation()
                     for release in parentReleases:
                         if regex.match(r'('+altquery+')',release.title,regex.I):
                             self.Releases += [release]
                     if self.debrid_download():
                         return True
                     else:
-                        self.Releases = scraper(self.query())
+                        self.Releases = scraper(self.query(),self.deviation())
                     i += 1
                 return self.debrid_download()
             if refresh and content.libraries.active == [plex.library.name]:
@@ -1931,12 +1940,7 @@ class debrid:
         def download(element:content.media,stream=True,query='',force=False):
             cached = element.Releases
             if query == '':
-                query = element.query()
-            if regex.search(r'(S[0-9][0-9])',query):
-                query = regex.split(r'(S[0-9]+)',query) 
-                season_number = regex.search(r'([0-9]+)',query[1]).group()
-                query[1] = '(S'+season_number+'|SEASON.'+str(int(season_number))+')'
-                query = query[0] + '[0-9]*.*' + query[1] + query[2]
+                query = element.deviation()
             wanted = [query]
             if not isinstance(element,releases):
                 wanted = element.files()
@@ -2070,12 +2074,7 @@ class debrid:
         def download(element:content.media,stream=True,query='',force=False):
             cached = element.Releases
             if query == '':
-                query = element.query()
-            if regex.search(r'(S[0-9][0-9])',query):
-                query = regex.split(r'(S[0-9]+)',query)
-                season_number = regex.search(r'([0-9]+)',query[1]).group()
-                query[1] = '(S'+season_number+'|SEASON.0?'+str(int(season_number))+')' 
-                query = query[0] + '[0-9]*.*' + query[1] + query[2]
+                query = element.deviation()
             for release in cached[:]:
                 #if release matches query
                 if regex.match(r'('+ query.replace('.','\.').replace("\.*",".*") + ')',release.title,regex.I) or force:
@@ -2198,12 +2197,7 @@ class debrid:
         def download(element:content.media,stream=True,query='',force=False):
             cached = element.Releases
             if query == '':
-                query = element.query()
-            if regex.search(r'(S[0-9][0-9])',query):
-                query = regex.split(r'(S[0-9]+)',query)
-                season_number = regex.search(r'([0-9]+)',query[1]).group()
-                query[1] = '(S'+season_number+'|SEASON.0?'+str(int(season_number))+')' 
-                query = query[0] + '[0-9]*.*' + query[1] + query[2]
+                query = element.deviation()
             for release in cached[:]:
                 #if release matches query
                 if regex.match(r'('+ query.replace('.','\.').replace("\.*",".*") + ')',release.title,regex.I) or force:
@@ -2314,12 +2308,7 @@ class debrid:
         def download(element:content.media,stream=True,query='',force=False):
             cached = element.Releases
             if query == '':
-                query = element.query()
-            if regex.search(r'(S[0-9][0-9])',query):
-                query = regex.split(r'(S[0-9]+)',query)
-                season_number = regex.search(r'([0-9]+)',query[1]).group()
-                query[1] = '(S'+season_number+'|SEASON.0?'+str(int(season_number))+')' 
-                query = query[0] + '[0-9]*.*' + query[1] + query[2]
+                query = element.deviation()
             for release in cached[:]:
                 #if release matches query
                 if regex.match(r'('+ query.replace('.','\.').replace("\.*",".*") + ')',release.title,regex.I) or force:
@@ -2435,12 +2424,7 @@ class debrid:
         def download(element:content.media,stream=True,query='',force=False):
             cached = element.Releases
             if query == '':
-                query = element.query()
-            if regex.search(r'(S[0-9][0-9])',query):
-                query = regex.split(r'(S[0-9]+)',query)
-                season_number = regex.search(r'([0-9]+)',query[1]).group()
-                query[1] = '(S'+season_number+'|SEASON.0?'+str(int(season_number))+')' 
-                query = query[0] + '[0-9]*.*' + query[1] + query[2]
+                query = element.deviation()
             for release in cached[:]:
                 #if release matches query
                 if regex.match(r'('+ query.replace('.','\.').replace("\.*",".*") + ')',release.title,regex.I) or force:
@@ -2789,15 +2773,16 @@ class scraper:
                     if service.name == servicename:
                         activeservices += [service]
             return activeservices
-    def __new__(cls,query):
+    def __new__(cls,query,altquery="(.*)"):
         ui.print('done')
         ui.print('scraping sources for query "' + query + '" ...')
+        ui.print('accepting title that regex match "' + altquery + '" ...',debug=ui_settings.debug)
         scrapers = scraper.services()
         scraped_releases = []
         results = [None] * len(scrapers)
         threads = []
         for index,scraper_ in enumerate(scrapers):
-            t = Thread(target=scrape, args=(scraper_,query,results,index))
+            t = Thread(target=scrape, args=(scraper_,query,altquery,results,index))
             threads.append(t)
             t.start()
         # wait for the threads to complete
@@ -2808,26 +2793,7 @@ class scraper:
                 scraped_releases += result
         for release in scraped_releases:
             release.title = ''.join([i if ord(i) < 128 else '' for i in release.title])  
-        if regex.search(r'(S[0-9]+)',query) or not query.endswith('.'):
-            if not query.endswith('.'):
-                altquery = [query,'(S[0-9]+|Season.[0-9]+)','']
-            else:
-                altquery = regex.split(r'(S[0-9]+)',query) 
-                season_number = regex.search(r'([0-9]+)',altquery[1]).group()
-                altquery[1] = '(S'+season_number+'|SEASON.'+str(int(season_number))+')'
-            for release in scraped_releases:
-                deviation = regex.search(r'(?<=' + altquery[0] + ')(.*?)(?=' + altquery[1] + altquery[2] + ')',release.title,regex.I)
-                if not deviation == None:
-                    if len(deviation.group()) <= 1:
-                        release.title_deviation = 0
-                    elif len(deviation.group()) > 6:
-                        release.title_deviation = 2
-                    else:
-                        release.title_deviation = 1
-                elif not query.endswith('.'):
-                    release.title_deviation = 2
-                else:
-                    release.title_deviation = 0
+            release.title_deviation = 0 #redundant, kept in for compatability reasons
         releases.sort(scraped_releases)
         ui.print('done - found ' + str(len(scraped_releases)) + ' releases')
         return scraped_releases       
@@ -2835,13 +2801,9 @@ class scraper:
         name = "rarbg"
         token = 'r05xvbq6ul'
         session = requests.Session()
-        def __new__(cls,query):
+        def __new__(cls,query,altquery):
             scraped_releases = []
             if 'rarbg' in scraper.services.active:
-                altquery = copy.deepcopy(query)
-                if regex.search(r'(S[0-9]+)',altquery):
-                    altquery = regex.split(r'(S[0-9]+)',altquery) 
-                    altquery = altquery[0] + '[0-9]*.*' + altquery[1] + altquery[2]
                 headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
                 response = None
                 retries = 0
@@ -2883,13 +2845,9 @@ class scraper:
     class x1337(services):
         name = "1337x"
         session = requests.Session()
-        def __new__(cls,query):
+        def __new__(cls,query,altquery):
             scraped_releases = []
             if '1337x' in scraper.services.active:
-                altquery = copy.deepcopy(query)
-                if regex.search(r'(S[0-9]+)',altquery):
-                    altquery = regex.split(r'(S[0-9]+)',altquery) 
-                    altquery = altquery[0] + '[0-9]*.*' + altquery[1] + altquery[2]
                 headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
                 url = 'https://1337x.to/search/' + str(query) + '/1/'
                 try:
@@ -2931,7 +2889,7 @@ class scraper:
         categories = []
         filters = []
         session = requests.Session()
-        def __new__(cls,query):
+        def __new__(cls,query,altquery):
             scraped_releases = []
             if 'jackett' in scraper.services.active:
                 filter = ""
@@ -2953,10 +2911,6 @@ class scraper:
                         filter = "all"
                 else:
                     filter = "all"
-                altquery = copy.deepcopy(query)
-                if regex.search(r'(S[0-9]+)',altquery):
-                    altquery = regex.split(r'(S[0-9]+)',altquery) 
-                    altquery = altquery[0] + '[0-9]*.*' + altquery[1] + altquery[2]
                 url = scraper.jackett.base_url + '/api/v2.0/indexers/' + filter + '/results?apikey=' + scraper.jackett.api_key + '&Query=' + query + tags
                 try:
                     response = scraper.jackett.session.get(url,timeout=25)
@@ -3026,13 +2980,9 @@ class scraper:
         api_key = ""
         name = "prowlarr"
         session = requests.Session()
-        def __new__(cls,query):
+        def __new__(cls,query,altquery):
             scraped_releases = []
             if 'prowlarr' in scraper.services.active:
-                altquery = copy.deepcopy(query)
-                if regex.search(r'(S[0-9]+)',altquery):
-                    altquery = regex.split(r'(S[0-9]+)',altquery) 
-                    altquery = altquery[0] + '[0-9]*.*' + altquery[1] + altquery[2]
                 url = scraper.prowlarr.base_url + '/api/v1/search?query='+query+'&type=search&limit=1000&offset=0'
                 headers = {'X-Api-Key': scraper.prowlarr.api_key}
                 response = scraper.prowlarr.session.get(url,headers=headers)
@@ -3092,8 +3042,8 @@ class scraper:
             except:
                 return scraped_releases
 #Multiprocessing scrape method
-def scrape(cls:scraper,query,result,index):
-    result[index] = cls(query)
+def scrape(cls:scraper,query,altquery,result,index):
+    result[index] = cls(query,altquery)
 #Multiprocessing download method
 def download(cls:content.media,library,parentReleases,result,index):
     result[index] = cls.download(library=library,parentReleases=parentReleases)
@@ -3111,15 +3061,6 @@ def run(stop):
     if len(library) > 0:
         #get entire plex_watchlist
         plex_watchlist = plex.watchlist()
-        for element in plex_watchlist:
-            element.watchlist = ""
-            if hasattr(element,'Seasons'):
-                for season in element.Seasons:
-                    season.watchlist = ""
-                    for episode in season.Episodes:
-                        episode.watchlist = ""
-        with open('plex_watchlist.json', 'w') as f:
-            json.dump(plex_watchlist.data,f, default=lambda o: o.__dict__,indent=4)
         #get entire trakt_watchlist
         trakt_watchlist = trakt.watchlist()
         #get all overseerr request, match content to plex media type and add to monitored list
