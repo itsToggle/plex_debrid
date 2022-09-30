@@ -166,7 +166,7 @@ class content:
             elif self.type == 'show':
                 title = releases.rename(self.title)
                 title = title.replace('.'+str(self.year),'')
-                return '(' + title + '.)(' + str(self.year) + '.)?'
+                return '(' + title + '.)((' + str(self.year) + '.)|(complete.)|(seasons?.[0-9]+.[0-9]?[0-9]?.?)|(S[0-9]+.[0-9]?[0-9]?.?)|(S[0-9]+E[0-9]+))'
             elif self.type == 'season':
                 title = releases.rename(self.parentTitle) 
                 title = title.replace('.'+str(self.parentYear),'')
