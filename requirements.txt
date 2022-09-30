@@ -1,0 +1,4 @@
+requests
+bs4
+regex
+six

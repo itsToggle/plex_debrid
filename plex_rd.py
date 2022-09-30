@@ -1,20 +1,29 @@
-import copy
-import datetime
-import hashlib
-import itertools
-import json
-import os
-import random
-import sys
-import time
-from collections.abc import Sequence
-from threading import Thread
-from types import SimpleNamespace
 
-import regex
-import requests
-import six
-from bs4 import BeautifulSoup
+try:
+    import copy
+    import datetime
+    import hashlib
+    import itertools
+    import json
+    import os
+    import random
+    import sys
+    import time
+    from collections.abc import Sequence
+    from threading import Thread
+    from types import SimpleNamespace
+
+    import regex
+    import requests
+    import six
+    from bs4 import BeautifulSoup
+except ImportError as e:
+    print("python error: (module import exception): ")
+    print(e)
+    print("Make sure you have installed this python module.")
+    print(f"You need to install 'pip' (https://pip.pypa.io/en/stable/installation/) and run the command 'pip install {e.name}.")
+    input("Press any key to exit")
+    exit()
 
 regex.DEFAULT_VERSION = regex.VERSION1
 
@@ -162,13 +171,13 @@ class content:
                 return title
             elif self.type == 'season':
                 title = releases.rename(self.parentTitle)
-                title = title.replace('.' + str(self.parentYear), '')
-                return title + '.S' + str("{:02d}".format(self.index)) + '.'
+                title = title.replace(f".{self.parentYear}", '')
+                return title + '.S' + str(f"{self.index:02d}") + '.'
             elif self.type == 'episode':
                 title = releases.rename(self.grandparentTitle)
                 title = title.replace('.' + str(self.grandparentYear), '')
-                return title + '.S' + str("{:02d}".format(self.parentIndex)) + 'E' + str(
-                    "{:02d}".format(self.index)) + '.'
+                return title + '.S' + str(f"{self.parentIndex:02d}") + 'E' + str(
+                    f"{self.index:02d}") + '.'
 
         def deviation(self):
             if self.type == 'movie':
@@ -184,12 +193,12 @@ class content:
                 title = releases.rename(self.parentTitle)
                 title = title.replace('.' + str(self.parentYear), '')
                 return '(' + title + '.)(' + str(self.parentYear) + '.)?(season.[0-9]+.)?' + '(S' + str(
-                    "{:02d}".format(self.index)) + '.)'
+                    f"{self.index:02d}") + '.)'
             elif self.type == 'episode':
                 title = releases.rename(self.grandparentTitle)
                 title = title.replace('.' + str(self.grandparentYear), '')
                 return '(' + title + '.)(' + str(self.grandparentYear) + '.)?(S' + str(
-                    "{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index)) + '.)'
+                    f"{self.parentIndex:02d}") + 'E' + str(f"{self.index:02d}") + '.)'
 
         def watch(self):
             if not self in content.media.ignore_queue:
@@ -661,7 +670,7 @@ class content:
                 for episode in self.Episodes:
                     files += episode.files()
             elif self.type == 'episode':
-                files += ['S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index)) + '']
+                files += ['S' + str(f"{self.parentIndex:02d}") + 'E' + str(f"{self.index:02d}") + '']
             return files
 
 

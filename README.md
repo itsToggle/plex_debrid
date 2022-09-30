@@ -191,14 +191,15 @@ more personal media server setup instructions to come soon.
 >  <summary><b><u>Standard Version:</u></b></summary>
 >  
 >  0. Clone this repository with git or click on "code" (top right) and then "download zip" 
->  1. Run the script!
->  2. The script will guide you through the initial setup and the next steps. When setting up plex_debrid, you will be prompted to choose the 3 main services that this script connects:
->  3. Pick and setup at least one **content service** which plex_debrid should monitor for new content
->  4. Pick and setup a **library service**, which plex_debrid will use to determine your current media collection.
->  5. Pick and setup at least one **debrid service**, which plex_debrid will use to download content.
->  3. You're done!
->  4. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
->  5. Read the rest of the README!
+>  1. Run `pip install -r requirements.txt`
+>  2. Run the script!
+>  3. The script will guide you through the initial setup and the next steps. When setting up plex_debrid, you will be prompted to choose the 3 main services that this script connects:
+>  4. Pick and setup at least one **content service** which plex_debrid should monitor for new content
+>  5. Pick and setup a **library service**, which plex_debrid will use to determine your current media collection.
+>  6. Pick and setup at least one **debrid service**, which plex_debrid will use to download content.
+>  7. You're done!
+>  8. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
+>  6. Read the rest of the README!
 >  
 ></details>
 >
