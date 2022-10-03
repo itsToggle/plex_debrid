@@ -1,15 +1,10 @@
 FROM python:3
 
 ADD plex_rd.py /
+ADD requirements.txt /
 
 ENV TERM=xterm
 
-RUN pip install requests
-
-RUN pip install bs4
-
-RUN pip install regex
-
-RUN pip install six
+RUN pip install -r requirements.txt
 
 CMD [ "python", "./plex_rd.py", "-e", "TERM=xterm"]
