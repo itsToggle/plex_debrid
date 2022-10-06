@@ -46,7 +46,7 @@ This is a work in progress, and im not a professional programmer. shits not read
 
 Feel free to ask any questions on github [discussions](https://github.com/itsToggle/plex_debrid/discussions) or create a new [issue](https://github.com/itsToggle/plex_debrid/issues) if you find a bug or have an idea for an improvement.
 
-If github is not your cup of tee, join the plex_debrid [discord server](https://discord.gg/RbuKc8Hp) or find me on [reddit](https://www.reddit.com/user/itsToggle)
+If github is not your cup of tee, join the plex_debrid [discord server](https://discord.gg/UKkPeRdukx) or find me on [reddit](https://www.reddit.com/user/itsToggle)
 
 ## Setup:
 For linux, mac and windows, the setup process does not require any additional preparation. For different operating systems, check out the information the fine people linked here have gathered:
