@@ -76,11 +76,11 @@ For linux, mac and windows, the setup process does not require any additional pr
 >  4. give your remote a name (e.g. 'your-remote')
 >  5. choose '47) realdebrid' as your remote type
 >  6. follow the rest of the prompted instructions, choose 'no advaced configuration'
->  7. You can mount your newly created remote by running the command 'rclone cmount your-remote: X: --dir-cache-time 10s --vfs-cache-mode full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
+>  7. You can mount your newly created remote by running the command 'rclone cmount your-remote: X: --dir-cache-time 10s' (replace 'your-remote' with your remote name, replace 'X' with a drive letter of your choice or replace 'X:' with a destination folder)
 >  8. If you are running my rclone fork on Linux, replace "cmount" with "mount" in the command above.
 >  9. You've successfuly created a virtual drive of your debrid service!
 >  
->  *You can run rclone as a background service by adding the mounting tag '--no-console' (Windows) or '--deamon' (Linux, Mac, etc)*
+>  *You can run rclone as a background service by adding the mounting tag '--no-console' (Windows) or '--deamon' (Linux, Mac, etc).*
 > 
 >  **Mounting with official rclone software (WebDav)**
 >  
@@ -94,7 +94,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 >  8. enter your realdebrid user name as your user name
 >  9. choose option 'y) yes, enter in my own password'
 >  10. enter your webdav password (available in your account settings) as the password
->  11. You can mount your newly created remote by running the command 'rclone mount your-remote:torrents X: --dir-cache-time 10s --vfs-cache-mode full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
+>  11. You can mount your newly created remote by running the command 'rclone mount your-remote:torrents X: --dir-cache-time 10s' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice or replace 'X:' with a destination folder)
 >  12. You've successfuly created a virtual drive of your debrid service!
 > 
 >  *You can run rclone as a background service by adding the mounting tag '--no-console' (Windows) or '--deamon' (Linux, Mac, etc)*
@@ -109,7 +109,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 >  4. give your remote a name (e.g. 'your-remote')
 >  5. choose '46) premiumize' as your remote type
 >  6. follow the rest of the prompted instructions, choose 'no advaced configuration'
->  7. You can mount your newly created remote by running the command 'rclone mount your-remote: X: --dir-cache-time 10s --vfs-cache-mode full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
+>  7. You can mount your newly created remote by running the command 'rclone mount your-remote: X: --dir-cache-time 10s' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice or replace 'X:' with a destination folder)
 >  8. You've successfuly created a virtual drive of your debrid service!
 >  
 >  *You can run rclone as a background service by adding the mounting tag '--no-console' (Windows) or '--deamon' (Linux, Mac, etc)*
@@ -128,7 +128,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 >  8. enter an api key as your user name
 >  9. choose option 'y) yes, enter in my own password'
 >  10. enter 'eeeee' as the password
->  11. You can mount your newly created remote by running the command 'rclone mount your-remote:links X: --dir-cache-time 10s --vfs-cache-mode full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
+>  11. You can mount your newly created remote by running the command 'rclone mount your-remote:links X: --dir-cache-time 10s' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice or replace 'X:' with a destination folder)
 >  12. You've successfuly created a virtual drive of your debrid service!
 >  13. You will only be able to watch content from the "links" and "history" folder, not the "magnet" folder. The "links" folder is recommended and the one used in the mounting command above.
 >  
@@ -148,7 +148,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 >  8. enter your debrid-link user name as your user name
 >  9. choose option 'y) yes, enter in my own password'
 >  10. enter your "passkey" (Available in your account) as the password
->  11. You can mount your newly created remote by running the command 'rclone mount your-remote X: --dir-cache-time 10s --vfs-cache-mode full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
+>  11. You can mount your newly created remote by running the command 'rclone mount your-remote X: --dir-cache-time 10s' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice or replace 'X:' with a destination folder)
 >  12. You've successfuly created a virtual drive of your debrid service!
 >  
 >  *You can run rclone as a background service by adding the mounting tag '--no-console' (Windows) or '--deamon' (Linux, Mac, etc)*
@@ -161,7 +161,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 >  
 >  http://help.put.io/en/articles/3480094-plex-rclone
 >  
->You can mount your newly created remote by running the command 'rclone mount your-remote X: --dir-cache-time 10s --vfs-cache-mode full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
+>You can mount your newly created remote by running the command 'rclone mount your-remote X: --dir-cache-time 10s' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice or replace 'X:' with a destination folder)
 >  
 >  *You can run rclone as a background service by adding the mounting tag '--no-console' (Windows) or '--deamon' (Linux, Mac, etc)*
 ></details>
@@ -176,8 +176,9 @@ For linux, mac and windows, the setup process does not require any additional pr
 >  1. Create a plex 'movie' library of the mounted virtual drive or add the virtual drive to an existing 'movie' library.
 >  2. Create a plex 'shows' library of the mounted virtual drive or add the virtual drive to an existing 'shows' library.
 >  3. *If you are running rclone on a Linux based OS and Plex cant find your mounted virtual drive, try adding the mounting tag '--allow-other'*
->  4. *Recommendation: disable 'video preview thumbnails', ~disable 'intro detection'~, disable the scheduled task 'perfom extensive media analysis' to reduce the download traffic*
->  5. You and your home users can now stream cached torrents from your debrid service/s!
+>  4. *Recommendation: disable 'video preview thumbnails', disable the scheduled task 'perfom extensive media analysis' to reduce the download traffic*
+>  5. Disable the libary setting "Empty trash after every scan", to make sure that no content is removed accidentaly
+>  6. You and your home users can now stream cached torrents from your debrid service/s!
 >  
 >  </details>
 
@@ -198,7 +199,8 @@ more personal media server setup instructions to come soon.
 >  5. Pick and setup at least one **debrid service**, which plex_debrid will use to download content.
 >  3. You're done!
 >  4. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
->  5. Read the rest of the README!
+>  5. If you want the main menu to show when starting the script (for an auto-run setup), navigate to "/Settings/UI Settings/show menu on startup" and set the value to "false".
+>  6. Read the rest of the README!
 >  
 ></details>
 >
@@ -214,7 +216,8 @@ more personal media server setup instructions to come soon.
 >  6. Pick and setup at least one **debrid service**, which plex_debrid will use to download content.
 >  7. You're done!
 >  8. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
->  9. Read the rest of the README!
+>  9. If you want the main menu to show when starting the script (for an auto-run setup), navigate to "/Settings/UI Settings/show menu on startup" and set the value to "false".
+>  10. Read the rest of the README!
 >  
 ></details>
 
@@ -429,13 +432,6 @@ more personal media server setup instructions to come soon.
 >  - If plex is chosen as the library service, trakt and overseerr content needs to be matched to the plex media type. In order to accurate match content from Overseerr and Trakt to Plex, its neccessary to have at least one movie and one show inside a library thats visible by plex_debrid. Thats because in order to accurately match content, a search by imdb/tmdb/tvdb ID is necessary - which currently only works by requesting a "Fix Match" call to an existing library item. Until Plex allows a universal search by ID, this is the best I can do.
 >  - plex_debrid cannot destinguish between a truly empty library and a library that couldnt be reached because its offline (or not reachable for any other reason). In order to avoid unwanted behaviour, the script simply stops running whenever an empty library is encountered. You will need to manually add at least one media item to the libraries visible by plex_debrid, before the download automation can run savely.
 >  - The plex discover api only provides release dates, not precise release times. Its recommended to connect the script to trakt.tv, which enables plex_debrid to find more accurate release dates and even find out if movies can be downloaded before their actual release date.
->
-></details>
->
-><details>
->  <summary><b><u>Scraping Limitations:</u></b></summary>
->  
->  - plex_debrid accepts releases whos title deviates a bit from the original search-query. This allows plex_debrid to download a release named "some.show.2018.season.1.S01", when the original search query was "some.show.S01". This usually works fine, but it does lead to problems when downloading shows which have similar titles like "NCIS" and "NCIS: Los Angeles". Im not sure how to find a good compromise solution.
 >
 ></details>
 
