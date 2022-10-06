@@ -293,12 +293,16 @@ class content:
                                 if not self in plex.ignored:
                                     plex.ignored += [self]
                                 return True
-                    else:
-                        if hasattr(self,'viewedLeafCount'):
-                            if self.viewedLeafCount >= self.leafCount:
-                                if not self in plex.ignored:
-                                    plex.ignored += [self]
-                                return True
+                    elif self.type == 'show':
+                        for season in self.Seasons:
+                            if season.watched() == False:
+                                return False
+                        return True
+                    elif self.type == 'season':
+                        for episode in self.Episodes:
+                            if episode.watched() == False:
+                                return False
+                        return True
                     return False
                 except Exception as e:
                     ui.print("plex error: (attr exception): " + str(e),debug=ui_settings.debug)
@@ -430,7 +434,7 @@ class content:
             return []
         def downloading(self):
             return self in debrid.downloading
-        def download(self,retries=1,library=[],parentReleases=[]):
+        def download(self,retries=0,library=[],parentReleases=[]):
             refresh = False
             i=0
             self.Releases = []
@@ -1119,11 +1123,7 @@ class trakt(content.services):
                                 element.show.type = 'show'
                                 element.show.user = user
                                 element.show.guid = element.show.ids.trakt
-                                collected_count = 0
-                                for season in element.seasons:
-                                    for episode in season.episodes:
-                                        collected_count += 1
-                                if not element.show in self.data and not collected_count == element.show.aired_episodes:
+                                if not element.show in self.data:
                                     self.data.append(trakt.show(element.show))
                     except Exception as e:
                         ui.print("[trakt error]: (exception): " + str(e),debug=ui_settings.debug)
@@ -3124,7 +3124,7 @@ class download_script:
                 time.sleep(1)
 #Ui Preference Class:
 class ui_settings:
-    version = ['1.2',"Special character renaming have been updated. You now have more control over how characters are renamed for scraping.",['Special character renaming',]]
+    version = ['1.21',"Settings compatible update",[]]
     run_directly = "true"
     debug = "false"
 #Ui Class
@@ -3500,7 +3500,7 @@ class ui:
         print('   / __ \/ / _ \| |/_/   / __  / _ \/ __ \/ ___/ / __  / ')
         print('  / /_/ / /  __/>  <    / /_/ /  __/ /_/ / /  / / /_/ /  ')
         print(' / .___/_/\___/_/|_|____\__,_/\___/_.___/_/  /_/\__,_/   ')
-        print('/_/               /_____/                                ')
+        print('/_/               /_____/                         [v' + ui_settings.version[0] + ']')
         print()
         print(path)
         print()
@@ -3718,12 +3718,12 @@ class ui:
         if 'version' not in settings:
             ui.update(settings,ui_settings.version)
             updated = True
-        elif not settings['version'][0] == ui_settings.version[0]:
+        elif not settings['version'][0] == ui_settings.version[0] and not ui_settings.version[2] == []:
             ui.update(settings,ui_settings.version)
             updated = True
         for category, load_settings in ui.settings_list:
             for setting in load_settings:
-                if setting.name in settings:
+                if setting.name in settings and not setting.name == 'version':
                     setting.set(settings[setting.name])
         if doprint:
             print('Last settings loaded!')
