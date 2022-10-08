@@ -125,6 +125,7 @@ class content:
     #Media Class
     class media:
         ignore_queue = []
+        downloaded_versions = []
         def __init__(self,other):
             self.__dict__.update(other.__dict__)
         def __eq__(self, other) -> bool:
@@ -175,6 +176,14 @@ class content:
                 title = releases.rename(self.grandparentTitle) 
                 title = title.replace('.'+str(self.grandparentYear),'')
                 return '(' + title + '.)(' + str(self.grandparentYear) + '.)?(S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index))+ '.)'
+        def versions(self):
+            versions = []
+            for version in releases.sort.versions:
+                versions += [releases.sort.version(version[0],version[1],version[2],version[3])]
+            for version in versions[:]:
+                if self.query() + ' [' + version.name + ']' in content.media.downloaded_versions:
+                    versions.remove(version)
+            return versions
         def watch(self):
             if not self in content.media.ignore_queue:
                 self.ignored_count = 1
@@ -433,13 +442,16 @@ class content:
                 return Seasons
             return []
         def downloading(self):
-            return self in debrid.downloading
+            if hasattr(self,"version"):
+                return [self.query() + ' [' + self.version.name + ']'] in debrid.downloading
+            else:
+                return False
         def download(self,retries=0,library=[],parentReleases=[]):
             refresh = False
             i=0
             self.Releases = []
             if self.type == 'movie':
-                if len(self.uncollected(library)) > 0:
+                if len(self.uncollected(library)) > 0 or (len(self.versions()) > 0 and not len(self.versions()) == len(releases.sort.versions)):
                     if self.released() and not self.watched() and not self.downloading():
                         tic = time.perf_counter()
                         alternate_years = [self.year, self.year - 1, self.year + 1]
@@ -451,16 +463,17 @@ class content:
                             if not len(self.Releases) == 0:
                                 self.year = year
                                 break
-                        if self.debrid_download():
+                        debrid_downloaded, retry = self.debrid_download()
+                        if debrid_downloaded:
                             refresh = True
                             if self.watchlist.autoremove == "both" or self.watchlist.autoremove == "movie":
                                 self.watchlist.remove([],self)
                             toc = time.perf_counter()
                             ui.print('took ' + str(round(toc-tic,2)) + 's')
-                        else:
+                        if retry:
                             self.watch()
             elif self.type == 'show':
-                if self.released() and not self.collected(library) and not self.watched():
+                if self.released() and (not self.collected(library) or (len(self.versions()) > 0 and not len(self.versions()) == len(releases.sort.versions))) and not self.watched():
                     self.Seasons = self.uncollected(library)
                     #if there are uncollected episodes
                     if len(self.Seasons) > 0:
@@ -521,17 +534,19 @@ class content:
                                     #if either not all seasons can be downloaded as single-season packs or the single season packs are of equal or lower quality compared to the multi-season packs, download the multi season packs.
                                     if download_multi_season_release:
                                         self.Releases = multi_season_releases
-                                        if self.debrid_download():
+                                        debrid_downloaded, retry = self.debrid_download()
+                                        if debrid_downloaded:
                                             refresh = True
-                                            for season in self.Seasons[:]:
-                                                for episode in season.Episodes[:]:
-                                                    for file in self.Releases[0].files:
-                                                        if hasattr(file,'match'):
-                                                            if file.match == episode.files()[0]:
-                                                                season.Episodes.remove(episode)
-                                                                break
-                                                if len(season.Episodes) == 0:
-                                                    self.Seasons.remove(season)
+                                            if not retry:
+                                                for season in self.Seasons[:]:
+                                                    for episode in season.Episodes[:]:
+                                                        for file in self.Releases[0].files:
+                                                            if hasattr(file,'match'):
+                                                                if file.match == episode.files()[0]:
+                                                                    season.Episodes.remove(episode)
+                                                                    break
+                                                    if len(season.Episodes) == 0:
+                                                        self.Seasons.remove(season)
                         #Download all remaining seasons by starting a thread for each season.
                         results = [None] * len(self.Seasons)
                         threads = []
@@ -544,7 +559,7 @@ class content:
                         for t in threads:
                             t.join()
                         for index,result in enumerate(results):
-                            if result:
+                            if result[0]:
                                 refresh = True
                         if refresh and (self.watchlist.autoremove == "both" or self.watchlist.autoremove == "show"):
                             self.watchlist.remove([],self)
@@ -556,32 +571,37 @@ class content:
                     if regex.match(r'('+altquery+')',release.title,regex.I):
                         self.Releases += [release]
                 if not len(self.Episodes) <= self.leafCount/2:
-                    if self.debrid_download():
-                        return True
+                    debrid_downloaded, retry = self.debrid_download()
+                    if debrid_downloaded:
+                        return True, retry
                     else:
                         self.Releases = []
                     while len(self.Releases) == 0 and i <= retries:
                         self.Releases += scraper(self.query(),self.deviation())
                         i += 1
-                if not self.debrid_download():
+                debrid_downloaded, retry = self.debrid_download()
+                if not debrid_downloaded:
                     self.Releases += scraper(self.query()[:-1])
                     for episode in self.Episodes:
-                        if episode.download(library=library,parentReleases=self.Releases):
+                        downloaded, retry = episode.download(library=library,parentReleases=self.Releases)
+                        if downloaded:
                             refresh = True
-                        else:
+                        if retry:
                             episode.watch()
                     if refresh:
-                        return True
+                        return True, retry
+                    return False, retry
                 else:
-                    return True
+                    return True, retry
             elif self.type == 'episode':
                 while len(self.Releases) == 0 and i <= retries:
                     altquery = self.deviation()
                     for release in parentReleases:
                         if regex.match(r'('+altquery+')',release.title,regex.I):
                             self.Releases += [release]
-                    if self.debrid_download():
-                        return True
+                    debrid_downloaded, retry = self.debrid_download()
+                    if debrid_downloaded:
+                        return True, retry
                     else:
                         self.Releases = scraper(self.query(),self.deviation())
                     i += 1
@@ -595,13 +615,27 @@ class content:
             elif refresh and content.libraries.active == [trakt.library.name]:
                 trakt.library.add(self)
         def debrid_download(self):
-            if debrid.download(self,stream=True):
-                return True
-            if not self.type == 'show' and debrid.uncached == 'true':
-                if debrid.download(self,stream=False):
-                    debrid.downloading += [self]
-                    return True
-            return False
+            debrid.check(self)
+            scraped_releases = copy.deepcopy(self.Releases)
+            downloaded = []
+            if len(scraped_releases) > 0:
+                for version in self.versions():
+                    self.version = version
+                    self.Releases = copy.deepcopy(scraped_releases)
+                    releases.sort(self.Releases,self.version)
+                    if debrid.download(self,stream=True):
+                        content.media.downloaded_versions += [self.query() + ' [' + self.version.name + ']']
+                        downloaded += [True]
+                    elif not self.type == 'show' and debrid.uncached == 'true': #change to version definition of cache status
+                        if debrid.download(self,stream=False):
+                            content.media.downloaded_versions += [self.query() + ' [' + self.version.name + ']']
+                            debrid.downloading += [self.query() + ' [' + self.version.name + ']']
+                            downloaded += [True]
+                        else:
+                            downloaded += [False]
+                    else:
+                        downloaded += [False]
+            return True in downloaded, (False in downloaded or len(downloaded) == 0)
         def files(self):
             files = []
             if self.type == 'movie':
@@ -669,6 +703,7 @@ class plex(content.services):
                                     element = next(x for x in self.data if x == entry)
                                     if not user in element.user:
                                         element.user += [user]
+                self.data.sort(key=lambda s: s.watchlistedAt,reverse=True)
             except Exception as e:
                 ui.print('done') 
                 ui.print("[plex error]: (watchlist exception): " + str(e),debug=ui_settings.debug)
@@ -726,6 +761,7 @@ class plex(content.services):
                 for entry in self.data[:]:
                     if not entry in new_watchlist:
                         self.data.remove(entry)
+                self.data.sort(key=lambda s: s.watchlistedAt,reverse=True)
             except Exception as e:
                 ui.print('done') 
                 ui.print("[plex error]: (watchlist exception): " + str(e),debug=ui_settings.debug)
@@ -749,7 +785,7 @@ class plex(content.services):
                                 self.Episodes += [plex.episode(episode)] 
                         self.leafCount = response.MediaContainer.totalSize
                 else: 
-                    time.sleep(1)       
+                    time.sleep(1)
     class episode(content.media):
         def __init__(self,other):
             self.watchlist = plex.watchlist
@@ -1756,98 +1792,50 @@ class debrid:
             return activeservices
     #Download Method:
     def download(element:content.media,stream=True,query='',force=False):
-        if len(releases.sort.multiple_versions) == 0 or len(element.Releases) <=1:
-            versions = [['(.*)'],]
-        else:
-            versions = releases.sort.multiple_versions
         downloaded_files = []
         if stream:
-            debrid.check(element,force=force)
             cached_releases = copy.deepcopy(element.Releases)
             downloaded = False
-            for index,version in enumerate(versions):
-                version_done = False
-                if not version == ['(.*)']:
-                    ui.print('attempting to download version ' + str(index+1) + '/' + str(len(versions)) + ': "' + version[0] + '" ...')
-                for release in cached_releases:
-                    if version[0].startswith('!'):
-                        try:
-                            match = regex.search(version[0][1:],release.title,regex.I)
-                            match = not match
-                        except:
-                            ui.print('multiple versions error: check your multiple versions settings.',debug=ui_settings.debug)
-                            match = True
-                    else:
-                        try:
-                            match = regex.search(version[0],release.title,regex.I)
-                        except:
-                            ui.print('multiple versions error: check your multiple versions settings.',debug=ui_settings.debug)
-                            match = True
-                    if match:
-                        element.Releases = [release,]
-                        if len(debrid.tracker) > 0:
-                            for t,s in debrid.tracker:
-                                if regex.search(t,release.source,regex.I):
-                                    release.cached = s
-                        for service in debrid.services():
-                            if service.short in release.cached:
-                                if service.download(element,stream=stream,query=query,force=force):
-                                    version_done = True
-                                    downloaded = True
-                                    downloaded_files += element.Releases[0].files
-                                    break
-                    if version_done:
-                        break
-                if not version == ['(.*)'] and not downloaded:
-                    ui.print('done')
+            for release in cached_releases:
+                element.Releases = [release,]
+                if len(debrid.tracker) > 0:
+                    for t,s in debrid.tracker:
+                        if regex.search(t,release.source,regex.I):
+                            release.cached = s
+                for service in debrid.services():
+                    if service.short in release.cached:
+                        if service.download(element,stream=stream,query=query,force=force):
+                            downloaded = True
+                            downloaded_files += element.Releases[0].files
+                            break
+                if downloaded:
+                    break
             if len(element.Releases) > 0:
                 element.Releases[0].files = downloaded_files
             return downloaded
         else:
             scraped_releases = copy.deepcopy(element.Releases)
             downloaded = False
-            for index,version in enumerate(versions):
-                version_done = False
-                if not version == ['(.*)']:
-                    ui.print('attempting to download version ' + str(index+1) + '/' + str(len(versions)) + ': "' + version[0] + '" ...')
-                for release in scraped_releases:
-                    if version[0].startswith('!'):
-                        try:
-                            match = regex.search(version[0][1:],release.title,regex.I)
-                            match = not match
-                        except:
-                            ui.print('multiple versions error: check your multiple versions settings.',debug=ui_settings.debug)
-                            match = True
+            for release in scraped_releases:
+                element.Releases = [release,]
+                if len(debrid.tracker) > 0:
+                    for t,s in debrid.tracker:
+                        if regex.search(t,release.source,regex.I):
+                            release.cached = s
+                for service in debrid.services():
+                    if len(release.cached) > 0:
+                        if service.short in release.cached:
+                            if service.download(element,stream=stream,query=query,force=force):
+                                downloaded = True
+                                downloaded_files += element.Releases[0].files
+                                break
                     else:
-                        try:
-                            match = regex.search(version[0],release.title,regex.I)
-                        except:
-                            ui.print('multiple versions error: check your multiple versions settings.',debug=ui_settings.debug)
-                            match = True
-                    if match:
-                        element.Releases = [release,]
-                        if len(debrid.tracker) > 0:
-                            for t,s in debrid.tracker:
-                                if regex.search(t,release.source,regex.I):
-                                    release.cached = s
-                        for service in debrid.services():
-                            if len(release.cached) > 0:
-                                if service.short in release.cached:
-                                    if service.download(element,stream=stream,query=query,force=force):
-                                        downloaded = True
-                                        version_done = True
-                                        downloaded_files += element.Releases[0].files
-                                        break
-                            else:
-                                if service.download(element,stream=stream,query=query,force=force):
-                                    downloaded = True
-                                    version_done = True
-                                    downloaded_files += element.Releases[0].files
-                                    break
-                    if version_done:
-                        break
-                if not version == ['(.*)'] and not downloaded:
-                    ui.print('done')
+                        if service.download(element,stream=stream,query=query,force=force):
+                            downloaded = True
+                            downloaded_files += element.Releases[0].files
+                            break
+                if downloaded:
+                    break
             if len(element.Releases) > 0:
                 element.Releases[0].files = downloaded_files
             return downloaded
@@ -1855,7 +1843,6 @@ class debrid:
     def check(element:content.media,force=False):
         for service in debrid.services():
             service.check(element,force=force)
-        releases.sort(element.Releases)
     #RealDebrid class
     class realdebrid(services):
         #(required) Name of the Debrid service
@@ -2472,104 +2459,244 @@ class releases:
             if regex.search(r'(?<=btih:).*?(?=&)',str(self.download[0]),regex.I):
                 self.hash   = regex.findall(r'(?<=btih:).*?(?=&)',str(self.download[0]),regex.I)[0]            
         self.cached     = []
-        self.title_deviation = 0
         self.wanted = 0
         self.unwanted = 0
         self.seeders = seeders
+        self.resolution = "0"
+        if regex.search(r'(2160|1080|720|480)(?=p)',str(self.title),regex.I):
+            self.resolution = regex.findall(r'(2160|1080|720|480)(?=p)',str(self.title),regex.I)[0]
     #Define when releases are Equal 
     def __eq__(self, other):
         return self.title == other.title
     #Sort Method
     class sort:
-        size_min = '0.1'
-        size_max = ''
+        def setup(cls,new=False):
+            print("Currently defined versions: [" + ', '.join(x[0] for x in releases.sort.versions) + ']')
+            print()
+            print("0) Back")
+            print("1) Edit versions")
+            print("2) Add version")
+            print()
+            choice = input("Choose an action: ")
+            if choice == "1":
+                print()
+                print("0) Back")
+                for index,version in enumerate(releases.sort.versions):
+                    print(str(index+1) + ') Edit version "' + version[0] + '"')
+                print()
+                input()
+            elif choice == "2":
+                print()
+                name = input("Please provide a name for this version: ")
+                print()
+                back = False
+                default = releases.sort.versions[0][3]
+                print('Your new version "' + name + '" has been filled with some default rules. You can add new ones or edit the existing rules.')
+                print()
+                print("0) Back")
+                for index,rule in enumerate(default):
+                    print(str(index+1) + ') "' + rule[0] + '" "' + rule[1] + '" : ' + rule[2] + ' ' + rule[3])
+                
+                print()
+                input()
+            return
+        class version:                
+            class rule:
+                operators = [""]
+                def __init__(self,attribute,required,operator,value=None) -> None:
+                    self.attribute = attribute
+                    self.required = (required == "requirement")
+                    self.operator = operator
+                    self.value = value
+                def apply(self,scraped_releases:list):
+                    if self.required:
+                        if self.operator == "==":
+                            for release in scraped_releases[:]:
+                                if not getattr(release,self.attribute) == self.value:
+                                    scraped_releases.remove(release)
+                            return scraped_releases
+                        if self.operator == ">=":
+                            for release in scraped_releases[:]:
+                                if not float(getattr(release,self.attribute)) >= float(self.value):
+                                    scraped_releases.remove(release)
+                            return scraped_releases
+                        if self.operator == "<=":
+                            for release in scraped_releases[:]:
+                                if not float(getattr(release,self.attribute)) <= float(self.value):
+                                    scraped_releases.remove(release)
+                            return scraped_releases
+                        if self.operator == "highest":
+                            scraped_releases.sort(key=lambda s: float(getattr(s,self.attribute)), reverse=True)
+                            for release in scraped_releases[:]:
+                                if not float(getattr(release,self.attribute)) == float(getattr(scraped_releases[0],self.attribute)):
+                                    scraped_releases.remove(release)
+                            return scraped_releases
+                        if self.operator == "lowest":
+                            scraped_releases.sort(key=lambda s: float(getattr(s,self.attribute)), reverse=False)
+                            for release in scraped_releases[:]:
+                                if not float(getattr(release,self.attribute)) == float(getattr(scraped_releases[0],self.attribute)):
+                                    scraped_releases.remove(release)
+                            return scraped_releases
+                        if self.operator == "include":
+                            for release in scraped_releases[:]:
+                                if not bool(regex.search(self.value,getattr(release,self.attribute),regex.I)):
+                                    scraped_releases.remove(release)
+                            return scraped_releases
+                        if self.operator == "exclude":
+                            for release in scraped_releases[:]:
+                                if bool(regex.search(self.value,getattr(release,self.attribute),regex.I)):
+                                    scraped_releases.remove(release)
+                            return scraped_releases
+                    else:
+                        if self.operator == "==":
+                            scraped_releases.sort(key=lambda s: (getattr(s,self.attribute) == self.value), reverse=True)
+                            return scraped_releases
+                        if self.operator == ">=":
+                            scraped_releases.sort(key=lambda s: (float(getattr(s,self.attribute)) >= float(self.value)), reverse=True)
+                            return scraped_releases
+                        if self.operator == "<=":
+                            scraped_releases.sort(key=lambda s: (float(getattr(s,self.attribute)) <= float(self.value)), reverse=True)
+                            return scraped_releases
+                        if self.operator == "highest":
+                            scraped_releases.sort(key=lambda s: float(getattr(s,self.attribute)), reverse=True)
+                            return scraped_releases
+                        if self.operator == "lowest":
+                            scraped_releases.sort(key=lambda s: float(getattr(s,self.attribute)), reverse=False)
+                            return scraped_releases
+                        if self.operator == "include":
+                            scraped_releases.sort(key=lambda s: bool(regex.search(self.value,getattr(s,self.attribute),regex.I)), reverse=True)
+                            return scraped_releases
+                        if self.operator == "exclude":
+                            scraped_releases.sort(key=lambda s: bool(regex.search(self.value,getattr(s,self.attribute),regex.I)), reverse=False)
+                            return scraped_releases
+            class resolution(rule):
+                name = "resolution"
+                operators = ["==",">=","<=","highest","lowest"]
+            class size(rule):
+                name = "size"
+                operators = ["==",">=","<=","highest","lowest"]
+                def apply(self,scraped_releases:list):
+                    if self.required:
+                        if self.operator == "==":
+                            for release in scraped_releases[:]:
+                                if not getattr(release,self.attribute) == self.value:
+                                    scraped_releases.remove(release)
+                            return scraped_releases
+                        if self.operator == ">=":
+                            for release in scraped_releases[:]:
+                                if not float(getattr(release,self.attribute)) >= float(self.value):
+                                    scraped_releases.remove(release)
+                            return scraped_releases
+                        if self.operator == "<=":
+                            for release in scraped_releases[:]:
+                                if not float(getattr(release,self.attribute)) <= float(self.value):
+                                    scraped_releases.remove(release)
+                            return scraped_releases
+                        if self.operator == "highest":
+                            scraped_releases.sort(key=lambda s: 5 * round(float(getattr(s,self.attribute))/5), reverse=True)
+                            for release in scraped_releases[:]:
+                                if not 5 * round(float(getattr(release,self.attribute))/5) == 5 * round(float(getattr(scraped_releases[0],self.attribute)/5)):
+                                    scraped_releases.remove(release)
+                            return scraped_releases
+                        if self.operator == "lowest":
+                            scraped_releases.sort(key=lambda s: 5 * round(float(getattr(s,self.attribute))/5), reverse=False)
+                            for release in scraped_releases[:]:
+                                if not 5 * round(float(getattr(release,self.attribute))/5) == 5 * round(float(getattr(scraped_releases[0],self.attribute))/5):
+                                    scraped_releases.remove(release)
+                            return scraped_releases
+                    else:
+                        if self.operator == "==":
+                            scraped_releases.sort(key=lambda s: (getattr(s,self.attribute) == self.value), reverse=True)
+                            return scraped_releases
+                        if self.operator == ">=":
+                            scraped_releases.sort(key=lambda s: (float(getattr(s,self.attribute)) >= float(self.value)), reverse=True)
+                            return scraped_releases
+                        if self.operator == "<=":
+                            scraped_releases.sort(key=lambda s: (float(getattr(s,self.attribute)) <= float(self.value)), reverse=True)
+                            return scraped_releases
+                        if self.operator == "highest":
+                            scraped_releases.sort(key=lambda s: 5 * round(float(getattr(s,self.attribute))/5), reverse=True)
+                            return scraped_releases
+                        if self.operator == "lowest":
+                            scraped_releases.sort(key=lambda s: 5 * round(float(getattr(s,self.attribute))/5), reverse=False)
+                            return scraped_releases
+            class seeders(rule):
+                name = "seeders"
+                operators = ["==",">=","<=","highest","lowest"]
+            class title(rule):
+                name = "title"
+                operators = ["==","include","exclude"]
+            class source(rule):
+                name = "source"
+                operators = ["==","include","exclude"]
+            class cache_status(rule):
+                name = "cache status"
+                operators = ["cached","uncached"]
+                def __init__(self,attribute,required,operator,value=None) -> None:
+                    self.attribute = "cached"
+                    self.required = (required == "requirement")
+                    self.operator = operator
+                    self.value = value
+                def apply(self,scraped_releases:list):
+                    if self.required:
+                        if self.operator == "cached":
+                            for release in scraped_releases[:]:
+                                if len(getattr(release,self.attribute)) == 0:
+                                    scraped_releases.remove(release)
+                            return scraped_releases
+                        if self.operator == "uncached":
+                            for release in scraped_releases[:]:
+                                if len(getattr(release,self.attribute)) > 0:
+                                    scraped_releases.remove(release)
+                            return scraped_releases
+                    else:
+                        if self.operator == "cached":
+                            scraped_releases.sort(key=lambda s: len(getattr(s,self.attribute)), reverse=True)
+                            return scraped_releases
+                        if self.operator == "uncached":
+                            scraped_releases.sort(key=lambda s: len(getattr(s,self.attribute)), reverse=False)
+                            return scraped_releases
+            def __init__(self,name,media,required,rules) -> None:
+                self.name = name
+                self.media = media
+                self.required = required
+                self.rules = rules                
         unwanted = ['sample']
-        multiple_versions = []
-        ranking= [
-            [
-                "(1080|720|480)(?=p|i)",
-                "title",
-                "number",
-                "1"
-            ],
-            [
-                "(.*)",
-                "wanted",
-                "number",
-                "1"
-            ],
-            [
-                "(.*)",
-                "unwanted",
-                "number",
-                "0"
-            ],
-            [
-                "(.*)",
-                "seeders",
-                "number",
-                "1"
-            ],
-            [
-                "(EXTENDED|REMASTERED)",
-                "title",
-                "text",
-                "1"
-            ],
-            [
-                "(h.?265|x.?265)",
-                "title",
-                "text",
-                "1"
-            ],
-            [
-                "(.*)",
-                "title_deviation",
-                "number",
-                "0"
-            ],
-            [
-                "(.*)",
-                "size",
-                "number",
-                "0"
-            ]
+        versions = [
+            ["2160p SDR","both","true",[
+                ["cache status","requirement","cached",""],
+                ["resolution","requirement",">=","2160"],
+                ["title","requirement","exclude","(\.DV\.|3D|\.H?D?.?CAM\.)"],
+                ["title","preference","exclude","(\.HDR\.)"],
+                ["title","preference","include","(EXTENDED|REMASTERED)"],
+                ["size","preference","lowest",""],
+                ["seeders","preference","highest",""],
+                ["size","requirement",">=","0.5"],
+            ]],
+            ["1080p SDR","both","true",[
+                ["cache status","requirement","cached",""],
+                ["resolution","requirement","<=","1080"],
+                ["resolution","preference","highest",""],
+                ["title","requirement","exclude","(\.DV\.|3D|\.H?D?.?CAM\.)"],
+                ["title","requirement","exclude","(\.HDR\.)"],
+                ["title","preference","include","(EXTENDED|REMASTERED)"],
+                ["size","preference","lowest",""],
+                ["seeders","preference","highest",""],
+                ["size","requirement",">=","0.5"],
+            ]],
         ]
-        def __new__(self,scraped_releases:list):
-            try:
-                for release in scraped_releases:
-                    release.rank = []
-                    for group,attribute,type,descending in releases.sort.ranking:
-                        search = regex.search(group,str(getattr(release,attribute)),regex.I)
-                        if search:
-                            if type == 'text':
-                                for rank,match in enumerate(search.groups()):
-                                    if match:
-                                        release.rank += [{attribute+': '+group:len(search.groups())-rank}]
-                            if type == 'number':
-                                release.rank += [{attribute+': '+group:int(float(search.group()))}]
-                        else:
-                            release.rank += [{attribute+': '+group:0}]
-                index = len(releases.sort.ranking)-1
-                for group,attribute,type,descending in reversed(releases.sort.ranking):
-                    scraped_releases.sort(key=lambda s: s.rank[index][attribute+': '+group], reverse=int(descending))
-                    index += -1
-                size_max = 2000
-                size_min = 0
-                try:
-                    size_max = float(releases.sort.size_max)
-                except:
-                    size_max = 2000
-                try:
-                    size_min = float(releases.sort.size_min)
-                except:
-                    size_min = 0
-                for release in scraped_releases[:]:
-                    if float(release.size) > size_max or float(release.size) < size_min:
-                        scraped_releases.remove(release)
-            except Exception as e:
-                ui.print("sorting error: (sorting exception): something seems wrong with your sorting rules. Aborted sorting. For details enable debug printing.")
-                ui.print("sorting error: (sorting exception): " + str(e),debug=ui_settings.debug)
+        always_on_rules = [version.rule("wanted","preference","highest",""),version.rule("unwanted","preference","lowest","")]
+        def __new__(self,scraped_releases:list,version:version):
+            if len(scraped_releases) > 0:
+                for rule in reversed(releases.sort.always_on_rules):
+                    rule.apply(scraped_releases)
+                for rule in reversed(version.rules):
+                    for subrule in releases.sort.version.rule.__subclasses__():
+                        if subrule.name == rule[0]:
+                            rule = subrule(rule[0],rule[1],rule[2],rule[3])
+                            break
+                    scraped_releases = rule.apply(scraped_releases)
+                ui.print('sorting releases for version [' + version.name + '] ... done - found ' + str(len(scraped_releases)) + ' releases')
             return scraped_releases
     #Rename Method
     class rename:
@@ -2793,8 +2920,6 @@ class scraper:
                 scraped_releases += result
         for release in scraped_releases:
             release.title = ''.join([i if ord(i) < 128 else '' for i in release.title])  
-            release.title_deviation = 0 #redundant, kept in for compatability reasons
-        releases.sort(scraped_releases)
         ui.print('done - found ' + str(len(scraped_releases)) + ' releases')
         return scraped_releases       
     class rarbg(services):
@@ -2954,7 +3079,7 @@ class scraper:
         def resolve(result):
             scraped_releases = []
             try:
-                link = scraper.jackett.session.get(result.Link,allow_redirects=False,timeout=0.5)
+                link = scraper.jackett.session.get(result.Link,allow_redirects=False,timeout=1)
                 if 'Location' in link.headers:
                     if regex.search(r'(?<=btih:).*?(?=&)',str(link.headers['Location']),regex.I):
                         if not result.Tracker == None and not result.Size == None:
@@ -3124,7 +3249,7 @@ class download_script:
                 time.sleep(1)
 #Ui Preference Class:
 class ui_settings:
-    version = ['1.21',"Settings compatible update",[]]
+    version = ['1.30',"Settings compatible update",[]]
     run_directly = "true"
     debug = "false"
 #Ui Class
@@ -3139,7 +3264,7 @@ class ui:
             func = getattr(self.cls,self.key)
             func()
     class setting:
-        def __init__(self,name,prompt,cls,key,required=False,entry="",test=None,help="",hidden=False,subclass=False,oauth=False,moveable=True,preflight=False,radio=False):
+        def __init__(self,name,prompt,cls,key,required=False,entry="",test=None,help="",hidden=False,subclass=False,oauth=False,moveable=True,preflight=False,radio=False,special=False):
             self.name = name
             self.prompt = prompt
             self.cls = cls
@@ -3154,8 +3279,12 @@ class ui:
             self.moveable = moveable
             self.preflight = preflight
             self.radio = radio
+            self.special = special
         def input(self):
-            if self.moveable:
+            if self.special:
+                self.cls.setup(self.cls)
+                return
+            elif self.moveable:
                 if not self.help == "":
                     print(self.help)
                     print()
@@ -3439,20 +3568,7 @@ class ui:
         ],
         ['Scraper Settings',[
             setting('Sources',[''],scraper.services,'active',entry="source",subclass=True,preflight=True),
-            setting(
-                'Release sorting',
-                [
-                    'Please specify what this sorting rule should to look for by providing one or more regex match group(s): ',
-                    'Please specify in which release attribute ("title","source","size" or "seeders") this sorting rule should search: ',
-                    'Please specify if the match should be interpreted as a number or as text ("number" or "text"): ',
-                    'Please specify in which order the releases should be by ranked by this sorting rule ("0" = ascending or "1" = descending): ',
-                ],
-                releases.sort,'ranking',
-                entry="rule",
-            ),
-            setting('Multiple versions',['Please specify a version by entering a regex match group: '],releases.sort,'multiple_versions',entry='version',help='This setting allows plex_debrid to download more than one version of your requested content. For each version you specify, plex_debrid will try to download the best release that matches your version definition. You can negate version rules by adding a "!" as the first character. (Example: download an HDR and a non-HDR version: add "(\.HDR\.)" and "!(\.HDR\.)" as your rules.)'),
-            setting('Maximum release size (Gb)','Please enter a maximum release size in Gb (e.g. enter 0.1 for 100Mb): ',releases.sort,'size_max'),
-            setting('Minimum release size (Gb)','Please enter a minimum release size in Gb (e.g. enter 0.1 for 100Mb): ',releases.sort,'size_min'),
+            setting('Versions',[],releases.sort,'versions',special=True,entry="version"),
             setting('Special character renaming',['Please specify a character or string that should be replaced: ','Please specify with what character or string it should be replaced: '],releases.rename,'replaceChars',entry="rule",help='In this setting you can specify a character or a string that should be replaced by nothing, some other character or a string.'),
             setting('Rarbg API Key','The Rarbg API Key gets refreshed automatically, enter the default value: ',scraper.rarbg,'token',hidden=True),
             setting('Jackett Base URL','Please specify your Jackett base URL: ',scraper.jackett,'base_url',hidden=True),
@@ -3466,7 +3582,6 @@ class ui:
         ],
         ['Debrid Services', [
             setting('Debrid Services',[''],debrid.services,'active',required=True,preflight=True,entry="service",subclass=True,help='Please setup at least one debrid service: '),
-            setting('Uncached Release Download','Please enter "true" or "false": ',debrid,'uncached',help='Please specify wether uncached releases should be added to your debrid service, if no cached releases were found.'),
             setting(
                 'Tracker specific Debrid Services',
                 [
@@ -3564,15 +3679,18 @@ class ui:
             return
         print()
         obj = releases('','','',[],0,[])
+        obj.version = releases.sort.version(releases.sort.versions[0][0],releases.sort.versions[0][1],releases.sort.versions[0][2],releases.sort.versions[0][3])
         scraped_releases = scraper(query.replace(' ','.'))
         if len(scraped_releases) > 0:
             obj.Releases = scraped_releases
             debrid.check(obj,force=True)
+            scraped_releases = obj.Releases
+            releases.sort(scraped_releases,obj.version)
             print()
             print("0) Back")
             releases.print(scraped_releases)
             print()
-            print("Type 'auto' to automatically download the first cached release.")
+            print("Type 'auto' to automatically download the first cached release. Releases were sorted by your first version definition.")
             back = False
             while not back:
                 print()
