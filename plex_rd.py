@@ -466,7 +466,7 @@ class content:
                         debrid_downloaded, retry = self.debrid_download()
                         if debrid_downloaded:
                             refresh = True
-                            if self.watchlist.autoremove == "both" or self.watchlist.autoremove == "movie":
+                            if not retry and (self.watchlist.autoremove == "both" or self.watchlist.autoremove == "movie"):
                                 self.watchlist.remove([],self)
                             toc = time.perf_counter()
                             ui.print('took ' + str(round(toc-tic,2)) + 's')
@@ -558,10 +558,13 @@ class content:
                         # wait for the threads to complete
                         for t in threads:
                             t.join()
+                        retry = False
                         for index,result in enumerate(results):
                             if result[0]:
                                 refresh = True
-                        if refresh and (self.watchlist.autoremove == "both" or self.watchlist.autoremove == "show"):
+                            if result[1]:
+                                retry = True
+                        if not retry and (self.watchlist.autoremove == "both" or self.watchlist.autoremove == "show"):
                             self.watchlist.remove([],self)
                         toc = time.perf_counter()
                         ui.print('took ' + str(round(toc-tic,2)) + 's')
