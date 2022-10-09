@@ -31,8 +31,7 @@ This is a work in progress, and im not a professional programmer. shits not read
    - <img src="https://prowlarr.com/img/favicon-32x32.png" height="16"> **[Prowlarr](https://github.com/Prowlarr/Prowlarr)**
    - <img src="https://progsoft.net/images/rarbg-icon-648af4dcc6ec63ee49d6c050af63d2547c74d46c.png" height="16"> **[RARBG](https://rarbg.to/)**
    - <img src="https://1337x.to/favicon.ico" height="16"> **[1337X](https://1337x.to/)**
-- Sorting and selecting scraped releases by completely customizable rules
-- Selecting multiple versions of your requested content (e.g. HDR and SDR versions) by completely customizable rules
+- Defining multiple, completely customizable versions to download (2160p HDR, 1080p SDR, etc)
 - Checking for cached releases and adding them to:
    - <img src="https://fcdn.real-debrid.com/0818/favicons/favicon.ico" height="16"> **[RealDebrid](http://real-debrid.com/?id=5708990)**
    - <img src="https://www.premiumize.me/favicon-16x16.png" height="16"> **[Premiumize](https://www.premiumize.me/)**
@@ -313,17 +312,6 @@ more personal media server setup instructions to come soon.
 ></details>
 >
 ><details>
->  <summary><b><u>Downloading multiple versions:</u></b></summary>
->  
->  - You can download multiple versions of your requested content (e.g. HDR and SDR versions, or a version for each resolution) by adding an unlimited amount of completely customizable version definitions
->  - You can add these version definition by navigating to "/Settings/Scraper Settings/Multiple Versions/Edit"
->  - You can negate the version definitions by adding a "!" as the first character
->  - Example: to download 2160p, 1080p and 720p releases, add the following versions: "(2160p)", "(1080p)" and "(720p)"
->  - Example: to download HDR and non-HDR releases, add the following versions: "(\.HDR\.)" and "!(\.HDR\.)"
->
-></details>
->
-><details>
 >  <summary><b><u>How releases are scraped</u></b></summary>
 >  
 >  The scraping of movies is pretty simple, there is not a lot to explain.
@@ -339,89 +327,6 @@ more personal media server setup instructions to come soon.
 >  
 >  All that is done to minimize the amount of calls made to torrent indexers and to fetch the most episodes at once. The process is done via multiprosing to speed things up.
 >  plex_debrid accepts releases whos title deviates a bit from the original search-query. This allows plex_debrid to download a release named "some.show.2018.season.1.S01", when the original search query was "some.show.S01". This usually works fine, but it does lead to problems when downloading shows which have similar titles like "NCIS" and "NCIS: Los Angeles". Im not sure how to find a good compromise solution.
-></details>
-><details>
->  <summary><b><u>Sorting and selecting scraped releases:</u></b></summary>
->  
->  The scrapers usually provide a whole bunch of releases. 
->  Adding them all to your debrid services would clutter your library and slow things down. This is why this script automatically sorts the releases by completely customizable rules and picks the best one. The script provides some pretty ok rules by default.
->  
->  You can define a minimum and maximum release size to filter out any unwanted releases. By default, the minimum release size is 100MB.
->  
->  The sorting is done by providing an unlimited number of sorting 'rules'. Rules can be added, edited, delted or moved. The first rule has the highest priority, the last one the lowest. 
->
->  Each rule consist of:
->  - a regex match group that defines what we are looking for. Check out regexr.com to try out some regex match definitions.
->  - an attribute definition that defines which attribute of the release we want to look in (can be the title, the source, or the size, or other special attributes that arent described further)
->  - an interpretation method. This can be either:
->    - "number" : the first regex match group will be interpreted as an integer and releases will be ranked by this number.
->    - "text" : we will give each release a rank accoring to which match group its in.
->  - lastly we define wheter to rank the releases in ascending or descending order.
->
->  You can test out your current sorting rules by manually scraping for releases from the main menu. The returned releases are sorted by your current rules. If you follow the 'scraping steps' from the section above, you will be able to tell which releases would be automatically downloaded with your current settings.
->
->  Lets make some rules: 
->
->  <details>
->    <summary><b><u>Example resolution sorting:</u></b></summary>
->
->  We want to download releases up to our prefered resolution of 1080p.
->  For this, we will choose the following setup:
->  - regex definition: "(1080|720|480)(?=p)" - This is one match group, that matches either "1080", "720" or "480", followed by the letter "p". This is a typical Resolution definition of releases.
->  - attribute definition: "title" - we want to look for this inside the release title
->  - interpretation method: "number" - we want to sort the releases by the highest number to the lowest number
->  - ascending/descending: "1" - 1 means descending. We want to sort the releases in decending order to get the highest resolution release.
->
->  </details>
->
->  <details>
->    <summary><b><u>Example codec sorting:</u></b></summary>
->
->  We want to download releases that use the x265 Codec, rather then the x264 codec. 
->  For this, we will choose the following setup:
->  - regex definition: "(h.?265|x.?265)|(h.?264|x.?264)" - These are two match groups, that match typical codec descriptions in the release titles
->  - attribute definition: "title" - we want to look for this inside the release title
->  - interpretation method: "text" - by choosing this, we define that the releases should be sorted by the match group they are in.
->  - ascending/descending: "1" - 1 means descending. Descending in this context means, that the First matchgroup is preffered over the second matchgroup, and both are prefered over a release that doesnt match.
->
->  </details>
->
->  <details>
->    <summary><b><u>Example release exclusion:</u></b></summary>
->
->  We don't want to download releases that are HDR or 3D. For this rule to ne effective, we need to make it our first rule.
->  For this, we will choose the following setup:
->  - regex definition: "(\\.HDR\\.|\\.3D\\.)"
->  - attribute definition: "title" - we want to look for this inside the release title
->  - interpretation method: "text" - by choosing this, we define that the releases should be sorted by the match group they are in.
->  - ascending/descending: "0" - 0 means ascending. Ascending in this context means, that releases that don't match are prefered over releases that do.
->
->  </details>
->
->  <details>
->    <summary><b><u>Example size sorting:</u></b></summary>
->
->  We want to sort or releases by size - this should be implemented as one of the last rules.
->  For this, we will choose the following setup:
->  - regex definition: "(.*)" - This is one match group that simply matches everything.
->  - attribute definition: "size" - we want to look for this inside the release size
->  - interpretation method: "number" - by choosing number, we define that the release size should be interpreted as a number.
->  - ascending/descending: "0" - 0 means ascending. We want to select the smallest release.
->
->  </details>
->
->  <details>
->    <summary><b><u>Example seeders sorting:</u></b></summary>
->
->  We want to sort or releases by the number of seeders.
->  For this, we will choose the following setup:
->  - regex definition: "(.*)" - This is one match group that simply matches everything.
->  - attribute definition: "seeders" - we want to look for this inside the releases seeders attribute
->  - interpretation method: "number" - by choosing number, we define that the releases number of seeders should be interpreted as a number.
->  - ascending/descending: "1" - 0 means descending. We want to select the release with the most seeders.
->
->  </details>
->
 ></details>
 
 ## Limitations:
