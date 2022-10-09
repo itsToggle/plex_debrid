@@ -583,7 +583,7 @@ class content:
                         self.Releases += scraper(self.query(),self.deviation())
                         i += 1
                 debrid_downloaded, retry = self.debrid_download()
-                if not debrid_downloaded:
+                if not debrid_downloaded or retry:
                     self.Releases += scraper(self.query()[:-1])
                     for episode in self.Episodes:
                         downloaded, retry = episode.download(library=library,parentReleases=self.Releases)
@@ -617,6 +617,16 @@ class content:
                 return True
             elif refresh and content.libraries.active == [trakt.library.name]:
                 trakt.library.add(self)
+        def downloaded(self):
+            content.media.downloaded_versions += [self.query() + ' [' + self.version.name + ']']
+            if self.type == 'show':
+                for season in self.Seasons:
+                    season.version = self.version
+                    season.downloaded()
+            if self.type == 'season':
+                for episode in self.Episodes:
+                    episode.version = self.version
+                    episode.downloaded()
         def debrid_download(self):
             debrid.check(self)
             scraped_releases = copy.deepcopy(self.Releases)
@@ -627,11 +637,11 @@ class content:
                     self.Releases = copy.deepcopy(scraped_releases)
                     releases.sort(self.Releases,self.version)
                     if debrid.download(self,stream=True):
-                        content.media.downloaded_versions += [self.query() + ' [' + self.version.name + ']']
+                        self.downloaded()
                         downloaded += [True]
                     elif not self.type == 'show' and debrid.uncached == 'true': #change to version definition of cache status
                         if debrid.download(self,stream=False):
-                            content.media.downloaded_versions += [self.query() + ' [' + self.version.name + ']']
+                            self.downloaded()
                             debrid.downloading += [self.query() + ' [' + self.version.name + ']']
                             downloaded += [True]
                         else:
@@ -2474,38 +2484,216 @@ class releases:
     #Sort Method
     class sort:
         def setup(cls,new=False):
-            print("Currently defined versions: [" + ', '.join(x[0] for x in releases.sort.versions) + ']')
-            print()
-            print("0) Back")
-            print("1) Edit versions")
-            print("2) Add version")
-            print()
-            choice = input("Choose an action: ")
-            if choice == "1":
+            back = False
+            while not back:
+                ui.cls('Options/Settings/Scraper Settings/Versions')
+                print("Currently defined versions: [" + '], ['.join(x[0] for x in releases.sort.versions) + ']')
                 print()
                 print("0) Back")
-                for index,version in enumerate(releases.sort.versions):
-                    print(str(index+1) + ') Edit version "' + version[0] + '"')
+                print("1) Edit versions")
+                print("2) Add version")
                 print()
-                input()
-            elif choice == "2":
-                print()
-                name = input("Please provide a name for this version: ")
-                print()
-                back = False
-                default = releases.sort.versions[0][3]
-                print('Your new version "' + name + '" has been filled with some default rules. You can add new ones or edit the existing rules.')
-                print()
-                print("0) Back")
-                for index,rule in enumerate(default):
-                    print(str(index+1) + ') "' + rule[0] + '" "' + rule[1] + '" : ' + rule[2] + ' ' + rule[3])
-                
-                print()
-                input()
+                choice = input("Choose an action: ")
+                if choice == '0':
+                    back = True
+                elif choice == "1":
+                    back2 = False
+                    while not back2:
+                        ui.cls('Options/Settings/Scraper Settings/Versions/Edit')
+                        print("0) Back")
+                        indices = []
+                        for index,version in enumerate(releases.sort.versions):
+                            print(str(index+1) + ') Edit version "' + version[0] + '"')
+                            indices += [str(index+1)]
+                        print()
+                        choice2 = input("Choose an action: ")
+                        if choice2 in indices:
+                            print()
+                            default = releases.sort.versions[int(choice2)-1][3]
+                            name = releases.sort.versions[int(choice2)-1][0]
+                            releases.sort.version.setup(name,default,new=False)
+                        if choice2 == '0':
+                            back2 = True
+                elif choice == "2":
+                    ui.cls('Options/Settings/Scraper Settings/Versions/Add')
+                    names = []
+                    name = "Id rather be watching the 1999 cinematic masterpiece 'The Mummy'."
+                    names += [name]
+                    for version in releases.sort.versions[:]:
+                        names += [version[0]]
+                    while name in names:
+                        name = input("Please provide a unique name for this version: ")
+                    print()
+                    default = copy.deepcopy(releases.sort.versions[0][3])
+                    releases.sort.version.setup(name,default,new=True)
+                    releases.sort.versions += [[name,'both','true',default]]
             return
         class version:                
+            def setup(name,default,new=False):
+                back = False
+                while not back:
+                    if new:
+                        ui.cls('Options/Settings/Scraper Settings/Versions/Add')
+                        print('Your new version [' + name + '] has been filled with some default rules. You can add new ones or edit the existing rules.')
+                    else:
+                        ui.cls('Options/Settings/Scraper Settings/Versions/Edit')
+                    print()
+                    print('Current settigns for version [' + name + ']:')
+                    print()
+                    print("0) Back")
+                    indices = []
+                    l_o = 0
+                    l_a = 0
+                    l_i = 0
+                    l_s = 0
+                    for index,rule in enumerate(default):
+                        indices += [str(index+1)]
+                        if len(str(index + 1)) >= l_i:
+                            l_i = len(str(index + 1)) + 1
+                        if len(rule[0]) >= l_a:
+                            l_a = len(rule[0]) + 1
+                        if len(rule[1]) >= l_s:
+                            l_s = len(rule[1]) + 1
+                        if len(rule[2]) >= l_o:
+                            l_o = len(rule[2]) + 1
+                    for index,rule in enumerate(default):
+                        print(str(index+1) + ')' + ' ' * (l_i - len(str(index + 1))) + rule[0] + ' ' * (l_a - len(rule[0])) + ' ' + rule[1] + ' ' * (l_s - len(rule[1])) + ': ' + ' ' * (l_o - len(rule[2])) + rule[2] + '  ' + rule[3])
+                    print()
+                    print("Choose a rule to edit or add a new rule by typing 'add'")
+                    print("To rename this version, type 'rename'")
+                    print("To delete this version, type 'remove'")
+                    print()
+                    choice = input("Choose an action: ")
+                    print()
+                    if choice in indices:
+                        releases.sort.version.rule.setup(choice,default,new=False)
+                    elif choice == '0':
+                        back = True
+                    elif choice == 'add':
+                        releases.sort.version.rule.setup(choice,default,new=True)
+                    elif choice == 'rename':
+                        ui.cls('Options/Settings/Scraper Settings/Versions/Add')
+                        names = []
+                        for version in releases.sort.versions[:]:
+                            names += [version[0]]
+                        for version in releases.sort.versions[:]:
+                            if version[0] == name:
+                                break
+                        while name in names:
+                            name = input("Please provide a unique name for this version: ")
+                        version[0] = name
+                        print()
+                    elif choice == 'remove':
+                        for version in releases.sort.versions[:]:
+                            if version[0] == name:
+                                releases.sort.versions.remove(version)
+                        back = True
             class rule:
+                def setup(choice,default,new=True):
+                    back = False
+                    while not back:
+                        if not new:
+                            ui.cls('Options/Settings/Scraper Settings/Versions/Edit')
+                            print("Current settings for rule #" + choice +":")
+                            print()
+                            print("0) Back")
+                            print("1) Edit  attribute : " + default[int(choice)-1][0])
+                            print("2) Edit  weight    : " + default[int(choice)-1][1])
+                            print("3) Edit  operator  : " + default[int(choice)-1][2])
+                            if not default[int(choice)-1][0] == "cache status" and not default[int(choice)-1][2] in ["highest","lowest"]:
+                                print("4) Edit  value     : " + default[int(choice)-1][3])
+                            print()
+                            print("Choose a value to edit, move this rule by typing 'move' or delete this rule by typing 'remove' ")
+                            print()
+                            choice2 = input("Choose an action: ")
+                        else:
+                            ui.cls('Options/Settings/Scraper Settings/Versions/Add')
+                            default += [["","","",""]]
+                            choice = str(len(default))
+                            choice2 = '1'
+                        print()
+                        if choice2 == '0':
+                            back = True
+                        elif choice2 == '1':
+                            if not new:
+                                print("You cannot change the attribute of an existing rule.")
+                                print()
+                                time.sleep(2)
+                            else:
+                                print("Please choose an attribute on which this rule should act.")
+                                print()
+                                indices = []
+                                for index,attribute in enumerate(releases.sort.version.rule.__subclasses__()):
+                                    print(str(index+1) + ') ' + attribute.name )
+                                    indices += [str(index+1)]
+                                print()
+                                choice3 = input("Please choose an attribute: ")
+                                if choice3 in indices:
+                                    default[int(choice)-1][int(choice2)-1] = releases.sort.version.rule.__subclasses__()[int(choice3)-1].name
+                                choice2 = '2'
+                        if choice2 == '2':
+                            print("Please choose a weight for this rule. This rule can either be a requirement or a preference.")
+                            print()
+                            indices = []
+                            for index,attribute in enumerate(releases.sort.version.rule.weights):
+                                print(str(index+1) + ') ' + attribute)
+                                indices += [str(index+1)]
+                            print()
+                            choice3 = input("Please choose a weight: ")
+                            if choice3 in indices:
+                                default[int(choice)-1][int(choice2)-1] = releases.sort.version.rule.weights[int(choice3)-1]
+                            if new:
+                                choice2 = '3'
+                        if choice2 == '3':
+                            print("Please choose an operator for this rule.")
+                            print()
+                            operators = []
+                            for subclass in releases.sort.version.rule.__subclasses__():
+                                if subclass.name == default[int(choice)-1][0]:
+                                    operators = subclass.operators
+                                    break
+                            indices = []
+                            for index,attribute in enumerate(operators):
+                                print(str(index+1) + ') ' + attribute)
+                                indices += [str(index+1)]
+                            print()
+                            choice3 = input("Please choose an operator: ")
+                            if choice3 in indices:
+                                default[int(choice)-1][int(choice2)-1] = subclass.operators[int(choice3)-1]
+                            if new and not default[int(choice)-1][0] == "cache status" and not default[int(choice)-1][2] in ["highest","lowest"]:
+                                choice2 = '4'
+                            elif new:
+                                print("New rule added!")
+                                time.sleep(2)
+                                new = False
+                        if choice2 == '4':
+                            print("Please choose a value for this rule. Make sure that the value you enter matches your chosen operator.")
+                            print()
+                            choice3 = input("Please enter a value: ")
+                            default[int(choice)-1][int(choice2)-1] = choice3
+                            if new:
+                                print("New rule added!")
+                                time.sleep(2)
+                                new = False
+                        if choice2 == 'remove':
+                            del default[int(choice)-1]
+                            back = True
+                        if choice2 == 'move':  
+                            print('0) Back')
+                            indices = []
+                            for i,rule in enumerate(default):
+                                print( str(i+1) +') Position '+ str(i+1))
+                                indices += [str(i+1)]
+                            print()
+                            choice3 = input('Move rule #' + choice + ' to: ')
+                            if choice in indices:
+                                temp = copy.deepcopy(default[int(choice)-1])
+                                del default[int(choice)-1]
+                                default.insert(int(choice3)-1,temp)
+                                back = True
+                        print()
                 operators = [""]
+                weights = ["requirement","preference"]
                 def __init__(self,attribute,required,operator,value=None) -> None:
                     self.attribute = attribute
                     self.required = (required == "requirement")
