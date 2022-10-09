@@ -302,16 +302,12 @@ class content:
                                 if not self in plex.ignored:
                                     plex.ignored += [self]
                                 return True
-                    elif self.type == 'show':
-                        for season in self.Seasons:
-                            if season.watched() == False:
-                                return False
-                        return True
-                    elif self.type == 'season':
-                        for episode in self.Episodes:
-                            if episode.watched() == False:
-                                return False
-                        return True
+                    else:
+                        if hasattr(self, 'viewedLeafCount'):
+                            if self.viewedLeafCount >= self.leafCount:
+                                if not self in plex.ignored:
+                                    plex.ignored += [self]
+                                return True
                     return False
                 except Exception as e:
                     ui.print("plex error: (attr exception): " + str(e),debug=ui_settings.debug)
