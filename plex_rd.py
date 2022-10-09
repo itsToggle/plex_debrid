@@ -629,13 +629,17 @@ class content:
             downloaded = []
             if len(scraped_releases) > 0:
                 for version in self.versions():
+                    debrid_uncached = True
+                    for rule in version.rules:
+                        if rule[0] == "cache status" and rule[1] == 'requirement' and rule[2] == "cached":
+                            debrid_uncached = False
                     self.version = version
                     self.Releases = copy.deepcopy(scraped_releases)
                     releases.sort(self.Releases,self.version)
                     if debrid.download(self,stream=True):
                         self.downloaded()
                         downloaded += [True]
-                    elif not self.type == 'show' and debrid.uncached == 'true': #change to version definition of cache status
+                    elif not self.type == 'show' and debrid_uncached: #change to version definition of cache status
                         if debrid.download(self,stream=False):
                             self.downloaded()
                             debrid.downloading += [self.query() + ' [' + self.version.name + ']']
