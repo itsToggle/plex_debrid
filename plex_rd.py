@@ -2667,9 +2667,16 @@ class releases:
                                 time.sleep(2)
                                 new = False
                         if choice2 == '4':
-                            print("Please choose a value for this rule. Make sure that the value you enter matches your chosen operator.")
-                            print()
-                            choice3 = input("Please enter a value: ")
+                            working = False
+                            for subclass in releases.sort.version.rule.__subclasses__():
+                                if subclass.name == default[int(choice)-1][0]:
+                                    break
+                            while not working:
+                                print("Please choose a value for this rule. Make sure that the value you enter matches your chosen operator.")
+                                print()
+                                choice3 = input("Please enter a value: ")
+                                if subclass.check(choice3):
+                                    working = True
                             default[int(choice)-1][int(choice2)-1] = choice3
                             if new:
                                 print("New rule added!")
@@ -2700,126 +2707,181 @@ class releases:
                     self.operator = operator
                     self.value = value
                 def apply(self,scraped_releases:list):
-                    if self.required:
-                        if self.operator == "==":
-                            for release in scraped_releases[:]:
-                                if not getattr(release,self.attribute) == self.value:
-                                    scraped_releases.remove(release)
-                            return scraped_releases
-                        if self.operator == ">=":
-                            for release in scraped_releases[:]:
-                                if not float(getattr(release,self.attribute)) >= float(self.value):
-                                    scraped_releases.remove(release)
-                            return scraped_releases
-                        if self.operator == "<=":
-                            for release in scraped_releases[:]:
-                                if not float(getattr(release,self.attribute)) <= float(self.value):
-                                    scraped_releases.remove(release)
-                            return scraped_releases
-                        if self.operator == "highest":
-                            scraped_releases.sort(key=lambda s: float(getattr(s,self.attribute)), reverse=True)
-                            for release in scraped_releases[:]:
-                                if not float(getattr(release,self.attribute)) == float(getattr(scraped_releases[0],self.attribute)):
-                                    scraped_releases.remove(release)
-                            return scraped_releases
-                        if self.operator == "lowest":
-                            scraped_releases.sort(key=lambda s: float(getattr(s,self.attribute)), reverse=False)
-                            for release in scraped_releases[:]:
-                                if not float(getattr(release,self.attribute)) == float(getattr(scraped_releases[0],self.attribute)):
-                                    scraped_releases.remove(release)
-                            return scraped_releases
-                        if self.operator == "include":
-                            for release in scraped_releases[:]:
-                                if not bool(regex.search(self.value,getattr(release,self.attribute),regex.I)):
-                                    scraped_releases.remove(release)
-                            return scraped_releases
-                        if self.operator == "exclude":
-                            for release in scraped_releases[:]:
-                                if bool(regex.search(self.value,getattr(release,self.attribute),regex.I)):
-                                    scraped_releases.remove(release)
-                            return scraped_releases
-                    else:
-                        if self.operator == "==":
-                            scraped_releases.sort(key=lambda s: (getattr(s,self.attribute) == self.value), reverse=True)
-                            return scraped_releases
-                        if self.operator == ">=":
-                            scraped_releases.sort(key=lambda s: (float(getattr(s,self.attribute)) >= float(self.value)), reverse=True)
-                            return scraped_releases
-                        if self.operator == "<=":
-                            scraped_releases.sort(key=lambda s: (float(getattr(s,self.attribute)) <= float(self.value)), reverse=True)
-                            return scraped_releases
-                        if self.operator == "highest":
-                            scraped_releases.sort(key=lambda s: float(getattr(s,self.attribute)), reverse=True)
-                            return scraped_releases
-                        if self.operator == "lowest":
-                            scraped_releases.sort(key=lambda s: float(getattr(s,self.attribute)), reverse=False)
-                            return scraped_releases
-                        if self.operator == "include":
-                            scraped_releases.sort(key=lambda s: bool(regex.search(self.value,getattr(s,self.attribute),regex.I)), reverse=True)
-                            return scraped_releases
-                        if self.operator == "exclude":
-                            scraped_releases.sort(key=lambda s: bool(regex.search(self.value,getattr(s,self.attribute),regex.I)), reverse=False)
-                            return scraped_releases
+                    try:
+                        if self.required:
+                            if self.operator == "==":
+                                for release in scraped_releases[:]:
+                                    if not getattr(release,self.attribute) == self.value:
+                                        scraped_releases.remove(release)
+                                return scraped_releases
+                            if self.operator == ">=":
+                                for release in scraped_releases[:]:
+                                    if not float(getattr(release,self.attribute)) >= float(self.value):
+                                        scraped_releases.remove(release)
+                                return scraped_releases
+                            if self.operator == "<=":
+                                for release in scraped_releases[:]:
+                                    if not float(getattr(release,self.attribute)) <= float(self.value):
+                                        scraped_releases.remove(release)
+                                return scraped_releases
+                            if self.operator == "highest":
+                                scraped_releases.sort(key=lambda s: float(getattr(s,self.attribute)), reverse=True)
+                                for release in scraped_releases[:]:
+                                    if not float(getattr(release,self.attribute)) == float(getattr(scraped_releases[0],self.attribute)):
+                                        scraped_releases.remove(release)
+                                return scraped_releases
+                            if self.operator == "lowest":
+                                scraped_releases.sort(key=lambda s: float(getattr(s,self.attribute)), reverse=False)
+                                for release in scraped_releases[:]:
+                                    if not float(getattr(release,self.attribute)) == float(getattr(scraped_releases[0],self.attribute)):
+                                        scraped_releases.remove(release)
+                                return scraped_releases
+                            if self.operator == "include":
+                                for release in scraped_releases[:]:
+                                    if not bool(regex.search(self.value,getattr(release,self.attribute),regex.I)):
+                                        scraped_releases.remove(release)
+                                return scraped_releases
+                            if self.operator == "exclude":
+                                for release in scraped_releases[:]:
+                                    if bool(regex.search(self.value,getattr(release,self.attribute),regex.I)):
+                                        scraped_releases.remove(release)
+                                return scraped_releases
+                        else:
+                            if self.operator == "==":
+                                scraped_releases.sort(key=lambda s: (getattr(s,self.attribute) == self.value), reverse=True)
+                                return scraped_releases
+                            if self.operator == ">=":
+                                scraped_releases.sort(key=lambda s: (float(getattr(s,self.attribute)) >= float(self.value)), reverse=True)
+                                return scraped_releases
+                            if self.operator == "<=":
+                                scraped_releases.sort(key=lambda s: (float(getattr(s,self.attribute)) <= float(self.value)), reverse=True)
+                                return scraped_releases
+                            if self.operator == "highest":
+                                scraped_releases.sort(key=lambda s: float(getattr(s,self.attribute)), reverse=True)
+                                return scraped_releases
+                            if self.operator == "lowest":
+                                scraped_releases.sort(key=lambda s: float(getattr(s,self.attribute)), reverse=False)
+                                return scraped_releases
+                            if self.operator == "include":
+                                scraped_releases.sort(key=lambda s: bool(regex.search(self.value,getattr(s,self.attribute),regex.I)), reverse=True)
+                                return scraped_releases
+                            if self.operator == "exclude":
+                                scraped_releases.sort(key=lambda s: bool(regex.search(self.value,getattr(s,self.attribute),regex.I)), reverse=False)
+                                return scraped_releases
+                    except:
+                        ui.print("version rule exception - ignoring this rule")
+                        return scraped_releases
+                def check(self):
+                    return True
             class resolution(rule):
                 name = "resolution"
                 operators = ["==",">=","<=","highest","lowest"]
+                def check(self):
+                    try:
+                        float(self)
+                        return True
+                    except:
+                        print()
+                        print("This value is not in the correct format. Please enter a number (e.g. '420' or '69.69')")
+                        print()
+                        return False
             class size(rule):
                 name = "size"
                 operators = ["==",">=","<=","highest","lowest"]
                 def apply(self,scraped_releases:list):
-                    if self.required:
-                        if self.operator == "==":
-                            for release in scraped_releases[:]:
-                                if not getattr(release,self.attribute) == self.value:
-                                    scraped_releases.remove(release)
-                            return scraped_releases
-                        if self.operator == ">=":
-                            for release in scraped_releases[:]:
-                                if not float(getattr(release,self.attribute)) >= float(self.value):
-                                    scraped_releases.remove(release)
-                            return scraped_releases
-                        if self.operator == "<=":
-                            for release in scraped_releases[:]:
-                                if not float(getattr(release,self.attribute)) <= float(self.value):
-                                    scraped_releases.remove(release)
-                            return scraped_releases
-                        if self.operator == "highest":
-                            scraped_releases.sort(key=lambda s: 5 * round(float(getattr(s,self.attribute))/5), reverse=True)
-                            for release in scraped_releases[:]:
-                                if not 5 * round(float(getattr(release,self.attribute))/5) == 5 * round(float(getattr(scraped_releases[0],self.attribute)/5)):
-                                    scraped_releases.remove(release)
-                            return scraped_releases
-                        if self.operator == "lowest":
-                            scraped_releases.sort(key=lambda s: 5 * round(float(getattr(s,self.attribute))/5), reverse=False)
-                            for release in scraped_releases[:]:
-                                if not 5 * round(float(getattr(release,self.attribute))/5) == 5 * round(float(getattr(scraped_releases[0],self.attribute))/5):
-                                    scraped_releases.remove(release)
-                            return scraped_releases
-                    else:
-                        if self.operator == "==":
-                            scraped_releases.sort(key=lambda s: (getattr(s,self.attribute) == self.value), reverse=True)
-                            return scraped_releases
-                        if self.operator == ">=":
-                            scraped_releases.sort(key=lambda s: (float(getattr(s,self.attribute)) >= float(self.value)), reverse=True)
-                            return scraped_releases
-                        if self.operator == "<=":
-                            scraped_releases.sort(key=lambda s: (float(getattr(s,self.attribute)) <= float(self.value)), reverse=True)
-                            return scraped_releases
-                        if self.operator == "highest":
-                            scraped_releases.sort(key=lambda s: 5 * round(float(getattr(s,self.attribute))/5), reverse=True)
-                            return scraped_releases
-                        if self.operator == "lowest":
-                            scraped_releases.sort(key=lambda s: 5 * round(float(getattr(s,self.attribute))/5), reverse=False)
-                            return scraped_releases
+                    try:
+                        if self.required:
+                            if self.operator == "==":
+                                for release in scraped_releases[:]:
+                                    if not getattr(release,self.attribute) == self.value:
+                                        scraped_releases.remove(release)
+                                return scraped_releases
+                            if self.operator == ">=":
+                                for release in scraped_releases[:]:
+                                    if not float(getattr(release,self.attribute)) >= float(self.value):
+                                        scraped_releases.remove(release)
+                                return scraped_releases
+                            if self.operator == "<=":
+                                for release in scraped_releases[:]:
+                                    if not float(getattr(release,self.attribute)) <= float(self.value):
+                                        scraped_releases.remove(release)
+                                return scraped_releases
+                            if self.operator == "highest":
+                                scraped_releases.sort(key=lambda s: 5 * round(float(getattr(s,self.attribute))/5), reverse=True)
+                                for release in scraped_releases[:]:
+                                    if not 5 * round(float(getattr(release,self.attribute))/5) == 5 * round(float(getattr(scraped_releases[0],self.attribute)/5)):
+                                        scraped_releases.remove(release)
+                                return scraped_releases
+                            if self.operator == "lowest":
+                                scraped_releases.sort(key=lambda s: 5 * round(float(getattr(s,self.attribute))/5), reverse=False)
+                                for release in scraped_releases[:]:
+                                    if not 5 * round(float(getattr(release,self.attribute))/5) == 5 * round(float(getattr(scraped_releases[0],self.attribute))/5):
+                                        scraped_releases.remove(release)
+                                return scraped_releases
+                        else:
+                            if self.operator == "==":
+                                scraped_releases.sort(key=lambda s: (getattr(s,self.attribute) == self.value), reverse=True)
+                                return scraped_releases
+                            if self.operator == ">=":
+                                scraped_releases.sort(key=lambda s: (float(getattr(s,self.attribute)) >= float(self.value)), reverse=True)
+                                return scraped_releases
+                            if self.operator == "<=":
+                                scraped_releases.sort(key=lambda s: (float(getattr(s,self.attribute)) <= float(self.value)), reverse=True)
+                                return scraped_releases
+                            if self.operator == "highest":
+                                scraped_releases.sort(key=lambda s: 5 * round(float(getattr(s,self.attribute))/5), reverse=True)
+                                return scraped_releases
+                            if self.operator == "lowest":
+                                scraped_releases.sort(key=lambda s: 5 * round(float(getattr(s,self.attribute))/5), reverse=False)
+                                return scraped_releases
+                    except:
+                        ui.print("version rule exception - ignoring this rule")
+                        return scraped_releases
+                def check(self):
+                    try:
+                        float(self)
+                        return True
+                    except:
+                        print()
+                        print("This value is not in the correct format. Please enter a number (e.g. '420' or '69.69')")
+                        print()
+                        return False
             class seeders(rule):
                 name = "seeders"
                 operators = ["==",">=","<=","highest","lowest"]
+                def check(self):
+                    try:
+                        float(self)
+                        return True
+                    except:
+                        print()
+                        print("This value is not in the correct format. Please enter a number (e.g. '420' or '69.69')")
+                        print()
+                        return False
             class title(rule):
                 name = "title"
                 operators = ["==","include","exclude"]
+                def check(self):
+                    try:
+                        regex.search(self,self,regex.I)
+                        return True
+                    except:
+                        print()
+                        print("This value is not in the correct format. Please make sure this value is a valid regex expression and no characters are escaped accidentally.")
+                        print()
+                        return False
             class source(rule):
                 name = "source"
                 operators = ["==","include","exclude"]
+                def check(self):
+                    try:
+                        regex.search(self,self,regex.I)
+                        return True
+                    except:
+                        print()
+                        print("This value is not in the correct format. Please make sure this value is a valid regex expression and no characters are escaped accidentally.")
+                        print()
+                        return False
             class cache_status(rule):
                 name = "cache status"
                 operators = ["cached","uncached"]
@@ -2829,24 +2891,28 @@ class releases:
                     self.operator = operator
                     self.value = value
                 def apply(self,scraped_releases:list):
-                    if self.required:
-                        if self.operator == "cached":
-                            for release in scraped_releases[:]:
-                                if len(getattr(release,self.attribute)) == 0:
-                                    scraped_releases.remove(release)
-                            return scraped_releases
-                        if self.operator == "uncached":
-                            for release in scraped_releases[:]:
-                                if len(getattr(release,self.attribute)) > 0:
-                                    scraped_releases.remove(release)
-                            return scraped_releases
-                    else:
-                        if self.operator == "cached":
-                            scraped_releases.sort(key=lambda s: len(getattr(s,self.attribute)), reverse=True)
-                            return scraped_releases
-                        if self.operator == "uncached":
-                            scraped_releases.sort(key=lambda s: len(getattr(s,self.attribute)), reverse=False)
-                            return scraped_releases
+                    try:
+                        if self.required:
+                            if self.operator == "cached":
+                                for release in scraped_releases[:]:
+                                    if len(getattr(release,self.attribute)) == 0:
+                                        scraped_releases.remove(release)
+                                return scraped_releases
+                            if self.operator == "uncached":
+                                for release in scraped_releases[:]:
+                                    if len(getattr(release,self.attribute)) > 0:
+                                        scraped_releases.remove(release)
+                                return scraped_releases
+                        else:
+                            if self.operator == "cached":
+                                scraped_releases.sort(key=lambda s: len(getattr(s,self.attribute)), reverse=True)
+                                return scraped_releases
+                            if self.operator == "uncached":
+                                scraped_releases.sort(key=lambda s: len(getattr(s,self.attribute)), reverse=False)
+                                return scraped_releases
+                    except:
+                        ui.print("version rule exception - ignoring this rule")
+                        return scraped_releases
             def __init__(self,name,media,required,rules) -> None:
                 self.name = name
                 self.media = media
