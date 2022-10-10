@@ -2509,7 +2509,7 @@ class releases:
                         choice2 = input("Choose an action: ")
                         if choice2 in indices:
                             print()
-                            default = releases.sort.versions[int(choice2)-1][3]
+                            default = releases.sort.versions[int(choice2)-1]
                             name = releases.sort.versions[int(choice2)-1][0]
                             releases.sort.version.setup(name,default,new=False)
                         if choice2 == '0':
@@ -2524,14 +2524,16 @@ class releases:
                     while name in names:
                         name = input("Please provide a unique name for this version: ")
                     print()
-                    default = copy.deepcopy(releases.sort.versions[0][3])
+                    default = copy.deepcopy(releases.sort.versions[0])
                     releases.sort.version.setup(name,default,new=True)
-                    releases.sort.versions += [[name,'both','true',default]]
+                    releases.sort.versions += [default]
             return
         class version:                
-            def setup(name,default,new=False):
+            def setup(name,version_,new=False):
                 back = False
+                default = version_[3]
                 while not back:
+                    version_[0] = name
                     if new:
                         ui.cls('Options/Settings/Scraper Settings/Versions/Add')
                         print('Your new version [' + name + '] has been filled with some default rules. You can add new ones or edit the existing rules.')
@@ -2539,6 +2541,10 @@ class releases:
                         ui.cls('Options/Settings/Scraper Settings/Versions/Edit')
                     print()
                     print('Current settigns for version [' + name + ']:')
+                    print()
+                    print("name     : " + version_[0])
+                    print("media    : " + str(version_[1]) + " (not editable yet)")
+                    print("required : " + version_[2]  + " (not editable yet)")
                     print()
                     print("0) Back")
                     indices = []
@@ -2561,7 +2567,8 @@ class releases:
                     print()
                     print("Choose a rule to edit or add a new rule by typing 'add'")
                     print("To rename this version, type 'rename'")
-                    print("To delete this version, type 'remove'")
+                    if len(releases.sort.versions) > 1:
+                        print("To delete this version, type 'remove'")
                     print()
                     choice = input("Choose an action: ")
                     print()
@@ -2584,10 +2591,11 @@ class releases:
                         version[0] = name
                         print()
                     elif choice == 'remove':
-                        for version in releases.sort.versions[:]:
-                            if version[0] == name:
-                                releases.sort.versions.remove(version)
-                        back = True
+                        if len(releases.sort.versions) > 1:
+                            for version in releases.sort.versions[:]:
+                                if version[0] == name:
+                                    releases.sort.versions.remove(version)
+                            back = True
             class rule:
                 def setup(choice,default,new=True):
                     back = False
@@ -2923,23 +2931,23 @@ class releases:
             ["2160p SDR","both","true",[
                 ["cache status","requirement","cached",""],
                 ["resolution","requirement",">=","2160"],
-                ["title","requirement","exclude","(\.DV\.|3D|\.H?D?.?CAM\.)"],
+                ["title","requirement","exclude","(\.DV\.|\.3D\.|\.H?D?.?CAM\.)"],
                 ["title","preference","exclude","(\.HDR\.)"],
                 ["title","preference","include","(EXTENDED|REMASTERED)"],
                 ["size","preference","lowest",""],
                 ["seeders","preference","highest",""],
-                ["size","requirement",">=","0.5"],
+                ["size","requirement",">=","0.1"],
             ]],
             ["1080p SDR","both","true",[
                 ["cache status","requirement","cached",""],
                 ["resolution","requirement","<=","1080"],
                 ["resolution","preference","highest",""],
-                ["title","requirement","exclude","(\.DV\.|3D|\.H?D?.?CAM\.)"],
+                ["title","requirement","exclude","(\.DV\.|\.3D\.|\.H?D?.?CAM\.)"],
                 ["title","requirement","exclude","(\.HDR\.)"],
                 ["title","preference","include","(EXTENDED|REMASTERED)"],
                 ["size","preference","lowest",""],
                 ["seeders","preference","highest",""],
-                ["size","requirement",">=","0.5"],
+                ["size","requirement",">=","0.1"],
             ]],
         ]
         always_on_rules = [version.rule("wanted","preference","highest",""),version.rule("unwanted","preference","lowest","")]
