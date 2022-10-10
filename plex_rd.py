@@ -423,13 +423,13 @@ class content:
                 if not self.collected(list):
                     return [self]
             elif self.type == 'show':
-                if self.collected(list):
+                if self.collected(list) and not (len(self.versions()) > 0 and not len(self.versions()) == len(releases.sort.versions)):
                     return []
                 Seasons = copy.deepcopy(self.Seasons)
                 for season in Seasons[:]:
-                    if not season.collected(list) and not season.watched() and season.released() and not season.downloading():
+                    if (not season.collected(list) or (len(season.versions()) > 0 and not len(season.versions()) == len(releases.sort.versions))) and not season.watched() and season.released() and not season.downloading():
                         for episode in season.Episodes[:]:
-                            if episode.collected(list) or episode.watched() or not episode.released() or episode.downloading():
+                            if (episode.collected(list) and not (len(episode.versions()) > 0 and not len(episode.versions()) == len(releases.sort.versions))) or episode.watched() or not episode.released() or episode.downloading():
                                 season.Episodes.remove(episode)
                     else:
                         Seasons.remove(season)
