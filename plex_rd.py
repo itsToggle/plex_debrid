@@ -2543,8 +2543,8 @@ class releases:
                     print('Current settigns for version [' + name + ']:')
                     print()
                     print("name     : " + version_[0])
-                    print("media    : " + str(version_[1]))
-                    print("required : " + version_[2])
+                    print("media    : " + str(version_[1]) + " (not editable yet)")
+                    print("required : " + version_[2]  + " (not editable yet)")
                     print()
                     print("0) Back")
                     indices = []
@@ -2931,7 +2931,7 @@ class releases:
             ["2160p SDR","both","true",[
                 ["cache status","requirement","cached",""],
                 ["resolution","requirement",">=","2160"],
-                ["title","requirement","exclude","(\.DV\.|3D|\.H?D?.?CAM\.)"],
+                ["title","requirement","exclude","(\.DV\.|\.3D\.|\.H?D?.?CAM\.)"],
                 ["title","preference","exclude","(\.HDR\.)"],
                 ["title","preference","include","(EXTENDED|REMASTERED)"],
                 ["size","preference","lowest",""],
@@ -2942,7 +2942,7 @@ class releases:
                 ["cache status","requirement","cached",""],
                 ["resolution","requirement","<=","1080"],
                 ["resolution","preference","highest",""],
-                ["title","requirement","exclude","(\.DV\.|3D|\.H?D?.?CAM\.)"],
+                ["title","requirement","exclude","(\.DV\.|\.3D\.|\.H?D?.?CAM\.)"],
                 ["title","requirement","exclude","(\.HDR\.)"],
                 ["title","preference","include","(EXTENDED|REMASTERED)"],
                 ["size","preference","lowest",""],
