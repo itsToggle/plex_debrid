@@ -3514,7 +3514,7 @@ class download_script:
                 time.sleep(1)
 #Ui Preference Class:
 class ui_settings:
-    version = ['1.31',"Settings compatible update",[]]
+    version = ['1.32',"Settings compatible update",[]]
     run_directly = "true"
     debug = "false"
 #Ui Class
