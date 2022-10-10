@@ -2936,7 +2936,7 @@ class releases:
                 ["title","preference","include","(EXTENDED|REMASTERED)"],
                 ["size","preference","lowest",""],
                 ["seeders","preference","highest",""],
-                ["size","requirement",">=","0.5"],
+                ["size","requirement",">=","0.1"],
             ]],
             ["1080p SDR","both","true",[
                 ["cache status","requirement","cached",""],
@@ -2947,7 +2947,7 @@ class releases:
                 ["title","preference","include","(EXTENDED|REMASTERED)"],
                 ["size","preference","lowest",""],
                 ["seeders","preference","highest",""],
-                ["size","requirement",">=","0.5"],
+                ["size","requirement",">=","0.1"],
             ]],
         ]
         always_on_rules = [version.rule("wanted","preference","highest",""),version.rule("unwanted","preference","lowest","")]
