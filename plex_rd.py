@@ -3440,7 +3440,7 @@ class download_script:
                 time.sleep(1)
 #Ui Preference Class:
 class ui_settings:
-    version = ['1.30',"Settings compatible update",[]]
+    version = ['1.31',"Settings compatible update",[]]
     run_directly = "true"
     debug = "false"
 #Ui Class
@@ -3865,18 +3865,37 @@ class ui:
         ui.cls('Options/Scraper/')
         print('Press Enter to return to the main menu.')
         print()
+        print("Please choose a version to scrape for: ")
+        print()
+        obj = releases('','','',[],0,[])
+        indices = []
+        for index,version in enumerate(releases.sort.versions):
+            print(str(index+1) + ') ' + version[0])
+            indices += [str(index+1)]
+        print(str(index+2) + ') Scrape without defining a version')
+        indices += [str(index+2)]
+        print()
+        choice = input("Choose a version: ")
+        if choice in indices and not choice == str(index+2):
+            obj.version = releases.sort.version(releases.sort.versions[int(choice)-1][0],releases.sort.versions[int(choice)-1][1],releases.sort.versions[int(choice)-1][2],releases.sort.versions[int(choice)-1][3])
+        elif choice == str(index+2):
+            obj.version = None
+        else:
+            return
+        ui.cls('Options/Scraper/')
+        print('Press Enter to return to the main menu.')
+        print()
         query = input("Enter a query: ")
         if query == '':
             return
         print()
-        obj = releases('','','',[],0,[])
-        obj.version = releases.sort.version(releases.sort.versions[0][0],releases.sort.versions[0][1],releases.sort.versions[0][2],releases.sort.versions[0][3])
         scraped_releases = scraper(query.replace(' ','.'))
         if len(scraped_releases) > 0:
             obj.Releases = scraped_releases
             debrid.check(obj,force=True)
             scraped_releases = obj.Releases
-            releases.sort(scraped_releases,obj.version)
+            if not obj.version == None:
+                releases.sort(scraped_releases,obj.version)
             print()
             print("0) Back")
             releases.print(scraped_releases)
