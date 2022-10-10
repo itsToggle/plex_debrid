@@ -194,11 +194,11 @@ more personal media server setup instructions to come soon.
 >  1. Run the script!
 >  2. The script will guide you through the initial setup and the next steps. When setting up plex_debrid, you will be prompted to choose the 3 main services that this script connects:
 >  3. Pick and setup at least one **content service** which plex_debrid should monitor for new content
->  4. Pick and setup a **library service**, which plex_debrid will use to determine your current media collection.
+>  4. Pick and setup a **library service**, which plex_debrid will use to determine your current media collection. If you intend to run a plex server, choose plex.
 >  5. Pick and setup at least one **debrid service**, which plex_debrid will use to download content.
 >  3. You're done!
 >  4. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
->  5. If you want the main menu to show when starting the script (for an auto-run setup), navigate to "/Settings/UI Settings/show menu on startup" and set the value to "false".
+>  5. If you dont want the main menu to show when starting the script (for an auto-run setup), navigate to "/Settings/UI Settings/show menu on startup" and set the value to "false".
 >  6. Read the rest of the README!
 >  
 ></details>
@@ -211,11 +211,11 @@ more personal media server setup instructions to come soon.
 >  2. Run 'docker run -ti plex_debrid'
 >  3. The script will guide you through the initial setup and the next steps. When setting up plex_debrid, you will be prompted to choose the 3 main services that this script connects:
 >  4. Pick and setup at least one **content service** which plex_debrid should monitor for new content
->  5. Pick and setup a **library service**, which plex_debrid will use to determine your current media collection.
+>  5. Pick and setup a **library service**, which plex_debrid will use to determine your current media collection. If you intend to run a plex server, choose plex.
 >  6. Pick and setup at least one **debrid service**, which plex_debrid will use to download content.
 >  7. You're done!
 >  8. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
->  9. If you want the main menu to show when starting the script (for an auto-run setup), navigate to "/Settings/UI Settings/show menu on startup" and set the value to "false".
+>  9. If you dont want the main menu to show when starting the script (for an auto-run setup), navigate to "/Settings/UI Settings/show menu on startup" and set the value to "false".
 >  10. Read the rest of the README!
 >  
 ></details>
@@ -293,7 +293,7 @@ more personal media server setup instructions to come soon.
 *The services that plex_debrid can use to find and download torrents.*
 
 ><details>
->  <summary><b><u>Integrating your favorite torrent indexers:</u></b></summary>
+>  <summary><b><u>Integrating your favorite torrent indexers (highly recommended):</u></b></summary>
 >  
 >  - The only legacy scrapers currently integrated are for rarbg.to and 1337x.to 
 >  - Its recommended to install "jackett", a program that wraps a huge amount of torrent indexers (https://github.com/Jackett/Jackett). Once installed and setup, you can enable jackett by navigating to '/Settings/Scraper/Sources/Edit/Add source/jackett'. Once enabled, you can delete the legacy scrapers, since jackett can handle both 1337x and rarbg.
@@ -308,6 +308,15 @@ more personal media server setup instructions to come soon.
 >  - You can add more than one debrid service and change the order in which they should be checked for cached releases by navigating to '/Settings/Debrid Services/Edit'.
 >  - In order to scrape for a movie/show, plex_debrid renames the movie/show title. by default, some special characters are removed and spaces are replaced with dots. You can edit the replacement of other special characters (for example replacing '&' with 'and', etc.) by navigating to '/Settings/Scraper/Special character renaming'
 >  - If you don't want the main menu to show when you start the script and run the download automation right away, you can define this in the 'UI Settings' section of the 'Settings' menu. You can return to the main menu at any time by typing 'exit'.
+>
+></details>
+>
+><details>
+>  <summary><b><u>Defining versions to download:</u></b></summary>
+>  
+>  - You can define what release qualities plex_debrid should download by defining a "version". You can add an unlimited amount of versions by navigating to '/Settings/Scraper Settings/versions'.
+>  - versions consist of an unlimited amount of completely customizable rules.
+>  - plex_debrid will continue looking for your defined versions, even if a 
 >
 ></details>
 >
