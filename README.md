@@ -315,7 +315,7 @@ more personal media server setup instructions to come soon.
 >  <summary><b><u>Defining versions to download:</u></b></summary>
 >  
 >  - You can define what release qualities plex_debrid should download by defining a "version". You can add an unlimited amount of versions by navigating to '/Settings/Scraper Settings/versions'. By default, plex_debrid comes with 2 version definitons ([2160 SDR], [1080p SDR])
->  - versions consist of an unlimited amount of completely customizable rules. Rules can be either formulated as a requirement or as a preference. To give some examples, here are the rules that make up the default [1080p SDR] version:
+>  - versions consist of an unlimited amount of completely customizable rules. Rules can be either formulated as a requirement or as a preference. The first rule has the highest priority, the last one the lowest. To give some examples, here are the rules that make up the default [1080p SDR] version:
 >      
 >        1) cache status  requirement :   cached
 >        2) resolution    requirement :       <=  1080
@@ -327,7 +327,8 @@ more personal media server setup instructions to come soon.
 >        8) seeders       preference  :  highest
 >        9) size          requirement :       >=  0.1
 >      
->  - plex_debrid will continue looking for your defined versions, even if a 
+>  - plex_debrid will continue looking for your defined versions, even if one version was already successfuly downloaded.
+>  - more features to come in the near future! Each version will have an option to only affect a particular media type (example: you only want movies to be downloaded in 4k, not shows). You will also be able to define versions to only affect a few media items by providing their titles (example: you only want "House of the Dragon" and "The rings of power" to be downloaded in 4k).
 >
 ></details>
 >
