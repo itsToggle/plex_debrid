@@ -432,7 +432,8 @@ class content:
                             if (episode.collected(list) and not (len(episode.versions()) > 0 and not len(episode.versions()) == len(releases.sort.versions))) or episode.watched() or not episode.released() or episode.downloading():
                                 season.Episodes.remove(episode)
                     else:
-                        Seasons.remove(season)
+                        if season in Seasons:
+                            Seasons.remove(season)
                     if len(season.Episodes) == 0 and season in Seasons:
                         Seasons.remove(season)
                 return Seasons
