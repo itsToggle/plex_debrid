@@ -31,8 +31,7 @@ This is a work in progress, and im not a professional programmer. shits not read
    - <img src="https://prowlarr.com/img/favicon-32x32.png" height="16"> **[Prowlarr](https://github.com/Prowlarr/Prowlarr)**
    - <img src="https://progsoft.net/images/rarbg-icon-648af4dcc6ec63ee49d6c050af63d2547c74d46c.png" height="16"> **[RARBG](https://rarbg.to/)**
    - <img src="https://1337x.to/favicon.ico" height="16"> **[1337X](https://1337x.to/)**
-- Sorting and selecting scraped releases by completely customizable rules
-- Selecting multiple versions of your requested content (e.g. HDR and SDR versions) by completely customizable rules
+- Defining multiple, completely customizable versions to download (2160p HDR, 1080p SDR, etc)
 - Checking for cached releases and adding them to:
    - <img src="https://fcdn.real-debrid.com/0818/favicons/favicon.ico" height="16"> **[RealDebrid](http://real-debrid.com/?id=5708990)**
    - <img src="https://www.premiumize.me/favicon-16x16.png" height="16"> **[Premiumize](https://www.premiumize.me/)**
@@ -46,10 +45,10 @@ This is a work in progress, and im not a professional programmer. shits not read
 
 Feel free to ask any questions on github [discussions](https://github.com/itsToggle/plex_debrid/discussions) or create a new [issue](https://github.com/itsToggle/plex_debrid/issues) if you find a bug or have an idea for an improvement.
 
-If github is not your cup of tee, join the plex_debrid [discord server](https://discord.gg/Q8Q7z3kk) or find me on [reddit](https://www.reddit.com/user/itsToggle)
+If github is not your cup of tee, join the plex_debrid [discord server](https://discord.gg/UKkPeRdukx) or find me on [reddit](https://www.reddit.com/user/itsToggle)
 
 ## Setup:
-For linux, mac and windows, the setup process does not require any additional preparation. For different operating systems, check out the information the fine people linked here have gathered:
+For linux, mac and windows, the setup process does not require any additional preparation. For different operating systems, check out the information the fine people linked here have gathered or check our discord server:
 <details>
   <summary><b><u>Help for your OS</u></b></summary>
   
@@ -76,11 +75,11 @@ For linux, mac and windows, the setup process does not require any additional pr
 >  4. give your remote a name (e.g. 'your-remote')
 >  5. choose '47) realdebrid' as your remote type
 >  6. follow the rest of the prompted instructions, choose 'no advaced configuration'
->  7. You can mount your newly created remote by running the command 'rclone cmount your-remote: X: --dir-cache-time 10s --vfs-cache-mode full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
+>  7. You can mount your newly created remote by running the command 'rclone cmount your-remote: X: --dir-cache-time 10s' (replace 'your-remote' with your remote name, replace 'X' with a drive letter of your choice or replace 'X:' with a destination folder)
 >  8. If you are running my rclone fork on Linux, replace "cmount" with "mount" in the command above.
 >  9. You've successfuly created a virtual drive of your debrid service!
 >  
->  *You can run rclone as a background service by adding the mounting tag '--no-console' (Windows) or '--deamon' (Linux, Mac, etc)*
+>  *You can run rclone as a background service by adding the mounting tag '--no-console' (Windows) or '--deamon' (Linux, Mac, etc).*
 > 
 >  **Mounting with official rclone software (WebDav)**
 >  
@@ -94,7 +93,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 >  8. enter your realdebrid user name as your user name
 >  9. choose option 'y) yes, enter in my own password'
 >  10. enter your webdav password (available in your account settings) as the password
->  11. You can mount your newly created remote by running the command 'rclone mount your-remote:torrents X: --dir-cache-time 10s --vfs-cache-mode full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
+>  11. You can mount your newly created remote by running the command 'rclone mount your-remote:torrents X: --dir-cache-time 10s' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice or replace 'X:' with a destination folder)
 >  12. You've successfuly created a virtual drive of your debrid service!
 > 
 >  *You can run rclone as a background service by adding the mounting tag '--no-console' (Windows) or '--deamon' (Linux, Mac, etc)*
@@ -109,7 +108,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 >  4. give your remote a name (e.g. 'your-remote')
 >  5. choose '46) premiumize' as your remote type
 >  6. follow the rest of the prompted instructions, choose 'no advaced configuration'
->  7. You can mount your newly created remote by running the command 'rclone mount your-remote: X: --dir-cache-time 10s --vfs-cache-mode full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
+>  7. You can mount your newly created remote by running the command 'rclone mount your-remote: X: --dir-cache-time 10s' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice or replace 'X:' with a destination folder)
 >  8. You've successfuly created a virtual drive of your debrid service!
 >  
 >  *You can run rclone as a background service by adding the mounting tag '--no-console' (Windows) or '--deamon' (Linux, Mac, etc)*
@@ -128,7 +127,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 >  8. enter an api key as your user name
 >  9. choose option 'y) yes, enter in my own password'
 >  10. enter 'eeeee' as the password
->  11. You can mount your newly created remote by running the command 'rclone mount your-remote:links X: --dir-cache-time 10s --vfs-cache-mode full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
+>  11. You can mount your newly created remote by running the command 'rclone mount your-remote:links X: --dir-cache-time 10s' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice or replace 'X:' with a destination folder)
 >  12. You've successfuly created a virtual drive of your debrid service!
 >  13. You will only be able to watch content from the "links" and "history" folder, not the "magnet" folder. The "links" folder is recommended and the one used in the mounting command above.
 >  
@@ -148,7 +147,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 >  8. enter your debrid-link user name as your user name
 >  9. choose option 'y) yes, enter in my own password'
 >  10. enter your "passkey" (Available in your account) as the password
->  11. You can mount your newly created remote by running the command 'rclone mount your-remote X: --dir-cache-time 10s --vfs-cache-mode full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
+>  11. You can mount your newly created remote by running the command 'rclone mount your-remote X: --dir-cache-time 10s' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice or replace 'X:' with a destination folder)
 >  12. You've successfuly created a virtual drive of your debrid service!
 >  
 >  *You can run rclone as a background service by adding the mounting tag '--no-console' (Windows) or '--deamon' (Linux, Mac, etc)*
@@ -161,7 +160,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 >  
 >  http://help.put.io/en/articles/3480094-plex-rclone
 >  
->You can mount your newly created remote by running the command 'rclone mount your-remote X: --dir-cache-time 10s --vfs-cache-mode full' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice e.g 'X','Y','Z',...)
+>You can mount your newly created remote by running the command 'rclone mount your-remote X: --dir-cache-time 10s' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice or replace 'X:' with a destination folder)
 >  
 >  *You can run rclone as a background service by adding the mounting tag '--no-console' (Windows) or '--deamon' (Linux, Mac, etc)*
 ></details>
@@ -176,8 +175,9 @@ For linux, mac and windows, the setup process does not require any additional pr
 >  1. Create a plex 'movie' library of the mounted virtual drive or add the virtual drive to an existing 'movie' library.
 >  2. Create a plex 'shows' library of the mounted virtual drive or add the virtual drive to an existing 'shows' library.
 >  3. *If you are running rclone on a Linux based OS and Plex cant find your mounted virtual drive, try adding the mounting tag '--allow-other'*
->  4. *Recommendation: disable 'video preview thumbnails', ~disable 'intro detection'~, disable the scheduled task 'perfom extensive media analysis' to reduce the download traffic*
->  5. You and your home users can now stream cached torrents from your debrid service/s!
+>  4. *Recommendation: disable 'video preview thumbnails', disable the scheduled task 'perfom extensive media analysis' to reduce the download traffic*
+>  5. Disable the libary setting "Empty trash after every scan", to make sure that no content is removed accidentaly
+>  6. You and your home users can now stream cached torrents from your debrid service/s!
 >  
 >  </details>
 
@@ -207,21 +207,22 @@ more personal media server setup instructions to come soon.
 >  <summary><b><u>Dockerized Version:</u></b></summary>
 >  
 >  0. Clone this repository with git or click on "code" (top right) and then "download zip" 
->  1. Run 'docker build -t plex_debrid .'
->  2. Run 'docker run -ti plex_debrid'
+>  1. Run `docker build -t plex_debrid .`
+>  2. Run `docker run -ti plex_debrid -v /path/on/host:/config` . Where `/path/on/host` is the path where you want to save settings file
 >  3. The script will guide you through the initial setup and the next steps. When setting up plex_debrid, you will be prompted to choose the 3 main services that this script connects:
 >  4. Pick and setup at least one **content service** which plex_debrid should monitor for new content
->  5. Pick and setup a **library service**, which plex_debrid will use to determine your current media collection.
+>  5. Pick and setup a **library service**, which plex_debrid will use to determine your current media collection. If you intend to run a plex server, choose plex.
 >  6. Pick and setup at least one **debrid service**, which plex_debrid will use to download content.
 >  7. You're done!
 >  8. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
->  9. Read the rest of the README!
+>  9. If you dont want the main menu to show when starting the script (for an auto-run setup), navigate to "/Settings/UI Settings/show menu on startup" and set the value to "false".
+>  10. Read the rest of the README!
 >  
 ></details>
 
 ## Usage:
 
-*plex_debrid can be setup in a bunch of different ways, which this readme wont be able to cover. Feel free to ask any questions in the "discussions" section of this respository.*
+*plex_debrid can be setup in a bunch of different ways, which this readme wont be able to cover. Feel free to ask any questions in the "discussions" section of this respository or join our discord server.*
 
 ### :tv: Content Services:
 
@@ -292,7 +293,7 @@ more personal media server setup instructions to come soon.
 *The services that plex_debrid can use to find and download torrents.*
 
 ><details>
->  <summary><b><u>Integrating your favorite torrent indexers:</u></b></summary>
+>  <summary><b><u>Integrating your favorite torrent indexers (highly recommended):</u></b></summary>
 >  
 >  - The only legacy scrapers currently integrated are for rarbg.to and 1337x.to 
 >  - Its recommended to install "jackett", a program that wraps a huge amount of torrent indexers (https://github.com/Jackett/Jackett). Once installed and setup, you can enable jackett by navigating to '/Settings/Scraper/Sources/Edit/Add source/jackett'. Once enabled, you can delete the legacy scrapers, since jackett can handle both 1337x and rarbg.
@@ -311,13 +312,23 @@ more personal media server setup instructions to come soon.
 ></details>
 >
 ><details>
->  <summary><b><u>Downloading multiple versions:</u></b></summary>
+>  <summary><b><u>Defining versions to download:</u></b></summary>
 >  
->  - You can download multiple versions of your requested content (e.g. HDR and SDR versions, or a version for each resolution) by adding an unlimited amount of completely customizable version definitions
->  - You can add these version definition by navigating to "/Settings/Scraper Settings/Multiple Versions/Edit"
->  - You can negate the version definitions by adding a "!" as the first character
->  - Example: to download 2160p, 1080p and 720p releases, add the following versions: "(2160p)", "(1080p)" and "(720p)"
->  - Example: to download HDR and non-HDR releases, add the following versions: "(\.HDR\.)" and "!(\.HDR\.)"
+>  - You can define what release qualities plex_debrid should download by defining a "version". You can add an unlimited amount of versions by navigating to '/Settings/Scraper Settings/versions'. By default, plex_debrid comes with 2 version definitons ([2160 SDR], [1080p SDR])
+>  - versions consist of an unlimited amount of completely customizable rules. Rules can be either formulated as a requirement or as a preference. The first rule has the highest priority, the last one the lowest. To give some examples, here are the rules that make up the default [1080p SDR] version:
+>      
+>        1) cache status  requirement :   cached
+>        2) resolution    requirement :       <=  1080
+>        3) resolution    preference  :  highest
+>        4) title         requirement :  exclude  (\.DV\.|3D|\.H?D?.?CAM\.)
+>        5) title         requirement :  exclude  (\.HDR\.)
+>        6) title         preference  :  include  (EXTENDED|REMASTERED)
+>        7) size          preference  :   lowest
+>        8) seeders       preference  :  highest
+>        9) size          requirement :       >=  0.1
+>      
+>  - plex_debrid will continue looking for your defined versions, even if one version was already successfuly downloaded.
+>  - more features to come in the near future! Each version will have an option to only affect a particular media type (example: you only want movies to be downloaded in 4k, not shows). You will also be able to define versions to only affect a few media items by providing their titles (example: you only want "House of the Dragon" and "The rings of power" to be downloaded in 4k).
 >
 ></details>
 >
@@ -336,90 +347,6 @@ more personal media server setup instructions to come soon.
 >    - If there are still episodes missing, the scraper will look for the individual episodes with the following query: 'some.show.S0XE0X.'
 >  
 >  All that is done to minimize the amount of calls made to torrent indexers and to fetch the most episodes at once. The process is done via multiprosing to speed things up.
->  plex_debrid accepts releases whos title deviates a bit from the original search-query. This allows plex_debrid to download a release named "some.show.2018.season.1.S01", when the original search query was "some.show.S01". This usually works fine, but it does lead to problems when downloading shows which have similar titles like "NCIS" and "NCIS: Los Angeles". Im not sure how to find a good compromise solution.
-></details>
-><details>
->  <summary><b><u>Sorting and selecting scraped releases:</u></b></summary>
->  
->  The scrapers usually provide a whole bunch of releases. 
->  Adding them all to your debrid services would clutter your library and slow things down. This is why this script automatically sorts the releases by completely customizable rules and picks the best one. The script provides some pretty ok rules by default.
->  
->  You can define a minimum and maximum release size to filter out any unwanted releases. By default, the minimum release size is 100MB.
->  
->  The sorting is done by providing an unlimited number of sorting 'rules'. Rules can be added, edited, delted or moved. The first rule has the highest priority, the last one the lowest. 
->
->  Each rule consist of:
->  - a regex match group that defines what we are looking for. Check out regexr.com to try out some regex match definitions.
->  - an attribute definition that defines which attribute of the release we want to look in (can be the title, the source, or the size, or other special attributes that arent described further)
->  - an interpretation method. This can be either:
->    - "number" : the first regex match group will be interpreted as an integer and releases will be ranked by this number.
->    - "text" : we will give each release a rank accoring to which match group its in.
->  - lastly we define wheter to rank the releases in ascending or descending order.
->
->  You can test out your current sorting rules by manually scraping for releases from the main menu. The returned releases are sorted by your current rules. If you follow the 'scraping steps' from the section above, you will be able to tell which releases would be automatically downloaded with your current settings.
->
->  Lets make some rules: 
->
->  <details>
->    <summary><b><u>Example resolution sorting:</u></b></summary>
->
->  We want to download releases up to our prefered resolution of 1080p.
->  For this, we will choose the following setup:
->  - regex definition: "(1080|720|480)(?=p)" - This is one match group, that matches either "1080", "720" or "480", followed by the letter "p". This is a typical Resolution definition of releases.
->  - attribute definition: "title" - we want to look for this inside the release title
->  - interpretation method: "number" - we want to sort the releases by the highest number to the lowest number
->  - ascending/descending: "1" - 1 means descending. We want to sort the releases in decending order to get the highest resolution release.
->
->  </details>
->
->  <details>
->    <summary><b><u>Example codec sorting:</u></b></summary>
->
->  We want to download releases that use the x265 Codec, rather then the x264 codec. 
->  For this, we will choose the following setup:
->  - regex definition: "(h.?265|x.?265)|(h.?264|x.?264)" - These are two match groups, that match typical codec descriptions in the release titles
->  - attribute definition: "title" - we want to look for this inside the release title
->  - interpretation method: "text" - by choosing this, we define that the releases should be sorted by the match group they are in.
->  - ascending/descending: "1" - 1 means descending. Descending in this context means, that the First matchgroup is preffered over the second matchgroup, and both are prefered over a release that doesnt match.
->
->  </details>
->
->  <details>
->    <summary><b><u>Example release exclusion:</u></b></summary>
->
->  We don't want to download releases that are HDR or 3D. For this rule to ne effective, we need to make it our first rule.
->  For this, we will choose the following setup:
->  - regex definition: "(\\.HDR\\.|\\.3D\\.)"
->  - attribute definition: "title" - we want to look for this inside the release title
->  - interpretation method: "text" - by choosing this, we define that the releases should be sorted by the match group they are in.
->  - ascending/descending: "0" - 0 means ascending. Ascending in this context means, that releases that don't match are prefered over releases that do.
->
->  </details>
->
->  <details>
->    <summary><b><u>Example size sorting:</u></b></summary>
->
->  We want to sort or releases by size - this should be implemented as one of the last rules.
->  For this, we will choose the following setup:
->  - regex definition: "(.*)" - This is one match group that simply matches everything.
->  - attribute definition: "size" - we want to look for this inside the release size
->  - interpretation method: "number" - by choosing number, we define that the release size should be interpreted as a number.
->  - ascending/descending: "0" - 0 means ascending. We want to select the smallest release.
->
->  </details>
->
->  <details>
->    <summary><b><u>Example seeders sorting:</u></b></summary>
->
->  We want to sort or releases by the number of seeders.
->  For this, we will choose the following setup:
->  - regex definition: "(.*)" - This is one match group that simply matches everything.
->  - attribute definition: "seeders" - we want to look for this inside the releases seeders attribute
->  - interpretation method: "number" - by choosing number, we define that the releases number of seeders should be interpreted as a number.
->  - ascending/descending: "1" - 0 means descending. We want to select the release with the most seeders.
->
->  </details>
->
 ></details>
 
 ## Limitations:
@@ -432,17 +359,7 @@ more personal media server setup instructions to come soon.
 >  - The plex discover api only provides release dates, not precise release times. Its recommended to connect the script to trakt.tv, which enables plex_debrid to find more accurate release dates and even find out if movies can be downloaded before their actual release date.
 >
 ></details>
->
-><details>
->  <summary><b><u>Scraping Limitations:</u></b></summary>
->  
->  - plex_debrid accepts releases whos title deviates a bit from the original search-query. This allows plex_debrid to download a release named "some.show.2018.season.1.S01", when the original search query was "some.show.S01". This usually works fine, but it does lead to problems when downloading shows which have similar titles like "NCIS" and "NCIS: Los Angeles". Im not sure how to find a good compromise solution.
->
-></details>
 
 ## Buy me a beer/coffee? :)
 
 I've written this automation because it's a hell of a lot of fun and because I've wanted a setup like this for a while. The continuation of this project does **not**, in any way, depend on monetary contributions. If you do want to buy me a beer/coffee, feel free to use my real-debrid [affiliate link](http://real-debrid.com/?id=5708990) or send a virtual beverage via [PayPal](https://www.paypal.com/paypalme/oidulibbe) :)
-
-If you are thinking of moving your plex server to a VPS or dedicated remote server, consider checking out netcup.de - You can get 5€ off any purchase using my affiliate coupon code `36nc16612918700` and if you contact me, I can provide you with other coupons that will get you (and me ;) ) up to 3 months free hosting. 
-Please note that your debrid service (realdebrid) might not allow VPN or VPS usage. This isn't an issue if you choose a private VPS with its own IPv4 address, but if you choose a shared VPS, your server IP might be blocked from your debrid service. If you still want to use a shared VPS, make sure that you can run the server behind a whitelisted VPN.

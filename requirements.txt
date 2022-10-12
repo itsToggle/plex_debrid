@@ -1,4 +1,4 @@
-requests
-bs4
-regex
-six
+bs4==0.0.1
+regex==2022.9.13
+requests==2.28.1
+six==1.16.0
