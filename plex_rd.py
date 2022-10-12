@@ -154,11 +154,11 @@ class content:
             elif self.type == 'season':
                 title = releases.rename(self.parentTitle) 
                 title = title.replace('.'+str(self.parentYear),'')
-                return title + '.S' + str(f"{:02d}".format(self.index)) + '.'
+                return title + '.S' + str("{:02d}".format(self.index)) + '.'
             elif self.type == 'episode': 
                 title = releases.rename(self.grandparentTitle) 
                 title = title.replace('.'+str(self.grandparentYear),'')
-                return title + '.S' + str(f"{:02d}".format(self.parentIndex)) + 'E' + str(f"{:02d}".format(self.index))+ '.'
+                return title + '.S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index))+ '.'
         def deviation(self):
             if self.type == 'movie':
                 title = releases.rename(self.title)
@@ -171,11 +171,11 @@ class content:
             elif self.type == 'season':
                 title = releases.rename(self.parentTitle) 
                 title = title.replace('.'+str(self.parentYear),'')
-                return '(' + title + '.)(' + str(self.parentYear) + '.)?(season.[0-9]+.)?' + '(S' + str(f"{:02d}".format(self.index)) + '.)'
+                return '(' + title + '.)(' + str(self.parentYear) + '.)?(season.[0-9]+.)?' + '(S' + str("{:02d}".format(self.index)) + '.)'
             elif self.type == 'episode': 
                 title = releases.rename(self.grandparentTitle) 
                 title = title.replace('.'+str(self.grandparentYear),'')
-                return '(' + title + '.)(' + str(self.grandparentYear) + '.)?(S' + str(f"{:02d}".format(self.parentIndex)) + 'E' + str(f"{:02d}".format(self.index))+ '.)'
+                return '(' + title + '.)(' + str(self.grandparentYear) + '.)?(S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index))+ '.)'
         def versions(self):
             versions = []
             for version in releases.sort.versions:
@@ -662,7 +662,7 @@ class content:
                 for episode in self.Episodes:
                     files += episode.files()
             elif self.type == 'episode':
-                files += ['S' + str(f"{:02d}".format(self.parentIndex)) + 'E' + str(f"{:02d}".format(self.index))+ '']
+                files += ['S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index))+ '']
             return files
 #Plex Class
 class plex(content.services):
