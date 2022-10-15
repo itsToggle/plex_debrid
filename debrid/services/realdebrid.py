@@ -107,7 +107,7 @@ def download(element, stream=True, query='', force=False):
     if query == '':
         query = element.deviation()
     wanted = [query]
-    if not isinstance(element, releases):
+    if not isinstance(element, releases.release):
         wanted = element.files()
     for release in cached[:]:
         # if release matches query

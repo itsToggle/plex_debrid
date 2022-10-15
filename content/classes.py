@@ -448,6 +448,7 @@ class media:
         import content.services.plex as plex
         import content.services.trakt as trakt
         import content.services.overseerr as overseerr
+        current_module = sys.modules[__name__]
         refresh = False
         i = 0
         self.Releases = []
@@ -460,7 +461,7 @@ class media:
                     for year in alternate_years:
                         i = 0
                         while len(self.Releases) == 0 and i <= retries:
-                            self.Releases += scraper(self.query().replace(str(self.year), str(year)),
+                            self.Releases += scraper.scrape(self.query().replace(str(self.year), str(year)),
                                                         self.deviation())
                             i += 1
                         if not len(self.Releases) == 0:
@@ -484,7 +485,7 @@ class media:
                     tic = time.perf_counter()
                     # if there is more than one uncollected season
                     if len(self.Seasons) > 1:
-                        self.Releases += scraper(self.query(), self.deviation())
+                        self.Releases += scraper.scrape(self.query(), self.deviation())
                         parentReleases = copy.deepcopy(self.Releases)
                         # if there are more than 3 uncollected seasons, look for multi-season releases before downloading single-season releases
                         if len(self.Seasons) > 3:
@@ -587,11 +588,11 @@ class media:
                 else:
                     self.Releases = []
                 while len(self.Releases) == 0 and i <= retries:
-                    self.Releases += scraper(self.query(), self.deviation())
+                    self.Releases += scraper.scrape(self.query(), self.deviation())
                     i += 1
             debrid_downloaded, retry = self.debrid_download()
             if not debrid_downloaded or retry:
-                self.Releases += scraper(self.query()[:-1])
+                self.Releases += scraper.scrape(self.query()[:-1])
                 for episode in self.Episodes:
                     downloaded, retry = episode.download(library=library, parentReleases=self.Releases)
                     if downloaded:
@@ -613,16 +614,16 @@ class media:
                 if debrid_downloaded:
                     return True, retry
                 else:
-                    self.Releases = scraper(self.query(), self.deviation())
+                    self.Releases = scraper.scrape(self.query(), self.deviation())
                 i += 1
             return self.debrid_download()
-        if refresh and library.active == [plex.library.name]:
+        if refresh and current_module.library.active == [plex.library.name]:
             if self.type == 'movie':
                 plex.library.refresh(plex.library.movies)
             elif self.type == 'show':
                 plex.library.refresh(plex.library.shows)
             return True
-        elif refresh and library.active == [trakt.library.name]:
+        elif refresh and current_module.library.active == [trakt.library.name]:
             trakt.library.add(self)
 
     def downloaded(self):

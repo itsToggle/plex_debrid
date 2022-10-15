@@ -18,7 +18,7 @@ def download(element, stream=True, query='', force=False):
                 for t, s in tracker:
                     if regex.search(t, release.source, regex.I):
                         release.cached = s
-            for service in services():
+            for service in services.get():
                 if service.short in release.cached:
                     if service.download(element, stream=stream, query=query, force=force):
                         downloaded = True
@@ -38,7 +38,7 @@ def download(element, stream=True, query='', force=False):
                 for t, s in tracker:
                     if regex.search(t, release.source, regex.I):
                         release.cached = s
-            for service in services():
+            for service in services.get():
                 if len(release.cached) > 0:
                     if service.short in release.cached:
                         if service.download(element, stream=stream, query=query, force=force):
