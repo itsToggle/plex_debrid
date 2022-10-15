@@ -54,6 +54,7 @@ For linux, mac and windows, the setup process does not require any additional pr
   
   - **[FreeBSD (u/TheNicestRichtofen)](https://www.reddit.com/r/Piracy/comments/v5zpj7/comment/ibnikqh/?utm_source=share&utm_medium=web2x&context=3)**
   - **[Android](https://github.com/itsToggle/plex_debrid/tree/android)**
+  - **Rooted Nvidia Shield guide from user "b u n n y" up on discord**
 </details>
 
 ### 1) :open_file_folder: Mount your debrid services:
