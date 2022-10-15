@@ -455,16 +455,16 @@ class library(classes.library):
                 element.show.user = library.user
                 element.show.guid = element.show.ids.trakt
                 element.show.Seasons = []
-                for season in element.seasons:
-                    season.parentYear = element.show.year
-                    season.parentTitle = element.show.title
-                    season.parentGuid = element.show.guid
-                    element.show.Seasons += [season(season)]
+                for season_ in element.seasons:
+                    season_.parentYear = element.show.year
+                    season_.parentTitle = element.show.title
+                    season_.parentGuid = element.show.guid
+                    element.show.Seasons += [season(season_)]
                 leafCount = 0
-                for season in element.show.Seasons:
-                    leafCount += season.leafCount
-                    collection.append(season)
-                    for episode in season.Episodes:
+                for season_ in element.show.Seasons:
+                    leafCount += season_.leafCount
+                    collection.append(season_)
+                    for episode in season_.Episodes:
                         collection.append(episode)
                 element.show.leafCount = leafCount
                 collection.append(classes.media(element.show))
