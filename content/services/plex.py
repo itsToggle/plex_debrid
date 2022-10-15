@@ -337,6 +337,7 @@ def search(query, library=[]):
         return []
 
 def match(query, type, library=[]):
+    current_module = sys.modules[__name__]
     if not library == []:
         for element in library:
             if element.type == type:
@@ -347,10 +348,10 @@ def match(query, type, library=[]):
             "[plex error]: couldnt match content to plex media type, because the plex library is empty. Please add at least one movie and one show!")
         return []
     if type == 'movie':
-        agent = 'tv.agents.movie'
+        agent = 'tv.plex.agents.movie'
     else:
-        agent = 'tv.agents.series'
-    url = library.url + '/library/metadata/' + some_local_media.ratingKey + '/matches?manual=1&title=' + query + '&agent=' + agent + '&language=en-US&X-Plex-Token=' + \
+        agent = 'tv.plex.agents.series'
+    url = current_module.library.url + '/library/metadata/' + some_local_media.ratingKey + '/matches?manual=1&title=' + query + '&agent=' + agent + '&language=en-US&X-Plex-Token=' + \
             users[0][1]
     response = get(url)
     try:

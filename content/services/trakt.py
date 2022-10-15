@@ -15,6 +15,7 @@ session = requests.Session()
 
 def setup(self, new=False):
     from settings import settings_list
+    global lists
     back = False
     settings = []
     for category, allsettings in settings_list:
@@ -170,6 +171,7 @@ class watchlist(classes.watchlist):
     autoremove = "movie"
 
     def __init__(self):
+        global current_user
         if len(lists) > 0:
             ui_print('[trakt] getting all trakt lists ...')
         self.data = []
@@ -239,6 +241,7 @@ class watchlist(classes.watchlist):
         ui_print('done')
 
     def update(self):
+        global current_user
         if len(lists) > 0:
             ui_print('[trakt] updating all trakt watchlists ...', debug=ui_settings.debug)
         refresh = False
@@ -290,6 +293,7 @@ class watchlist(classes.watchlist):
         return False
 
     def remove(self, original_element):
+        global current_user
         element = copy.deepcopy(original_element)
         user = copy.deepcopy(element.user)
         data = []
@@ -389,7 +393,7 @@ class show(classes.media):
             'https://api.trakt.tv/shows/' + str(self.ids.trakt) + '/seasons?extended=episodes,full')
         leafCount = 0
         for season_ in response:
-            if not season.number == 0:
+            if not season_.number == 0:
                 season_.parentYear = self.year
                 season_.parentTitle = self.title
                 season_.parentGuid = self.guid
@@ -441,6 +445,7 @@ class library(classes.library):
                 back = True
 
     def __new__(self):
+        global current_user
         current_user = library.user
         ui_print('[trakt] getting ' + current_user[0] + "'s" + ' entire trakt collection ...')
         watchlist_items = []
@@ -556,6 +561,7 @@ class library(classes.library):
         sys.stdout.flush()
 
 def search(query, type):
+    global current_user
     current_user = users[0]
     if type == 'all':
         response, header = get('https://api.trakt.tv/search/movie,show?query=' + str(query))
@@ -572,6 +578,7 @@ def search(query, type):
     return response
 
 def match(query, service, type):
+    global current_user
     current_user = users[0]
     if service == 'imdb':
         response, header = get(
