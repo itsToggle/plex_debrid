@@ -6,9 +6,6 @@ import releases
 base_url = "http://127.0.0.1:9117"
 api_key = ""
 name = "jackett"
-indexers = []
-categories = []
-filters = []
 session = requests.Session()
 
 def setup(cls, new=False):
@@ -19,26 +16,8 @@ def scrape(query, altquery):
     from scraper.services import active
     scraped_releases = []
     if 'jackett' in active:
-        filter = ""
-        tags = ""
-        for indexer in indexers:
-            if not indexer[0] == '':
-                tags += "&Tracker[]=" + indexer[0]
-        for category in categories:
-            if not category[0] == '':
-                tags += "&Category[]=" + category[0]
-        if not filters == []:
-            filters = []
-            for fil in filters:
-                if not fil[0] == '':
-                    filters += fil
-            if not filters == []:
-                filter = (",").join(filters)
-            else:
-                filter = "all"
-        else:
-            filter = "all"
-        url = base_url + '/api/v2.0/indexers/' + filter + '/results?apikey=' + api_key + '&Query=' + query + tags
+        filter = "all"
+        url = base_url + '/api/v2.0/indexers/' + filter + '/results?apikey=' + api_key + '&Query=' + query
         try:
             response = session.get(url, timeout=60)
         except:
