@@ -13,6 +13,11 @@ api_key = ""
 session = requests.Session()
 
 def setup(self):
+    global base_url
+    global api_key
+    global users
+    global allowed_status
+    global session
     from settings import settings_list
     ui_cls("Options/Settings/Content Services/Content Services/Overseerr")
     working_key = False
@@ -87,9 +92,9 @@ def setup(self):
             if setting.cls == self or setting.name.startswith(self.name):
                 settings += [setting]
     response = get(base_url + '/api/v1/user')
-    users = response.results
+    users_ = response.results
     new_users = []
-    for user in users:
+    for user in users_:
         if not user.displayName in users:
             new_users += [user.displayName]
     back = False
@@ -128,7 +133,7 @@ def setup(self):
                     indices = []
                     add_user = []
                     print('0) Back')
-                    for user in users:
+                    for user in users_:
                         if not user.displayName in users:
                             print(str(i + 1) + ') ' + user.displayName)
                             indices += [str(i + 1)]
