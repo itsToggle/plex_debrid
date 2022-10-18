@@ -16,6 +16,7 @@ session = requests.Session()
 def setup(self, new=False):
     from settings import settings_list
     global lists
+    global current_user
     back = False
     settings = []
     for category, allsettings in settings_list:
@@ -75,7 +76,6 @@ def setup(self, new=False):
                                 "To add a public list, please enter the lists url in the format shown by this example: (Example URL: '/users/giladg/lists/latest-releases') ")
                             print()
                             url = input("Please enter the public list url: ")
-                            working = False
                             current_user = users[0]
                             if current_user[1] == "":
                                 print("Please add at least one trakt user before adding a trakt list!")
@@ -172,6 +172,7 @@ class watchlist(classes.watchlist):
 
     def __init__(self):
         global current_user
+        global lists
         if len(lists) > 0:
             ui_print('[trakt] getting all trakt lists ...')
         self.data = []
@@ -242,6 +243,7 @@ class watchlist(classes.watchlist):
 
     def update(self):
         global current_user
+        global users
         if len(lists) > 0:
             ui_print('[trakt] updating all trakt watchlists ...', debug=ui_settings.debug)
         refresh = False
