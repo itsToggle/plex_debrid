@@ -247,6 +247,14 @@ def load(doprint=False, updated=False):
     elif not settings['version'][0] == ui_settings.version[0] and not ui_settings.version[2] == []:
         update(settings, ui_settings.version)
         updated = True
+    if 'Library Service' in settings: #compatability code for updating from <2.10 
+        settings['Library collection service'] = settings['Library Service']
+        if settings['Library Service'] == ["Plex Library"]:
+            if 'Plex \"movies\" library' in settings and 'Plex \"shows\" library' in settings: #compatability code for updating from <2.10 
+                settings['Plex library refresh'] = [settings['Plex \"movies\" library'],settings['Plex \"shows\" library']]
+            settings['Library update services'] = ["Plex Libraries"]
+        elif settings['Library Service'] == ["Trakt Collection"]:
+            settings['Library update services'] = ["Trakt Collection"]
     for category, load_settings in settings_list:
         for setting in load_settings:
             if setting.name in settings and not setting.name == 'version':

@@ -326,18 +326,17 @@ settings_list = [
                 hidden=True),
     ]
         ],
-    ['Library Service', [
-        setting('Library Service', [''], content.classes.library, 'active', entry="library service", subclass=True,
+    ['Library Services', [
+        setting('Library collection service', [''], content.classes.library, 'active', entry="library collection service", subclass=True,
                 radio=True, required=True, preflight=True,
-                help='Please choose at least one library service that plex debrid will monitor for existing content.'),
+                help='Please choose one library collection service that plex debrid will use to determine your current media collection.'),
+        setting('Library update services', [''], content.classes.refresh, 'active', entry="libary update service", subclass=True,
+                radio=False, required=True, preflight=True,
+                help='Please choose at least one libary update service that plex debrid should update after a complete download'),
         setting('Trakt library user', [''], content.services.trakt.library, 'user', hidden=True),
+        setting('Trakt refresh user', [''], content.services.trakt.library.refresh, 'user', hidden=True),
+        setting('Plex library refresh', [''], content.services.plex.library.refresh, 'sections', hidden=True,moveable=False),
         setting('Plex server address', 'Please enter your Plex server address: ', content.services.plex.library, 'url', hidden=True),
-        setting('Plex "movies" library',
-                'Please enter the section number of the "movies" library, that should be refreshed after a movie download. To find the section number, go to "https://app.plex.tv", open your "movies" library and look for the "source=" parameter in the url. Please enter the section number: ',
-                content.services.plex.library, 'movies', hidden=True),
-        setting('Plex "shows" library',
-                'Please enter the section number of the "shows" library, that should be refreshed after a show download. To find the section number, go to "https://app.plex.tv", open your "shows" library and look for the "source=" parameter in the url. Please enter the section number:  ',
-                content.services.plex.library, 'shows', hidden=True),
         setting('Plex library check', [
             'Please specify a library section number that should be checked for existing content before download: '],
                 content.services.plex.library, 'check', hidden=True, entry="section",

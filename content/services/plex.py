@@ -224,8 +224,6 @@ class movie(classes.media):
 class library(classes.library):
     name = 'Plex Library'
     url = 'http://localhost:32400'
-    movies = '1'
-    shows = '2'
     check = []
 
     def setup(cls, new=False):
@@ -247,43 +245,179 @@ class library(classes.library):
                 if setting.name == 'Plex server address':
                     setting.setup()
                     print()
-                elif setting.name == 'Plex "movies" library':
-                    setting.setup()
-                    print()
-                elif setting.name == 'Plex "shows" library':
-                    setting.setup()
-                    print()
             classes.library.active = [library.name]
         else:
             classes.library.setup(library)
 
-    class refresh:
-        def poll(self):
+    class refresh(classes.refresh):
+
+        name = 'Plex Libraries'
+        sections = []
+
+        def setup(cls, new=False):
+            ui_cls("Options/Settings/Library Services/Library update services")
+            from settings import settings_list
+            settings = []
+            for category, allsettings in settings_list:
+                for setting in allsettings:
+                    settings += [setting]
+            if len(users) == 0:
+                print("It looks like you havent setup a plex user. Please set up a plex user first.")
+                print()
+                for setting in settings:
+                    if setting.name == "Plex users":
+                        setting.setup()
+            working = False
+            while not working:
+                try:
+                    response = get(library.url  + '/library/sections/?X-Plex-Token=' + users[0][1])
+                    working = True
+                    if len(response.MediaContainer.Directory) == 0:
+                        print("It looks like this server does not have any libraries set-up! Please open the plex webui, setup at least one library and point it to your mounted debrid service drive.")
+                        time.sleep(3)
+                        return
+                except:
+                    print("It looks like your plex server could not be reached at '" + library.url + "'")
+                    print()
+                    for setting in settings:
+                        if setting.name == "Plex server address":
+                            setting.setup()
+                    print()
+            if not new:
+                back = False
+                while not back:
+                    print("Current plex library sections that are refreshed after a successful download: ")
+                    print()
+                    print("0) Back")
+                    indices = []
+                    for index,section in enumerate(library.refresh.sections):
+                        for section_ in response.MediaContainer.Directory:
+                            if section_.key == section:
+                                print(str(index+1) + ") Plex library section '" + section_.title + "' of type '" + section_.type + "'")
+                                indices += [str(index+1)]
+                                break
+                    print()
+                    print("Type 'add' to add another plex library section that should be refreshed.")
+                    print()
+                    choice = input("Please choose a plex library section: ")
+                    if choice in indices:
+                        print()
+                        print("0) Back")
+                        print("1) Remove plex library section")
+                        print()
+                        choice2 = input("Choose an action: ")
+                        if choice2 == "1":
+                            library.refresh.sections.remove(library.refresh.sections[int(choice)-1])
+                    if choice == '0':
+                        back=True
+                    if choice == 'add':
+                        sections = []
+                        for index,section in enumerate(response.MediaContainer.Directory):
+                            if not section.key in library.refresh.sections:
+                                sections += [section]
+                        if len(sections) == 0:
+                            print()
+                            print("It seems youve added all plex library sections of this server!")
+                            time.sleep(3)
+                            return
+                        indices = []
+                        print("Please choose a plex library section that should be refreshed after a successful download: ")
+                        print()
+                        print("0) Back")
+                        for index,section in enumerate(sections):
+                            print(str(index+1) + ") Plex library section '" + section.title + "' of type '" + section.type + "'")
+                            indices += [str(index+1)]
+                        print()
+                        choice = input("Please choose a plex library section: ")
+                        if choice in indices:
+                            library.refresh.sections += [sections[int(choice)-1].key]
+                            print()
+                            print("Successfully added plex library section '" + sections[int(choice)-1].title + "'")
+                            print()
+                            time.sleep(3)
+            else:
+                back = False
+                initial = False
+                while not back:
+                    sections = []
+                    for index,section in enumerate(response.MediaContainer.Directory):
+                        if not section.key in library.refresh.sections:
+                            sections += [section]
+                    if len(sections) == 0:
+                        print("It seems youve added all plex library sections of this server!")
+                        time.sleep(3)
+                        return
+                    print("Please choose at least one plex library section that should be refreshed after a successful download: ")
+                    print()
+                    indices = []
+                    if classes.refresh.active == [] or initial:
+                        if initial:
+                            print("0) Done")
+                        initial = True
+                    else:
+                        print("0) Back")
+                    for index,section in enumerate(sections):
+                        print(str(index+1) + ") Plex library section '" + section.title + "' of type '" + section.type + "'")
+                        indices += [str(index+1)]
+                    print()
+                    choice = input("Please choose a plex library section: ")
+                    if choice in indices:
+                        library.refresh.sections += [sections[int(choice)-1].key]
+                        if not library.refresh.name in classes.refresh.active:
+                            classes.refresh.active += [library.refresh.name]
+                        print()
+                        print("Successfully added plex library section '" + sections[int(choice)-1].title + "'")
+                        print()
+                        time.sleep(3)
+                    if choice == '0' and not classes.refresh.active == []:
+                        back=True
+
+        def call(path):
             try:
-                refreshing = True
-                while refreshing:
-                    refreshing = False
-                    url = library.url + '/library/sections/?X-Plex-Token=' + users[0][1]
-                    response = get(url)
-                    for section in response.MediaContainer.Directory:
-                        if section.refreshing:
-                            refreshing = True
-                    time.sleep(1)
-                return True
+                section = path[0]
+                folders = path[1]
+                for folder in folders:
+                    refreshing = True
+                    while refreshing:
+                        refreshing = False
+                        url = library.url + '/library/sections/?X-Plex-Token=' + users[0][1]
+                        response = get(url)
+                        for section_ in response.MediaContainer.Directory:
+                            if section_.refreshing:
+                                refreshing = True
+                        if refreshing:
+                            time.sleep(1)
+                    url = library.url + '/library/sections/' + section + '/refresh?path='+folder+'&X-Plex-Token=' + users[0][1]
+                    ui_print("refreshing plex via url: " + url, debug=ui_settings.debug)
+                    response = session.get(url)
             except Exception as e:
                 ui_print(str(e), debug=ui_settings.debug)
-                return True
 
-        def call(section):
-            time.sleep(2)
-            library.refresh.poll(None)
-            url = library.url + '/library/sections/' + section + '/refresh?X-Plex-Token=' + users[0][1]
-            session.get(url)
-
-        def __new__(cls, section):
-            ui_print('refreshing library section ' + section + '')
-            t = Thread(target=multi_init, args=(library.refresh.call, section, [None], 0))
-            t.start()
+        def __new__(cls, element):
+            try:
+                names = []
+                element_type = ("show" if element.type in ["show","season","episode"] else "movie")
+                url = library.url + '/library/sections/?X-Plex-Token=' + users[0][1]
+                response = get(url)
+                paths = []
+                for section_ in response.MediaContainer.Directory:
+                    if section_.key in library.refresh.sections and element_type == section_.type:
+                        names += [section_.title]
+                        folders = []
+                        for location in section_.Location:
+                            if hasattr(element,"downloaded_releases"):
+                                for release in element.downloaded_releases:
+                                    folders += [requests.utils.quote(location.path + "/" + release)]
+                            else:
+                                folders += [requests.utils.quote(location.path)]
+                        paths += [[section_.key,folders]]
+                ui_print('[plex] refreshing '+element_type+' library section/s: "' + '","'.join(names) + '"')
+                for path in paths:
+                    t = Thread(target=multi_init, args=(library.refresh.call, path, [None], 0))
+                    t.start()
+                    time.sleep(0.1)
+            except:
+                print("[plex] error: couldnt refresh libraries")
 
     def __new__(self):
         list = []
