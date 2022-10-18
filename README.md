@@ -38,8 +38,9 @@ This is a work in progress, and im not a professional programmer. shits not read
    - <img src="https://cdn.alldebrid.com/lib/images/default/favicon.png" height="16"> **[AllDebrid](https://alldebrid.com/)**
    - <img src="https://cdn.debrid-link.com/favicon.ico?i=2" height="16"> **[DebridLink](https://debrid-link.com/)**
    - <img src="https://app.put.io/assets/favicon-32x32.png" height="16"> **[PUT.io (no check for cached releases)](https://put.io/)**
-- Refreshing your personal media server libraries to make the content available to watch for:
+- Refreshing your personal media server libraries (fully or partially) to make the content available to watch for:
    - <img src="https://app.plex.tv/desktop/favicon.ico" height="16"> **[Plex](https://plex.tv/)**
+
 
 ### Community
 
@@ -194,7 +195,7 @@ more personal media server setup instructions to come soon.
 >  0. Clone this repository with git or click on "code" (top right) and then "download zip" 
 >  1. Run `pip install -r requirements.txt`
 >  2. Run the script!
->  3. The script will guide you through the initial setup and the next steps. When setting up plex_debrid, you will be prompted to choose the 3 main services that this script connects:
+>  3. The script will guide you through the initial setup and the next steps. When setting up plex_debrid, you will be prompted to choose the 4 main services that this script connects:
 >  4. Pick and setup at least one **content service** which plex_debrid should monitor for new content
 >  5. Pick and setup a **library collection service**, which plex_debrid will use to determine your current media collection. If you intend to run a plex server, choose plex.
 >  6. Pick and setup a **library update service**, which plex_debrid will update/refresh after a successful download. If you intent to run a plex server, choose plex.
@@ -211,7 +212,7 @@ more personal media server setup instructions to come soon.
 >   
 >  1. Run `docker pull itstoggle/plex_debrid .`or visit https://hub.docker.com/repository/docker/itstoggle/plex_debrid.
 >  2. Run `docker run -ti plex_debrid -v /path/on/host:/settings.json` . Where `/path/on/host` is the path where you want to save settings file
->  3. The script will guide you through the initial setup and the next steps. When setting up plex_debrid, you will be prompted to choose the 3 main services that this script connects:
+>  3. The script will guide you through the initial setup and the next steps. When setting up plex_debrid, you will be prompted to choose the 4 main services that this script connects:
 >  4. Pick and setup at least one **content service** which plex_debrid should monitor for new content
 >  5. Pick and setup a **library collection service**, which plex_debrid will use to determine your current media collection. If you intent to run a plex server, choose plex.
 >  6. Pick and setup a **library update service**, which plex_debrid will update/refresh after a successful download. If you intent to run a plex server, choose plex.
@@ -229,7 +230,7 @@ more personal media server setup instructions to come soon.
 
 ### :tv: Content Services:
 
-*The services that plex_debrid can monitor for new content.*
+*The services that plex_debrid can monitor for new content. You can pick any combination of services.*
 
 ><details>
 >  <summary><b><u><img src="https://app.plex.tv/desktop/favicon.ico" height="16"> Plex watchlists:</u></b></summary>
@@ -270,24 +271,44 @@ more personal media server setup instructions to come soon.
 >
 ></details>
 
-### :open_file_folder: Library Service
+### :open_file_folder: Library Collection Service
 
 *The services that plex_debrid can use to determine your current media collection.*
 
 ><details>
 >  <summary><b><u><img src="https://app.plex.tv/desktop/favicon.ico" height="16"> Plex library:</u></b></summary>
 >  
->  - To use your plex library as your library service, navigate to '/Settings/Library Service/Change library service/'
->  - If you choose your plex library as your library service, your *entire* Plex Library (including shares) is checked before downloading anything and the script will avoid duplicate downloads. To limit this library check to specific library sections, navigate to '/Settings/Library Service/Edit library service/Plex library check/Edit'
+>  - To use your plex library as your library service, navigate to '/Settings/Library Service/Library collection service/Change library service/'
+>  - If you choose your plex library as your library service, your *entire* Plex Library (including shares) is checked before downloading anything and the script will avoid duplicate downloads. To limit this library check to specific library sections, navigate to '/Settings/Library Service/Library collectikn service/Edit library service/Plex library check/Edit'
 >
 ></details>
 >
 ><details>
 >  <summary><b><u><img src="https://walter.trakt.tv/hotlink-ok/public/favicon.ico" height="16"> Trakt collection:</u></b></summary>
 >  
->  - To use one of your trakt users collections as your library service, navigate to '/Settings/Library Service/Change library service/'
->  - If you choose your trakt collection as your library service, your *entire* trakt collection is checked before downloading anything and the script will avoid duplicate downloads.
->  - Once content is downloaded, plex_debrid will mark it as collected for the specified trakt user. 
+>  - To use one of your trakt users collections as your library service, navigate to '/Settings/Library Service/Library collection service/Change library service/'
+>  - If you choose your trakt collection as your library service, your *entire* trakt collection is checked before downloading anything and the script will avoid duplicate downloads. 
+>
+></details>
+
+### 🔁 Library Update Services
+
+*The services that plex_debrid can update/refresh after a successful download. You can add any combination of services.*
+
+><details>
+>  <summary><b><u><img src="https://app.plex.tv/desktop/favicon.ico" height="16"> Plex library:</u></b></summary>
+>  
+>  - To refresh your plex libraries after a succesful download, navigate to '/Settings/Library Service/Library update service/Edit/'
+>  - You can add an unlimited amount of libraries to be refreshed
+>  - plex_debrid is now capable of only partially scanning your libraries. This feature is currently only available for content that's downloaded through realdebrid.
+>
+></details>
+>
+><details>
+>  <summary><b><u><img src="https://walter.trakt.tv/hotlink-ok/public/favicon.ico" height="16"> Trakt collection:</u></b></summary>
+>  
+>  - To mark content as collected on Trakt after it has been successfully downloaded, navigate to '/Settings/Library Service/Library update service/Edit/'
+>  - plex_debrid will automatically add the downloaded resolution and other properties of the downloaded media to your trakt collection
 >
 ></details>
 
