@@ -452,36 +452,41 @@ class library(classes.library):
         ui_print('[trakt] getting ' + current_user[0] + "'s" + ' entire trakt collection ...')
         watchlist_items = []
         collection = []
-        collection_movies, header = get('https://api.trakt.tv/sync/collection/movies?extended=metadata')
-        collection_shows, header = get('https://api.trakt.tv/sync/collection/shows?extended=metadata')
-        watchlist_items += collection_movies
-        watchlist_items += collection_shows
-        for element in watchlist_items:
-            if hasattr(element, 'show'):
-                element.show.type = 'show'
-                element.show.user = library.user
-                element.show.guid = element.show.ids.trakt
-                element.show.Seasons = []
-                for season_ in element.seasons:
-                    season_.parentYear = element.show.year
-                    season_.parentTitle = element.show.title
-                    season_.parentGuid = element.show.guid
-                    element.show.Seasons += [season(season_)]
-                leafCount = 0
-                for season_ in element.show.Seasons:
-                    leafCount += season_.leafCount
-                    collection.append(season_)
-                    for episode in season_.Episodes:
-                        collection.append(episode)
-                element.show.leafCount = leafCount
-                collection.append(classes.media(element.show))
-            elif hasattr(element, 'movie'):
-                element.movie.type = 'movie'
-                element.movie.user = library.user
-                element.movie.guid = element.movie.ids.trakt
-                collection.append(classes.media(element.movie))
-        ui_print('done')
-        return collection
+        try:
+            collection_movies, header = get('https://api.trakt.tv/sync/collection/movies?extended=metadata')
+            collection_shows, header = get('https://api.trakt.tv/sync/collection/shows?extended=metadata')
+            watchlist_items += collection_movies
+            watchlist_items += collection_shows
+            for element in watchlist_items:
+                if hasattr(element, 'show'):
+                    element.show.type = 'show'
+                    element.show.user = library.user
+                    element.show.guid = element.show.ids.trakt
+                    element.show.Seasons = []
+                    for season_ in element.seasons:
+                        season_.parentYear = element.show.year
+                        season_.parentTitle = element.show.title
+                        season_.parentGuid = element.show.guid
+                        element.show.Seasons += [season(season_)]
+                    leafCount = 0
+                    for season_ in element.show.Seasons:
+                        leafCount += season_.leafCount
+                        collection.append(season_)
+                        for episode in season_.Episodes:
+                            collection.append(episode)
+                    element.show.leafCount = leafCount
+                    collection.append(classes.media(element.show))
+                elif hasattr(element, 'movie'):
+                    element.movie.type = 'movie'
+                    element.movie.user = library.user
+                    element.movie.guid = element.movie.ids.trakt
+                    collection.append(classes.media(element.movie))
+            ui_print('done')
+            return collection
+        except Exception as e:
+            ui_print("[trakt] error: (exception): " + str(e), debug=ui_settings.debug)
+            ui_print("[trakt] error: couldnt get trakt collection. the script will pause all downloads to avoid unwanted behavior.")
+            return []
 
     class refresh(classes.refresh):
         
