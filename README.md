@@ -196,11 +196,13 @@ more personal media server setup instructions to come soon.
 >  2. Run the script!
 >  3. The script will guide you through the initial setup and the next steps. When setting up plex_debrid, you will be prompted to choose the 3 main services that this script connects:
 >  4. Pick and setup at least one **content service** which plex_debrid should monitor for new content
->  5. Pick and setup a **library service**, which plex_debrid will use to determine your current media collection.
->  6. Pick and setup at least one **debrid service**, which plex_debrid will use to download content.
->  7. You're done!
->  8. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
->  6. Read the rest of the README!
+>  5. Pick and setup a **library collection service**, which plex_debrid will use to determine your current media collection. If you intend to run a plex server, choose plex.
+>  6. Pick and setup a **library update service**, which plex_debrid will update/refresh after a successful download. If you intent to run a plex server, choose plex.
+>  7. Pick and setup at least one **debrid service**, which plex_debrid will use to download content.
+>  8. You're done!
+>  9. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
+>  10. If you dont want the main menu to show when starting the script (for an auto-run setup), navigate to "/Settings/UI Settings/show menu on startup" and set the value to "false".
+>  11. Read the rest of the README!
 >  
 ></details>
 >
@@ -211,12 +213,13 @@ more personal media server setup instructions to come soon.
 >  2. Run `docker run -ti plex_debrid -v /path/on/host:/settings.json` . Where `/path/on/host` is the path where you want to save settings file
 >  3. The script will guide you through the initial setup and the next steps. When setting up plex_debrid, you will be prompted to choose the 3 main services that this script connects:
 >  4. Pick and setup at least one **content service** which plex_debrid should monitor for new content
->  5. Pick and setup a **library service**, which plex_debrid will use to determine your current media collection. If you intend to run a plex server, choose plex.
->  6. Pick and setup at least one **debrid service**, which plex_debrid will use to download content.
->  7. You're done!
->  8. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
->  9. If you dont want the main menu to show when starting the script (for an auto-run setup), navigate to "/Settings/UI Settings/show menu on startup" and set the value to "false".
->  10. Read the rest of the README!
+>  5. Pick and setup a **library collection service**, which plex_debrid will use to determine your current media collection. If you intent to run a plex server, choose plex.
+>  6. Pick and setup a **library update service**, which plex_debrid will update/refresh after a successful download. If you intent to run a plex server, choose plex.
+>  7. Pick and setup at least one **debrid service**, which plex_debrid will use to download content.
+>  8. You're done!
+>  9. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
+>  10. If you dont want the main menu to show when starting the script (for an auto-run setup), navigate to "/Settings/UI Settings/show menu on startup" and set the value to "false".
+>  11. Read the rest of the README!
 >  
 ></details>
 
