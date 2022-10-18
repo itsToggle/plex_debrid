@@ -67,6 +67,49 @@ class library:
                     activeservices += [service]
         return activeservices
 
+class refresh:
+    
+    active = []
+
+    def setup(cls, new=False):
+        from settings import settings_list
+        settings = []
+        for category, allsettings in settings_list:
+            for setting in allsettings:
+                if setting.cls == cls or setting.name.startswith(cls.name):
+                    settings += [setting]
+        back = False
+        if not new:
+            while not back:
+                print("0) Back")
+                indices = []
+                for index, setting in enumerate(settings):
+                    print(str(index + 1) + ') ' + setting.name)
+                    indices += [str(index + 1)]
+                print()
+                choice = input("Choose an action: ")
+                if choice in indices:
+                    settings[int(choice) - 1].input()
+                    if not cls.name in refresh.active:
+                        refresh.active = [cls.name]
+                    back = True
+                elif choice == '0':
+                    back = True
+        else:
+            print()
+            indices = []
+            for setting in settings:
+                setting.setup()
+                if not cls.name in refresh.active:
+                    refresh.active = [cls.name]
+
+    def __new__(cls):
+        activeservices = []
+        for servicename in refresh.active:
+            for service in cls.__subclasses__():
+                if service.name == servicename:
+                    activeservices += [service]
+        return activeservices
 
 class media:
     ignore_queue = []
@@ -307,6 +350,20 @@ class media:
         elif library.active == ['Trakt Collection']:
             return False
 
+    def collect(self):
+        for refresh_service in refresh():
+            if refresh_service.__module__ == self.__module__ or (self.__module__ == "content.services.trakt" and refresh_service.__module__ == "content.services.plex"):
+                refresh_service(self)
+            elif self.__module__ == "content.services.plex" and refresh_service.__module__ == "content.services.trakt":
+                try:
+                    for guid in self.Guid:
+                        service, guid = guid.id.split('://')
+                        trakt_match = sys.modules["content.services.trakt"].match(guid, service, self.type)
+                    if not trakt_match == None:
+                        refresh_service(trakt_match)
+                except:
+                    print("[trakt] error: updating trakt collection failed")
+    
     def collected(self, list):
         import content.services.plex as plex
         import content.services.trakt as trakt
@@ -449,7 +506,7 @@ class media:
         import content.services.trakt as trakt
         import content.services.overseerr as overseerr
         current_module = sys.modules[__name__]
-        refresh = False
+        refresh_ = False
         i = 0
         self.Releases = []
         if self.type == 'movie':
@@ -469,7 +526,7 @@ class media:
                             break
                     debrid_downloaded, retry = self.debrid_download()
                     if debrid_downloaded:
-                        refresh = True
+                        refresh_ = True
                         if not retry and (
                                 self.watchlist.autoremove == "both" or self.watchlist.autoremove == "movie"):
                             self.watchlist.remove([], self)
@@ -544,7 +601,7 @@ class media:
                                     self.Releases = multi_season_releases
                                     debrid_downloaded, retry = self.debrid_download()
                                     if debrid_downloaded:
-                                        refresh = True
+                                        refresh_ = True
                                         if not retry:
                                             for season in self.Seasons[:]:
                                                 for episode in season.Episodes[:]:
@@ -569,7 +626,7 @@ class media:
                     retry = False
                     for index, result in enumerate(results):
                         if result[0]:
-                            refresh = True
+                            refresh_ = True
                         if result[1]:
                             retry = True
                     if not retry and (self.watchlist.autoremove == "both" or self.watchlist.autoremove == "show"):
@@ -596,10 +653,10 @@ class media:
                 for episode in self.Episodes:
                     downloaded, retry = episode.download(library=library, parentReleases=self.Releases)
                     if downloaded:
-                        refresh = True
+                        refresh_ = True
                     if retry:
                         episode.watch()
-                if refresh:
+                if refresh_:
                     return True, retry
                 return False, retry
             else:
@@ -617,14 +674,8 @@ class media:
                     self.Releases = scraper.scrape(self.query(), self.deviation())
                 i += 1
             return self.debrid_download()
-        if refresh and current_module.library.active == [plex.library.name]:
-            if self.type == 'movie':
-                plex.library.refresh(plex.library.movies)
-            elif self.type == 'show':
-                plex.library.refresh(plex.library.shows)
-            return True
-        elif refresh and current_module.library.active == [trakt.library.name]:
-            trakt.library.add(self)
+        if refresh_:
+            self.collect()
 
     def downloaded(self):
         media.downloaded_versions += [self.query() + ' [' + self.version.name + ']']

@@ -433,7 +433,7 @@ class library(classes.library):
             print()
         back = False
         while not back:
-            print('Please choose the trakt user whos trakt collection should be maintained by plex_debrid.')
+            print('Please choose the trakt user whos trakt collection plex_debrid should use to determine your current media collection.')
             print()
             indices = []
             for index, user in enumerate(users):
@@ -483,84 +483,119 @@ class library(classes.library):
         ui_print('done')
         return collection
 
-    def add(original_element):
-        element = copy.deepcopy(original_element)
-        data = []
-        shows = []
-        movies = []
-        # determine release quality
-        try:
-            if len(element.Releases) == 0:
-                element.Releases += [element.Seasons[0].Releases[0]]
-            resolution = regex.search(r'(2160|1080|720)(?=p)', element.Releases[0].title, regex.I)
-        except:
-            resolution = False
-        if resolution:
-            if resolution.group() == '2160':
-                resolution = 'uhd_4k'
-            elif resolution.group() == '1080':
-                resolution = 'hd_1080p'
-            elif resolution.group() == '720':
-                resolution = 'hd_720p'
-        else:
-            resolution = 'sd_480p'
-        try:
-            hdr = regex.search(r'(HDR)', element.Releases[0].title, regex.I)
-        except:
-            hdr = False
-        if hdr:
-            hdr = 'hdr10'
-        # add release quality to element
-        if element.type == 'show':
-            if hasattr(element, 'seasons'):
-                for season in element.seasons:
-                    for attribute in season.__dict__.copy():
-                        if not (attribute == 'ids' or attribute == 'episodes' or attribute == 'number'):
-                            delattr(season, attribute)
-                    for episode in season.episodes:
-                        if hdr:
-                            episode.media_type = 'digital'
-                            episode.resolution = resolution
-                            episode.hdr = hdr
-                        else:
-                            episode.media_type = 'digital'
-                            episode.resolution = resolution
+    class refresh(classes.refresh):
+        
+        user = []
+        name = 'Trakt Collection'
+
+        def setup(cls, new=False):
+            from settings import settings_list
+            print()
+            traktuser = []
+            for category, allsettings in settings_list:
+                for setting in allsettings:
+                    if setting.name == 'Trakt users':
+                        traktuser = setting
+            if len(users) == 0:
+                print('Please set up a trakt user first:')
+                print()
+                traktuser.setup()
+                print()
+            back = False
+            while not back:
+                print('Please choose the trakt user whos trakt collection plex_debrid should update after a successful download.')
+                print()
+                indices = []
+                for index, user in enumerate(users):
+                    print(str(index + 1) + ') ' + user[0] + "'s trakt collection")
+                    indices += [str(index + 1)]
+                print()
+                choice = input("Choose a trakt users collection: ")
+                if choice in indices:
+                    library.refresh.user = users[int(choice) - 1]
+                    classes.refresh.active += [library.refresh.name]
+                    back = True
+
+        def __new__(cls, original_element):
+            global current_user
+            element = copy.deepcopy(original_element)
+            data = []
+            shows = []
+            movies = []
+            # determine release quality
+            try:
+                if len(element.Releases) == 0:
+                    element.Releases += [element.Seasons[0].Releases[0]]
+                resolution = regex.search(r'(2160|1080|720)(?=p)', element.Releases[0].title, regex.I)
+            except:
+                resolution = False
+            if resolution:
+                if resolution.group() == '2160':
+                    resolution = 'uhd_4k'
+                elif resolution.group() == '1080':
+                    resolution = 'hd_1080p'
+                elif resolution.group() == '720':
+                    resolution = 'hd_720p'
             else:
-                ui_print("[trakt] error: couldnt find seasons in show object", debug=ui_settings.debug)
-            # remove unwanted attributes from element
-            for ids in element.ids.__dict__.copy():
-                value = getattr(element.ids, ids)
-                if not value:
-                    delattr(element.ids, ids)
-            for attribute in element.__dict__.copy():
-                if not (
-                        attribute == 'ids' or attribute == 'seasons' or attribute == 'title' or attribute == 'year'):
-                    delattr(element, attribute)
-            shows += [element]
-        elif element.type == 'movie':
+                resolution = 'sd_480p'
+            try:
+                hdr = regex.search(r'(HDR)', element.Releases[0].title, regex.I)
+            except:
+                hdr = False
             if hdr:
-                element.media_type = 'digital'
-                element.resolution = resolution
-                element.hdr = hdr
-            else:
-                element.media_type = 'digital'
-                element.resolution = resolution
-            # remove unwanted attributes from element
-            for ids in element.ids.__dict__.copy():
-                value = getattr(element.ids, ids)
-                if not value:
-                    delattr(element.ids, ids)
-            for attribute in element.__dict__.copy():
-                if not (
-                        attribute == 'ids' or attribute == 'resolution' or attribute == 'media_type' or attribute == 'hdr' or attribute == 'title' or attribute == 'year'):
-                    delattr(element, attribute)
-            movies += [element]
-        # add element to collection
-        data = {'movies': movies, 'shows': shows}
-        response = post('https://api.trakt.tv/sync/collection',
-                                json.dumps(data, default=lambda o: o.__dict__))
-        ui_print('[trakt] item: ' + element.title + ' added to ' + library.user[0] + "'s collection")
-        sys.stdout.flush()
+                hdr = 'hdr10'
+            # add release quality to element
+            if element.type == 'show':
+                if hasattr(element, 'seasons'):
+                    for season in element.seasons:
+                        for attribute in season.__dict__.copy():
+                            if not (attribute == 'ids' or attribute == 'episodes' or attribute == 'number'):
+                                delattr(season, attribute)
+                        for episode in season.episodes:
+                            if hdr:
+                                episode.media_type = 'digital'
+                                episode.resolution = resolution
+                                episode.hdr = hdr
+                            else:
+                                episode.media_type = 'digital'
+                                episode.resolution = resolution
+                else:
+                    ui_print("[trakt] error: couldnt find seasons in show object", debug=ui_settings.debug)
+                # remove unwanted attributes from element
+                for ids in element.ids.__dict__.copy():
+                    value = getattr(element.ids, ids)
+                    if not value:
+                        delattr(element.ids, ids)
+                for attribute in element.__dict__.copy():
+                    if not (
+                            attribute == 'ids' or attribute == 'seasons' or attribute == 'title' or attribute == 'year'):
+                        delattr(element, attribute)
+                shows += [element]
+            elif element.type == 'movie':
+                if hdr:
+                    element.media_type = 'digital'
+                    element.resolution = resolution
+                    element.hdr = hdr
+                else:
+                    element.media_type = 'digital'
+                    element.resolution = resolution
+                # remove unwanted attributes from element
+                for ids in element.ids.__dict__.copy():
+                    value = getattr(element.ids, ids)
+                    if not value:
+                        delattr(element.ids, ids)
+                for attribute in element.__dict__.copy():
+                    if not (
+                            attribute == 'ids' or attribute == 'resolution' or attribute == 'media_type' or attribute == 'hdr' or attribute == 'title' or attribute == 'year'):
+                        delattr(element, attribute)
+                movies += [element]
+            # add element to collection
+            current_user = library.refresh.user
+            data = {'movies': movies, 'shows': shows}
+            response = post('https://api.trakt.tv/sync/collection',
+                                    json.dumps(data, default=lambda o: o.__dict__))
+            ui_print('[trakt] item: ' + element.title + ' added to ' + library.refresh.user[0] + "'s collection")
+            sys.stdout.flush()
 
 def search(query, type):
     global current_user

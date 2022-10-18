@@ -135,6 +135,10 @@ def download(element, stream=True, query='', force=False):
                             response = get(
                                 'https://api.real-debrid.com/rest/1.0/torrents/info/' + torrent_id)
                             if len(response.links) == len(cached_ids):
+                                if not hasattr(element,"downloaded_releases"):
+                                    element.downloaded_releases = [response.filename]
+                                else:
+                                    element.downloaded_releases += [response.filename]
                                 release.download = response.links
                             else:
                                 delete(
