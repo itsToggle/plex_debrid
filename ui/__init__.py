@@ -104,6 +104,7 @@ def scrape():
                     release.type = ("show" if regex.search(r'(S[0-9]+|SEASON|E[0-9]+|EPISODE|[0-9]+-[0-9])',release.title,regex.I) else "movie")
                     if debrid.download(release, stream=True, query=query, force=True):
                         content.classes.media.collect(release)
+                        scraped_releases.remove(scraped_releases[0])
                         time.sleep(3)
                     else:
                         print()
@@ -116,6 +117,7 @@ def scrape():
                         if choice == '1':
                             debrid.download(release, stream=False, query=query, force=True)
                             content.classes.media.collect(release)
+                            scraped_releases.remove(scraped_releases[0])
                             time.sleep(3)
                 elif int(choice) <= len(scraped_releases) and not int(choice) <= 0:
                     release = scraped_releases[int(choice) - 1]
@@ -123,6 +125,7 @@ def scrape():
                     release.type = ("show" if regex.search(r'(S[0-9]+|SEASON|E[0-9]+|EPISODE|[0-9]+-[0-9])',release.title,regex.I) else "movie")
                     if debrid.download(release, stream=True, query=release.title, force=True):
                         content.classes.media.collect(release)
+                        scraped_releases.remove(scraped_releases[int(choice) - 1])
                         time.sleep(3)
                     else:
                         print()
@@ -132,10 +135,11 @@ def scrape():
                         print("0) Back")
                         print("1) Add uncached torrent")
                         print()
-                        choice = input("Choose an action: ")
-                        if choice == '1':
+                        choice2 = input("Choose an action: ")
+                        if choice2 == '1':
                             if debrid.download(release, stream=False, query=query, force=True):
                                 content.classes.media.collect(release)
+                                scraped_releases.remove(scraped_releases[int(choice) - 1])
                                 time.sleep(3)
                             else:
                                 print()
