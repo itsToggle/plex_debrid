@@ -263,6 +263,7 @@ def load(doprint=False, updated=False):
             settings['Library update services'] = ["Plex Libraries"]
         elif settings['Library Service'] == ["Trakt Collection"]:
             settings['Library update services'] = ["Trakt Collection"]
+            settings['Trakt refresh user'] = settings['Trakt library user']
     for category, load_settings in settings_list:
         for setting in load_settings:
             if setting.name in settings and not setting.name == 'version':
