@@ -19,31 +19,35 @@ class option:
         func()
 
 def ignored():
-    ui_cls('Options/Ignored Media/')
-    if len(content.services.plex.ignored) == 0:
-        library = content.classes.library()[0]()
-        if len(library) > 0:
-            # get entire plex_watchlist
-            plex_watchlist = content.services.plex.watchlist()
-            # get entire trakt_watchlist
-            trakt_watchlist = content.services.trakt.watchlist()
-            print('checking new content ...')
-            for iterator in itertools.zip_longest(plex_watchlist, trakt_watchlist):
-                for element in iterator:
-                    if hasattr(element, 'uncollected'):
-                        element.uncollected(library)
+    back = False
+    while not back:
+        ui_cls('Options/Ignored Media/')
+        if len(content.services.plex.ignored) == 0:
+            library = content.classes.library()[0]()
+            if len(library) > 0:
+                # get entire plex_watchlist
+                plex_watchlist = content.services.plex.watchlist()
+                # get entire trakt_watchlist
+                trakt_watchlist = content.services.trakt.watchlist()
+                print('checking new content ...')
+                for iterator in itertools.zip_longest(plex_watchlist, trakt_watchlist):
+                    for element in iterator:
+                        if hasattr(element, 'uncollected'):
+                            element.uncollected(library)
+            print()
+        print('0) Back')
+        indices = []
+        for index, element in enumerate(content.services.plex.ignored):
+            print(str(index + 1) + ') ' + element.query())
+            indices += [str(index + 1)]
         print()
-    print('0) Back')
-    indices = []
-    for index, element in enumerate(content.services.plex.ignored):
-        print(str(index + 1) + ') ' + element.query())
-        indices += [str(index + 1)]
-    print()
-    choice = input('Choose a media item that you want to remove from the ignored list: ')
-    if choice in indices:
-        print("Media item: " + content.services.plex.ignored[int(choice) - 1].query() + ' removed from ignored list.')
-        content.services.plex.ignored[int(choice) - 1].unwatch()
-        time.sleep(3)
+        choice = input('Choose a media item that you want to remove from the ignored list: ')
+        if choice in indices:
+            print("Media item: " + content.services.plex.ignored[int(choice) - 1].query() + ' removed from ignored list.')
+            content.services.plex.ignored[int(choice) - 1].unwatch()
+            time.sleep(3)
+        elif choice == '0':
+            back = True
     options()
 
 def scrape():
