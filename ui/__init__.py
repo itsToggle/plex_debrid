@@ -84,27 +84,26 @@ def scrape():
         scraped_releases = obj.Releases
         if not obj.version == None:
             releases.sort(scraped_releases, obj.version)
-        print()
-        print("0) Back")
-        releases.print_releases(scraped_releases)
-        print()
-        print(
-            "Type 'auto' to automatically download the first cached release. Releases were sorted by your first version definition.")
         back = False
         while not back:
+            ui_cls('Options/Scraper/')
+            print("0) Back")
+            releases.print_releases(scraped_releases)
+            print()
+            print("Type 'auto' to automatically download the first cached release.")
             print()
             choice = input("Choose a release to download: ")
             try:
                 if choice == 'auto':
                     release = scraped_releases[0]
                     release.Releases = scraped_releases
+                    release.type = ("show" if regex.search(r'(S[0-9]+|SEASON|E[0-9]+|EPISODE|[0-9]+-[0-9])',release.title,regex.I) else "movie")
                     if debrid.download(release, stream=True, query=query, force=True):
-                        back = True
+                        content.classes.media.collect(release)
                         time.sleep(3)
                     else:
                         print()
-                        print(
-                            "These releases do not seem to be cached on your debrid services. Add uncached torrent?")
+                        print("These releases do not seem to be cached on your debrid services. Add uncached torrent?")
                         print()
                         print("0) Back")
                         print("1) Add uncached torrent")
@@ -112,13 +111,14 @@ def scrape():
                         choice = input("Choose an action: ")
                         if choice == '1':
                             debrid.download(release, stream=False, query=query, force=True)
-                            back = True
+                            content.classes.media.collect(release)
                             time.sleep(3)
                 elif int(choice) <= len(scraped_releases) and not int(choice) <= 0:
                     release = scraped_releases[int(choice) - 1]
                     release.Releases = [release, ]
+                    release.type = ("show" if regex.search(r'(S[0-9]+|SEASON|E[0-9]+|EPISODE|[0-9]+-[0-9])',release.title,regex.I) else "movie")
                     if debrid.download(release, stream=True, query=release.title, force=True):
-                        back = True
+                        content.classes.media.collect(release)
                         time.sleep(3)
                     else:
                         print()
@@ -131,7 +131,7 @@ def scrape():
                         choice = input("Choose an action: ")
                         if choice == '1':
                             if debrid.download(release, stream=False, query=query, force=True):
-                                back = True
+                                content.classes.media.collect(release)
                                 time.sleep(3)
                             else:
                                 print()

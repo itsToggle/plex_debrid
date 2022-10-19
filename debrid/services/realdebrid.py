@@ -47,7 +47,11 @@ def post(url, data):
         logerror(response)
         response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
     except Exception as e:
-        ui_print("[realdebrid] error: (json exception): " + str(e), debug=ui_settings.debug)
+        if hasattr(response,"status_code"):
+            if response.status_code >= 300:
+                ui_print("[realdebrid] error: (json exception): " + str(e), debug=ui_settings.debug)
+        else:
+            ui_print("[realdebrid] error: (json exception): " + str(e), debug=ui_settings.debug)
         response = None
     return response
 
