@@ -352,7 +352,7 @@ class media:
 
     def collect(self):
         for refresh_service in refresh():
-            if refresh_service.__module__ == self.__module__ or (self.__module__ == "content.services.trakt" and refresh_service.__module__ == "content.services.plex"):
+            if refresh_service.__module__ == self.__module__ or (self.__module__ in ["content.services.trakt","releases"] and refresh_service.__module__ == "content.services.plex"):
                 refresh_service(self)
             elif self.__module__ == "content.services.plex" and refresh_service.__module__ == "content.services.trakt":
                 try:
@@ -362,7 +362,7 @@ class media:
                     if not trakt_match == None:
                         refresh_service(trakt_match)
                 except:
-                    print("[trakt] error: updating trakt collection failed")
+                    print("[trakt] error: adding item to trakt collection failed")
     
     def collected(self, list):
         import content.services.plex as plex

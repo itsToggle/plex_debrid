@@ -19,31 +19,35 @@ class option:
         func()
 
 def ignored():
-    ui_cls('Options/Ignored Media/')
-    if len(content.services.plex.ignored) == 0:
-        library = content.classes.library()[0]()
-        if len(library) > 0:
-            # get entire plex_watchlist
-            plex_watchlist = content.services.plex.watchlist()
-            # get entire trakt_watchlist
-            trakt_watchlist = content.services.trakt.watchlist()
-            print('checking new content ...')
-            for iterator in itertools.zip_longest(plex_watchlist, trakt_watchlist):
-                for element in iterator:
-                    if hasattr(element, 'uncollected'):
-                        element.uncollected(library)
+    back = False
+    while not back:
+        ui_cls('Options/Ignored Media/')
+        if len(content.services.plex.ignored) == 0:
+            library = content.classes.library()[0]()
+            if len(library) > 0:
+                # get entire plex_watchlist
+                plex_watchlist = content.services.plex.watchlist()
+                # get entire trakt_watchlist
+                trakt_watchlist = content.services.trakt.watchlist()
+                print('checking new content ...')
+                for iterator in itertools.zip_longest(plex_watchlist, trakt_watchlist):
+                    for element in iterator:
+                        if hasattr(element, 'uncollected'):
+                            element.uncollected(library)
+            print()
+        print('0) Back')
+        indices = []
+        for index, element in enumerate(content.services.plex.ignored):
+            print(str(index + 1) + ') ' + element.query())
+            indices += [str(index + 1)]
         print()
-    print('0) Back')
-    indices = []
-    for index, element in enumerate(content.services.plex.ignored):
-        print(str(index + 1) + ') ' + element.query())
-        indices += [str(index + 1)]
-    print()
-    choice = input('Choose a media item that you want to remove from the ignored list: ')
-    if choice in indices:
-        print("Media item: " + content.services.plex.ignored[int(choice) - 1].query() + ' removed from ignored list.')
-        content.services.plex.ignored[int(choice) - 1].unwatch()
-        time.sleep(3)
+        choice = input('Choose a media item that you want to remove from the ignored list: ')
+        if choice in indices:
+            print("Media item: " + content.services.plex.ignored[int(choice) - 1].query() + ' removed from ignored list.')
+            content.services.plex.ignored[int(choice) - 1].unwatch()
+            time.sleep(3)
+        elif choice == '0':
+            back = True
     options()
 
 def scrape():
@@ -84,27 +88,27 @@ def scrape():
         scraped_releases = obj.Releases
         if not obj.version == None:
             releases.sort(scraped_releases, obj.version)
-        print()
-        print("0) Back")
-        releases.print_releases(scraped_releases)
-        print()
-        print(
-            "Type 'auto' to automatically download the first cached release. Releases were sorted by your first version definition.")
         back = False
         while not back:
+            ui_cls('Options/Scraper/')
+            print("0) Back")
+            releases.print_releases(scraped_releases)
+            print()
+            print("Type 'auto' to automatically download the first cached release.")
             print()
             choice = input("Choose a release to download: ")
             try:
                 if choice == 'auto':
                     release = scraped_releases[0]
                     release.Releases = scraped_releases
+                    release.type = ("show" if regex.search(r'(S[0-9]+|SEASON|E[0-9]+|EPISODE|[0-9]+-[0-9])',release.title,regex.I) else "movie")
                     if debrid.download(release, stream=True, query=query, force=True):
-                        back = True
+                        content.classes.media.collect(release)
+                        scraped_releases.remove(scraped_releases[0])
                         time.sleep(3)
                     else:
                         print()
-                        print(
-                            "These releases do not seem to be cached on your debrid services. Add uncached torrent?")
+                        print("These releases do not seem to be cached on your debrid services. Add uncached torrent?")
                         print()
                         print("0) Back")
                         print("1) Add uncached torrent")
@@ -112,13 +116,16 @@ def scrape():
                         choice = input("Choose an action: ")
                         if choice == '1':
                             debrid.download(release, stream=False, query=query, force=True)
-                            back = True
+                            content.classes.media.collect(release)
+                            scraped_releases.remove(scraped_releases[0])
                             time.sleep(3)
                 elif int(choice) <= len(scraped_releases) and not int(choice) <= 0:
                     release = scraped_releases[int(choice) - 1]
                     release.Releases = [release, ]
+                    release.type = ("show" if regex.search(r'(S[0-9]+|SEASON|E[0-9]+|EPISODE|[0-9]+-[0-9])',release.title,regex.I) else "movie")
                     if debrid.download(release, stream=True, query=release.title, force=True):
-                        back = True
+                        content.classes.media.collect(release)
+                        scraped_releases.remove(scraped_releases[int(choice) - 1])
                         time.sleep(3)
                     else:
                         print()
@@ -128,10 +135,11 @@ def scrape():
                         print("0) Back")
                         print("1) Add uncached torrent")
                         print()
-                        choice = input("Choose an action: ")
-                        if choice == '1':
+                        choice2 = input("Choose an action: ")
+                        if choice2 == '1':
                             if debrid.download(release, stream=False, query=query, force=True):
-                                back = True
+                                content.classes.media.collect(release)
+                                scraped_releases.remove(scraped_releases[int(choice) - 1])
                                 time.sleep(3)
                             else:
                                 print()
@@ -255,6 +263,7 @@ def load(doprint=False, updated=False):
             settings['Library update services'] = ["Plex Libraries"]
         elif settings['Library Service'] == ["Trakt Collection"]:
             settings['Library update services'] = ["Trakt Collection"]
+            settings['Trakt refresh user'] = settings['Trakt library user']
     for category, load_settings in settings_list:
         for setting in load_settings:
             if setting.name in settings and not setting.name == 'version':
