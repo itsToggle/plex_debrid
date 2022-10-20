@@ -181,6 +181,13 @@ class media:
         for version in versions[:]:
             if self.query() + ' [' + version.name + ']' in media.downloaded_versions:
                 versions.remove(version)
+            elif self.type == 'show':
+                all_seasons_downloaded = True
+                for season in self.Seasons:
+                    if not season.query() + ' [' + version.name + ']' in media.downloaded_versions:
+                        all_seasons_downloaded = False
+                if all_seasons_downloaded:
+                    versions.remove(version)
         return versions
 
     def version_missing(self):
@@ -363,6 +370,8 @@ class media:
                         refresh_service(trakt_match)
                 except:
                     print("[trakt] error: adding item to trakt collection failed")
+            else:
+                print("error: library update service could not be determined")
     
     def collected(self, list):
         import content.services.plex as plex
@@ -649,6 +658,8 @@ class media:
                     i += 1
             debrid_downloaded, retry = self.debrid_download()
             if not debrid_downloaded or retry:
+                if debrid_downloaded:
+                    refresh_ = True
                 self.Releases += scraper.scrape(self.query()[:-1])
                 for episode in self.Episodes:
                     downloaded, retry = episode.download(library=library, parentReleases=self.Releases)
@@ -656,9 +667,7 @@ class media:
                         refresh_ = True
                     if retry:
                         episode.watch()
-                if refresh_:
-                    return True, retry
-                return False, retry
+                return refresh_, retry
             else:
                 return True, retry
         elif self.type == 'episode':
