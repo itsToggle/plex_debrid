@@ -346,7 +346,7 @@ def threaded(stop):
                 library = content.classes.library()[0]()
                 overseerr_requests.sync(plex_watchlist, library)
                 if len(library) == 0:
-                    break
+                    continue
                 ui_print('checking new content ...')
                 for iterator in itertools.zip_longest(plex_watchlist, trakt_watchlist):
                     for element in iterator:
@@ -362,9 +362,9 @@ def threaded(stop):
                 overseerr_requests = content.services.overseerr.requests()
                 overseerr_requests.sync(plex_watchlist, library)
                 library = content.classes.library()[0]()
-                if len(library) == 0:
-                    break
                 timeout_counter = 0
+                if len(library) == 0:
+                    continue
                 ui_print('checking new content ...')
                 for iterator in itertools.zip_longest(plex_watchlist, trakt_watchlist):
                     for element in iterator:

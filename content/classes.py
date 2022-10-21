@@ -188,6 +188,13 @@ class media:
                         all_seasons_downloaded = False
                 if all_seasons_downloaded:
                     versions.remove(version)
+            elif self.type == 'season':
+                all_episodes_downloaded = True
+                for episode in self.Episodes:
+                    if not episode.query() + ' [' + version.name + ']' in media.downloaded_versions:
+                        all_episodes_downloaded = False
+                if all_episodes_downloaded:
+                    versions.remove(version)
         return versions
 
     def version_missing(self):
