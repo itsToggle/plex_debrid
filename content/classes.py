@@ -675,18 +675,20 @@ class media:
             else:
                 return True, retry
         elif self.type == 'episode':
-            while len(self.Releases) == 0 and i <= retries:
-                altquery = self.deviation()
-                for release in parentReleases:
-                    if regex.match(r'(' + altquery + ')', release.title, regex.I):
-                        self.Releases += [release]
+            altquery = self.deviation()
+            for release in parentReleases:
+                if regex.match(r'(' + altquery + ')', release.title, regex.I):
+                    self.Releases += [release]
+            debrid_downloaded, retry = self.debrid_download()
+            if not debrid_downloaded or retry:
+                if debrid_downloaded:
+                    refresh_ = True
+                self.Releases = scraper.scrape(self.query(), self.deviation())
                 debrid_downloaded, retry = self.debrid_download()
-                if not debrid_downloaded or retry:
-                    self.Releases = scraper.scrape(self.query(), self.deviation())
-                else:
-                    return True, retry
-                i += 1
-            return self.debrid_download()
+                if debrid_downloaded:
+                    refresh_ = True
+                return refresh_, retry
+            return True, retry
         if refresh_:
             self.collect()
 
