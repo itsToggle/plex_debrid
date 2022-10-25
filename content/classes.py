@@ -179,19 +179,27 @@ class media:
         for version in releases.sort.versions:
             versions += [releases.sort.version(version[0], version[1], version[2], version[3])]
         for version in versions[:]:
+            missing = True
             if self.type == "movie" or self.type == "episode":
                 if self.query() + ' [' + version.name + ']' in media.downloaded_versions:
                     versions.remove(version)
             elif self.type == 'show':
                 for season in self.Seasons:
-                    if season.version_missing():
-                        versions.remove(version)
+                    for episode in season.Episodes:
+                        if episode.query() + ' [' + version.name + ']' in media.downloaded_versions:
+                            missing = False
+                            break
+                    if missing == False:
                         break
+                if missing:
+                    versions.remove(version)            
             elif self.type == 'season':
                 for episode in self.Episodes:
-                    if episode.version_missing():
-                        versions.remove(version)
-                        break
+                    if episode.query() + ' [' + version.name + ']' in media.downloaded_versions:
+                            missing = False
+                            break
+                if missing:
+                    versions.remove(version)   
         return versions
 
     def version_missing(self):
@@ -523,8 +531,7 @@ class media:
         i = 0
         self.Releases = []
         if self.type == 'movie':
-            if len(self.uncollected(library)) > 0 or (
-                    len(self.versions()) > 0 and not len(self.versions()) == len(releases.sort.versions)):
+            if len(self.uncollected(library)) > 0 or self.version_missing():
                 if self.released() and not self.watched() and not self.downloading():
                     tic = time.perf_counter()
                     alternate_years = [self.year, self.year - 1, self.year + 1]
