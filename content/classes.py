@@ -179,22 +179,27 @@ class media:
         for version in releases.sort.versions:
             versions += [releases.sort.version(version[0], version[1], version[2], version[3])]
         for version in versions[:]:
-            if self.query() + ' [' + version.name + ']' in media.downloaded_versions:
-                versions.remove(version)
+            missing = True
+            if self.type == "movie" or self.type == "episode":
+                if self.query() + ' [' + version.name + ']' in media.downloaded_versions:
+                    versions.remove(version)
             elif self.type == 'show':
-                all_seasons_downloaded = True
                 for season in self.Seasons:
-                    if not season.query() + ' [' + version.name + ']' in media.downloaded_versions:
-                        all_seasons_downloaded = False
-                if all_seasons_downloaded:
-                    versions.remove(version)
+                    for episode in season.Episodes:
+                        if episode.query() + ' [' + version.name + ']' in media.downloaded_versions:
+                            missing = False
+                            break
+                    if missing == False:
+                        break
+                if missing:
+                    versions.remove(version)            
             elif self.type == 'season':
-                all_episodes_downloaded = True
                 for episode in self.Episodes:
-                    if not episode.query() + ' [' + version.name + ']' in media.downloaded_versions:
-                        all_episodes_downloaded = False
-                if all_episodes_downloaded:
-                    versions.remove(version)
+                    if episode.query() + ' [' + version.name + ']' in media.downloaded_versions:
+                            missing = False
+                            break
+                if missing:
+                    versions.remove(version)   
         return versions
 
     def version_missing(self):
@@ -379,7 +384,7 @@ class media:
                     print("[trakt] error: adding item to trakt collection failed")
             else:
                 print("error: library update service could not be determined")
-    
+
     def collected(self, list):
         import content.services.plex as plex
         import content.services.trakt as trakt
@@ -526,8 +531,7 @@ class media:
         i = 0
         self.Releases = []
         if self.type == 'movie':
-            if len(self.uncollected(library)) > 0 or (
-                    len(self.versions()) > 0 and not len(self.versions()) == len(releases.sort.versions)):
+            if len(self.uncollected(library)) > 0 or self.version_missing():
                 if self.released() and not self.watched() and not self.downloading():
                     tic = time.perf_counter()
                     alternate_years = [self.year, self.year - 1, self.year + 1]
@@ -678,28 +682,31 @@ class media:
             else:
                 return True, retry
         elif self.type == 'episode':
-            while len(self.Releases) == 0 and i <= retries:
-                altquery = self.deviation()
-                for release in parentReleases:
-                    if regex.match(r'(' + altquery + ')', release.title, regex.I):
-                        self.Releases += [release]
+            altquery = self.deviation()
+            for release in parentReleases:
+                if regex.match(r'(' + altquery + ')', release.title, regex.I):
+                    self.Releases += [release]
+            debrid_downloaded, retry = self.debrid_download()
+            if not debrid_downloaded or retry:
+                if debrid_downloaded:
+                    refresh_ = True
+                self.Releases = scraper.scrape(self.query(), self.deviation())
                 debrid_downloaded, retry = self.debrid_download()
                 if debrid_downloaded:
-                    return True, retry
-                else:
-                    self.Releases = scraper.scrape(self.query(), self.deviation())
-                i += 1
-            return self.debrid_download()
+                    refresh_ = True
+                return refresh_, retry
+            return True, retry
         if refresh_:
             self.collect()
 
     def downloaded(self):
-        media.downloaded_versions += [self.query() + ' [' + self.version.name + ']']
-        if self.type == 'show':
+        if self.type == "movie" or self.type == "episode":
+            media.downloaded_versions += [self.query() + ' [' + self.version.name + ']']
+        elif self.type == 'show':
             for season in self.Seasons:
                 season.version = self.version
                 season.downloaded()
-        if self.type == 'season':
+        elif self.type == 'season':
             for episode in self.Episodes:
                 episode.version = self.version
                 episode.downloaded()
