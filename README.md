@@ -181,6 +181,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 >  5. Disable the libary setting "Empty trash after every scan", to make sure that no content is removed accidentaly
 >  6. You and your home users can now stream cached torrents from your debrid service/s!
 >  
+>  **Please keep your libraries metadata agent as the default Plex metadata agent**
 >  </details>
 
 more personal media server setup instructions to come soon.
