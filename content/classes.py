@@ -179,26 +179,26 @@ class media:
         for version in releases.sort.versions:
             versions += [releases.sort.version(version[0], version[1], version[2], version[3])]
         for version in versions[:]:
-            missing = True
+            missing = False
             if self.type == "movie" or self.type == "episode":
                 if self.query() + ' [' + version.name + ']' in media.downloaded_versions:
                     versions.remove(version)
             elif self.type == 'show':
                 for season in self.Seasons:
                     for episode in season.Episodes:
-                        if episode.query() + ' [' + version.name + ']' in media.downloaded_versions:
-                            missing = False
+                        if not episode.query() + ' [' + version.name + ']' in media.downloaded_versions:
+                            missing = True
                             break
-                    if missing == False:
+                    if missing == True:
                         break
-                if missing:
+                if not missing:
                     versions.remove(version)            
             elif self.type == 'season':
                 for episode in self.Episodes:
-                    if episode.query() + ' [' + version.name + ']' in media.downloaded_versions:
-                            missing = False
-                            break
-                if missing:
+                    if not episode.query() + ' [' + version.name + ']' in media.downloaded_versions:
+                        missing = True
+                        break
+                if not missing:
                     versions.remove(version)   
         return versions
 
