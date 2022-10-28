@@ -22,7 +22,7 @@ def ignored():
     back = False
     while not back:
         ui_cls('Options/Ignored Media/')
-        if len(content.services.plex.ignored) == 0:
+        if len(content.classes.ignore.ignored) == 0:
             library = content.classes.library()[0]()
             if len(library) > 0:
                 # get entire plex_watchlist
@@ -32,19 +32,20 @@ def ignored():
                 print('checking new content ...')
                 for iterator in itertools.zip_longest(plex_watchlist, trakt_watchlist):
                     for element in iterator:
-                        if hasattr(element, 'uncollected'):
+                        if hasattr(element, 'uncollected') and hasattr(element, 'watched'):
+                            element.watched()
                             element.uncollected(library)
             print()
         print('0) Back')
         indices = []
-        for index, element in enumerate(content.services.plex.ignored):
+        for index, element in enumerate(content.classes.ignore.ignored):
             print(str(index + 1) + ') ' + element.query())
             indices += [str(index + 1)]
         print()
         choice = input('Choose a media item that you want to remove from the ignored list: ')
         if choice in indices:
-            print("Media item: " + content.services.plex.ignored[int(choice) - 1].query() + ' removed from ignored list.')
-            content.services.plex.ignored[int(choice) - 1].unwatch()
+            print("Media item: " + content.classes.ignore.ignored[int(choice) - 1].query() + ' removed from ignored list.')
+            content.classes.ignore.ignored[int(choice) - 1].unwatch()
             time.sleep(3)
         elif choice == '0':
             back = True
@@ -266,7 +267,7 @@ def load(doprint=False, updated=False):
             settings['Trakt refresh user'] = settings['Trakt library user']
     for category, load_settings in settings_list:
         for setting in load_settings:
-            if setting.name in settings and not setting.name == 'version':
+            if setting.name in settings and not setting.name == 'version' and not setting.name == 'Content Services':
                 setting.set(settings[setting.name])
     if doprint:
         print('Last settings loaded!')
@@ -319,7 +320,6 @@ def update(settings, version):
                 elif setting.name == 'version':
                     settings[setting.name] = setting.get()
 
-# Multiprocessing run method
 def threaded(stop):
     ui_cls()
     print("Type 'exit' to return to the main menu.")
@@ -332,9 +332,12 @@ def threaded(stop):
         plex_watchlist = content.services.plex.watchlist()
         # get entire trakt_watchlist
         trakt_watchlist = content.services.trakt.watchlist()
-        # get all overseerr request, match content to plex media type and add to monitored list
+        # get all overseerr request, match content to available media type and add to monitored list
         overseerr_requests = content.services.overseerr.requests()
-        overseerr_requests.sync(plex_watchlist, library)
+        if len(plex_watchlist) > 0:
+            overseerr_requests.sync(plex_watchlist)
+        else:
+            overseerr_requests.sync(trakt_watchlist)
         ui_print('checking new content ...')
         for iterator in itertools.zip_longest(plex_watchlist, trakt_watchlist):
             for element in iterator:
@@ -344,7 +347,10 @@ def threaded(stop):
         while not stop():
             if plex_watchlist.update() or overseerr_requests.update() or trakt_watchlist.update():
                 library = content.classes.library()[0]()
-                overseerr_requests.sync(plex_watchlist, library)
+                if len(plex_watchlist) > 0:
+                    overseerr_requests.sync(plex_watchlist)
+                else:
+                    overseerr_requests.sync(trakt_watchlist)
                 if len(library) == 0:
                     continue
                 ui_print('checking new content ...')
@@ -360,7 +366,10 @@ def threaded(stop):
                 trakt_watchlist = content.services.trakt.watchlist()
                 # get all overseerr request, match content to plex media type and add to monitored list
                 overseerr_requests = content.services.overseerr.requests()
-                overseerr_requests.sync(plex_watchlist, library)
+                if len(plex_watchlist) > 0:
+                    overseerr_requests.sync(plex_watchlist)
+                else:
+                    overseerr_requests.sync(trakt_watchlist)
                 library = content.classes.library()[0]()
                 timeout_counter = 0
                 if len(library) == 0:

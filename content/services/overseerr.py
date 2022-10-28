@@ -3,6 +3,7 @@ from base import *
 #import parent modules
 from content import classes
 from content.services import plex
+from content.services import trakt
 from ui.ui_print import *
 
 name = 'Overseerr'
@@ -22,8 +23,8 @@ def setup(self):
     ui_cls("Options/Settings/Content Services/Content Services/Overseerr")
     working_key = False
     working_url = False
-    if len(plex.users) == 0:
-        print('Looks like you havent connected plex_debrid to plex! Please setup at least one plex user.')
+    if len(plex.users) == 0 and len(trakt.users) == 0:
+        print('Looks like you havent connected plex_debrid to any other content service! Please setup at least one other content service.')
         time.sleep(3)
         return
     try:
@@ -44,12 +45,12 @@ def setup(self):
         else:
             print(
                 "Looks like overseerr couldn't be reached under the current base url ('" + base_url + "').")
-        print("Please make sure overseerr is running and try again, or provide your overseerr base URL below:")
+        print("Please make sure overseerr is running and try again, or provide your overseerr base URL below.")
+        print("Please provide your overseerr base URL in the following format 'http://localhost:5055' or press enter to return to the main menu.")
         print()
-        base_url = input(
-            "Please provide your overseerr base URL (or press enter to retry default: 'http://localhost:5055'): ")
+        base_url = input("Please provide your overseerr base URL: ")
         if base_url == "":
-            base_url = "http://localhost:5055"
+            return
         working_key = False
         working_url = False
         try:
@@ -198,6 +199,24 @@ def post(url, data):
         response = None
     return response
 
+def setEID(self):
+    EID = []
+    if hasattr(self,"media"):    
+        if hasattr(self.media,"imdbId"):
+            if not self.media.imdbId == None:
+                EID += ['imdb://' + str(self.media.imdbId)]
+        if hasattr(self.media,"tmdbId"):
+            if not self.media.tmdbId == None:
+                EID += ['tmdb://' + str(self.media.tmdbId)]
+        if hasattr(self.media,"tvdbId"):
+            if not self.media.tvdbId == None:
+                EID += ['tvdb://' + str(self.media.tmvbId)]
+    return EID
+
+class media(classes.media):
+    def __init__(self, other):
+        super().__init__(other)
+
 class requests(classes.watchlist):
     def __init__(self):
         self.data = []
@@ -216,23 +235,15 @@ class requests(classes.watchlist):
                 self.data = []
             ui_print('done')
 
-    def sync(self, other, library):
+    def sync(self, other):
         add = []
-        for element in self.data:
-            result = []
-            try:
-                if not element.media.tmdbId == None:
-                    match_id = 'tmdb-' + str(element.media.tmdbId)
-                elif not element.media.tvdbId == None:
-                    match_id = 'tvdb-' + str(element.media.tvdbId)
-                if element.type == 'movie':
-                    result = plex.match(match_id, 'movie', library=library)
-                elif element.type == 'tv':
-                    result = plex.match(match_id, 'show', library=library)
-            except:
-                result = []
-            if not result == []:
-                add += result
+        for element_ in self.data:
+            element = copy.deepcopy(element_)
+            element = media(element)
+            element.EID = setEID(element)
+            element.match(other.__module__)
+            element.watchlist = sys.modules[other.__module__].watchlist
+            add += [element]
         for element in add:
             if not element in other:
                 other.data.append(element)
@@ -244,11 +255,8 @@ class requests(classes.watchlist):
             try:
                 response = get(base_url + '/api/v1/request')
                 for element in response.results:
-                    if not element in self.data and (
-                            element.requestedBy.displayName in users or users == ['all']) and [
-                        str(element.status)] in allowed_status:
-                        ui_print(
-                            '[overseerr] found new overseerr request by user "' + element.requestedBy.displayName + '".')
+                    if not element in self.data and (element.requestedBy.displayName in users or users == ['all']) and [str(element.status)] in allowed_status:
+                        ui_print('[overseerr] found new overseerr request by user "' + element.requestedBy.displayName + '".')
                         refresh = True
                         self.data.append(element)
                 for element in self.data[:]:

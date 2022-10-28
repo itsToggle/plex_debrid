@@ -333,6 +333,9 @@ settings_list = [
         setting('Library update services', [''], content.classes.refresh, 'active', entry="libary update service", subclass=True,
                 radio=False, required=True, preflight=True,
                 help='Please choose at least one libary update service that plex debrid should update after a complete download'),
+        setting('Library ignore services', [''], content.classes.ignore, 'active', entry="libary ignore service", subclass=True,
+                radio=False, required=True, preflight=True,
+                help='Please choose at least one libary ignore service that plex debrid should use to ignore content that could repeatedly not be found.'),
         setting('Trakt library user', [''], content.services.trakt.library, 'user', hidden=True),
         setting('Trakt refresh user', [''], content.services.trakt.library.refresh, 'user', hidden=True),
         setting('Plex library refresh', [''], content.services.plex.library.refresh, 'sections', hidden=True,moveable=False),
@@ -341,6 +344,9 @@ settings_list = [
             'Please specify a library section number that should be checked for existing content before download: '],
                 content.services.plex.library, 'check', hidden=True, entry="section",
                 help='By default, your entire library (including plex shares) is checked for existing content before a download is started. This setting allows you limit this check to specific library sections. To find a section number, go to "https://app.plex.tv", open your the library you want to include in the check and look for the "source=" parameter in the url.'),
+        setting('Plex ignore user', '', content.services.plex.library.ignore, 'user', hidden=True),
+        setting('Trakt ignore user', '', content.services.trakt.library.ignore, 'user', hidden=True),
+        setting('Local ignore list path', 'Please provide a path where the list ignored media items should be saved: ', content.services.textfile.library.ignore, 'path', hidden=True),
     ]
         ],
     ['Scraper Settings', [
