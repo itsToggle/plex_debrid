@@ -353,6 +353,9 @@ class media:
 
     def version_missing(self):
         all_versions = []
+        if self in media.ignore_queue:
+            match = next((x for x in media.ignore_queue if self == x), None)
+            self.ignored_count = match.ignored_count
         for version in releases.sort.versions:
             all_versions += [releases.sort.version(version[0], version[1], version[2], version[3])]
         for version in all_versions[:]:
