@@ -396,6 +396,7 @@ class library(classes.library):
 
         def call(path):
             try:
+                time.sleep(2)
                 section = path[0]
                 folders = path[1]
                 for folder in folders:

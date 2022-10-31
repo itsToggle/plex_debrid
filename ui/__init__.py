@@ -218,24 +218,24 @@ def options():
 
 def setup():
     if os.path.exists('./settings.json'):
-        with open('settings.json', 'r') as f:
-            settings = json.loads(f.read())
-        if settings['Show Menu on Startup'] == "false":
-            return False
-        load()
-        return True
-    else:
-        ui_cls('Initial Setup')
-        input('Press Enter to continue: ')
-        for category, settings in settings_list:
-            for setting in settings:
-                if setting.required:
-                    ui_cls('Options/Settings/' + category + '/' + setting.name)
-                    setting.setup()
-        ui_cls('Done!')
-        input('Press Enter to continue to the main menu: ')
-        save()
-        return True
+        if os.path.getsize('./settings.json') > 0:
+            with open('settings.json', 'r') as f:
+                settings = json.loads(f.read())
+            if settings['Show Menu on Startup'] == "false":
+                return False
+            load()
+            return True
+    ui_cls('Initial Setup')
+    input('Press Enter to continue: ')
+    for category, settings in settings_list:
+        for setting in settings:
+            if setting.required:
+                ui_cls('Options/Settings/' + category + '/' + setting.name)
+                setting.setup()
+    ui_cls('Done!')
+    input('Press Enter to continue to the main menu: ')
+    save()
+    return True
 
 def save():
     save_settings = {}
