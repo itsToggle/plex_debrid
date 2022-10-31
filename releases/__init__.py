@@ -114,7 +114,7 @@ class sort:
             while not back:
                 version_[0] = name
                 if version_[1] == "both":
-                    version_[1] = sort.default_triggers
+                    version_[1] = copy.deepcopy(sort.default_triggers)
                 if new:
                     ui_cls('Options/Settings/Scraper Settings/Versions/Add')
                     print(
@@ -809,7 +809,7 @@ class sort:
             self.name = name
             self.triggers = triggers
             if self.triggers == "both":
-                self.triggers = sort.default_triggers
+                self.triggers = copy.deepcopy(sort.default_triggers)
             self.required = required
             self.rules = rules
 
