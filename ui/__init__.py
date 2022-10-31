@@ -256,15 +256,24 @@ def load(doprint=False, updated=False):
     elif not settings['version'][0] == ui_settings.version[0] and not ui_settings.version[2] == []:
         update(settings, ui_settings.version)
         updated = True
-    if 'Library Service' in settings: #compatability code for updating from <2.10 
+    #compatability code for updating from <2.10 
+    if 'Library Service' in settings: 
         settings['Library collection service'] = settings['Library Service']
         if settings['Library Service'] == ["Plex Library"]:
-            if 'Plex \"movies\" library' in settings and 'Plex \"shows\" library' in settings: #compatability code for updating from <2.10 
+            if 'Plex \"movies\" library' in settings and 'Plex \"shows\" library' in settings: 
                 settings['Plex library refresh'] = [settings['Plex \"movies\" library'],settings['Plex \"shows\" library']]
             settings['Library update services'] = ["Plex Libraries"]
         elif settings['Library Service'] == ["Trakt Collection"]:
             settings['Library update services'] = ["Trakt Collection"]
             settings['Trakt refresh user'] = settings['Trakt library user']
+    #compatability code for updating from <2.20
+    if not 'Library ignore services' in settings: 
+        if settings['Library collection service'] == ["Plex Library"]:
+            settings['Library ignore services'] = ["Plex Discover Watch Status"]
+            settings["Plex ignore user"] = settings["Plex users"][0][0]
+        elif settings['Library collection service'] == ["Trakt Collection"]:
+            settings['Library ignore services'] = ["Trakt Watch Status"]
+            settings["Trakt ignore user"] = settings["Trakt users"][0]
     for category, load_settings in settings_list:
         for setting in load_settings:
             if setting.name in settings and not setting.name == 'version' and not setting.name == 'Content Services':

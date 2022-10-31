@@ -25,6 +25,7 @@ class watchlist(Sequence):
         self.data.append(item)
 
 class library:
+
     active = []
 
     def setup(cls, new=False):
@@ -178,6 +179,7 @@ class ignore:
         return check
 
 class media:
+    
     ignore_queue = []
     downloaded_versions = []
 
@@ -775,6 +777,5 @@ class media:
             files += ['S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index)) + '']
         return files
 
-# Multiprocessing download method
 def download(cls, library, parentReleases, result, index):
     result[index] = cls.download(library=library, parentReleases=parentReleases)
