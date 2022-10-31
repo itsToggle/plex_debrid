@@ -560,21 +560,11 @@ class sort:
 
     unwanted = ['sample']
     versions = [
-        ["2160p SDR", "both", "true", [
-            ["cache status", "requirement", "cached", ""],
-            ["resolution", "requirement", ">=", "2160"],
-            ["title", "requirement", "exclude", "(\.DV\.|\.3D\.|\.H?D?.?CAM\.)"],
-            ["title", "preference", "exclude", "(\.HDR\.)"],
-            ["title", "preference", "include", "(EXTENDED|REMASTERED)"],
-            ["size", "preference", "lowest", ""],
-            ["seeders", "preference", "highest", ""],
-            ["size", "requirement", ">=", "0.1"],
-        ]],
         ["1080p SDR", "both", "true", [
             ["cache status", "requirement", "cached", ""],
             ["resolution", "requirement", "<=", "1080"],
             ["resolution", "preference", "highest", ""],
-            ["title", "requirement", "exclude", "(\.DV\.|\.3D\.|\.H?D?.?CAM\.)"],
+            ["title", "requirement", "exclude", "(\.DV\.|\.3D\.|\.H?D?.?CAM\.|\.HDTS\.)"],
             ["title", "requirement", "exclude", "(\.HDR\.)"],
             ["title", "preference", "include", "(EXTENDED|REMASTERED)"],
             ["size", "preference", "lowest", ""],
