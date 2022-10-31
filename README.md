@@ -22,6 +22,7 @@ This is a work in progress, and im not a professional programmer. shits not read
    - <img src="https://app.plex.tv/desktop/favicon.ico" height="16"> **[Plex Watchlists](https://plex.tv/)**
    - <img src="https://walter.trakt.tv/hotlink-ok/public/favicon.ico" height="16"> **[Trakt public lists, watchlists and collections](https://trakt.tv/)**
    - <img src="https://hotio.dev/webhook-avatars/overseerr.png" height="16"> **[Overseerr Requests](https://overseerr.dev/)**
+   - <img src="https://raw.githubusercontent.com/Fallenbagel/jellyseerr/main/public/android-chrome-512x512.png" height="16"> **[Jellyseerr Requests](https://github.com/Fallenbagel/jellyseerr)**
 - Checking and maintaining your library for:
    - <img src="https://app.plex.tv/desktop/favicon.ico" height="16"> **[Plex Library](https://plex.tv/)**
    - <img src="https://walter.trakt.tv/hotlink-ok/public/favicon.ico" height="16"> **[Trakt Collection](https://trakt.tv/)**
@@ -40,6 +41,7 @@ This is a work in progress, and im not a professional programmer. shits not read
    - <img src="https://app.put.io/assets/favicon-32x32.png" height="16"> **[PUT.io (no check for cached releases)](https://put.io/)**
 - Refreshing your personal media server libraries (fully or partially) to make the content available to watch for:
    - <img src="https://app.plex.tv/desktop/favicon.ico" height="16"> **[Plex](https://plex.tv/)**
+   - <img src="https://jellyfin.org/images/favicon.ico" height="16"> **[Jellyfin](https://jellyfin.org/)**
 
 
 ### Community
@@ -196,15 +198,16 @@ more personal media server setup instructions to come soon.
 >  0. Clone this repository with git or click on "code" (top right) and then "download zip" 
 >  1. Run `pip install -r requirements.txt`
 >  2. Run the script!
->  3. The script will guide you through the initial setup and the next steps. When setting up plex_debrid, you will be prompted to choose the 4 main services that this script connects:
+>  3. The script will guide you through the initial setup and the next steps. When setting up plex_debrid, you will be prompted to choose the 5 main services that this script connects:
 >  4. Pick and setup at least one **content service** which plex_debrid should monitor for new content
 >  5. Pick and setup a **library collection service**, which plex_debrid will use to determine your current media collection. If you intend to run a plex server, choose plex.
 >  6. Pick and setup a **library update service**, which plex_debrid will update/refresh after a successful download. If you intent to run a plex server, choose plex.
->  7. Pick and setup at least one **debrid service**, which plex_debrid will use to download content.
->  8. You're done!
->  9. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
->  10. If you dont want the main menu to show when starting the script (for an auto-run setup), navigate to "/Settings/UI Settings/show menu on startup" and set the value to "false".
->  11. Read the rest of the README!
+>  7. Pick and setup a **library ignore service**, which plex_debrid will use to ignore content. If you intent to run a plex server, choose plex.
+>  8. Pick and setup at least one **debrid service**, which plex_debrid will use to download content.
+>  9. You're done!
+>  10. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
+>  11. If you dont want the main menu to show when starting the script (for an auto-run setup), navigate to "/Settings/UI Settings/show menu on startup" and set the value to "false".
+>  12. Read the rest of the README!
 >  
 ></details>
 >
@@ -213,15 +216,16 @@ more personal media server setup instructions to come soon.
 >   
 >  1. Run `docker pull itstoggle/plex_debrid .`or visit https://hub.docker.com/repository/docker/itstoggle/plex_debrid.
 >  2. Run `docker run -ti plex_debrid -v /path/on/host:/settings.json` . Where `/path/on/host` is the path where you want to save settings file
->  3. The script will guide you through the initial setup and the next steps. When setting up plex_debrid, you will be prompted to choose the 4 main services that this script connects:
+>  3. The script will guide you through the initial setup and the next steps. When setting up plex_debrid, you will be prompted to choose the 5 main services that this script connects:
 >  4. Pick and setup at least one **content service** which plex_debrid should monitor for new content
 >  5. Pick and setup a **library collection service**, which plex_debrid will use to determine your current media collection. If you intent to run a plex server, choose plex.
 >  6. Pick and setup a **library update service**, which plex_debrid will update/refresh after a successful download. If you intent to run a plex server, choose plex.
->  7. Pick and setup at least one **debrid service**, which plex_debrid will use to download content.
->  8. You're done!
->  9. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
->  10. If you dont want the main menu to show when starting the script (for an auto-run setup), navigate to "/Settings/UI Settings/show menu on startup" and set the value to "false".
->  11. Read the rest of the README!
+>  7. Pick and setup a **library ignore service**, which plex_debrid will use to ignore content. If you intent to run a plex server, choose plex.
+>  8. Pick and setup at least one **debrid service**, which plex_debrid will use to download content.
+>  9. You're done!
+>  10. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
+>  11. If you dont want the main menu to show when starting the script (for an auto-run setup), navigate to "/Settings/UI Settings/show menu on startup" and set the value to "false".
+>  12. Read the rest of the README!
 >  
 ></details>
 
@@ -271,6 +275,15 @@ more personal media server setup instructions to come soon.
 >  - By default, all approved requests from all overseerr users are downloaded by plex_debrid. To limit this feature to specific users, navigate to '/Settings/Content Services/Overseerr/Overseerr users'
 >
 ></details>
+>
+><details>
+>  <summary><b><u><img src="https://raw.githubusercontent.com/Fallenbagel/jellyseerr/main/public/android-chrome-512x512.png" height="16"> Jellyseerr requests:</u></b></summary>
+> 
+>  - You can connect plex_debrid to jellyseerr to instantly and automatically download approved requests from selected users. Since the api endpoints are the same, simply set it up in the same way as overseerr!
+>  - To connect the script to jellyseerr, navigate to '/Settings/Content Services/Overseerr'. 
+>  - By default, all approved requests from all overseerr users are downloaded by plex_debrid. To limit this feature to specific users, navigate to '/Settings/Content Services/Overseerr/Overseerr users'
+>
+></details>
 
 ### :open_file_folder: Library Collection Service
 
@@ -312,6 +325,39 @@ more personal media server setup instructions to come soon.
 >  - plex_debrid will automatically add the downloaded resolution and other properties of the downloaded media to your trakt collection
 >
 ></details>
+>
+><details>
+>  <summary><b><u><img src="https://jellyfin.org/images/favicon.ico" height="16"> Jellyfin Libraries:</u></b></summary>
+>  
+>  - To refresh your jellyfin libraries after a succesful download, navigate to '/Settings/Library Service/Library update service/Edit/'
+>  - plex_debrid is currently only able to refresh your entire jellyfinlibrary. Partial library scans to come shortly!
+>
+></details>
+
+### :eyes: Library Ignore Services
+
+*The services that plex_debrid will use to ignore content. You can add any combination of services.*
+
+><details>
+>  <summary><b><u><img src="https://app.plex.tv/desktop/favicon.ico" height="16"> Plex Discover Watch Status:</u></b></summary>
+>  
+>  - To use a plex users plex discover watch status to ignore content, navigate to '/Settings/Library Service/Library ignore services/Edit/'
+>
+></details>
+>
+><details>
+>  <summary><b><u><img src="https://walter.trakt.tv/hotlink-ok/public/favicon.ico" height="16"> Trakt Watch Status:</u></b></summary>
+>  
+>  - To use a trakt users trakt watch status to ignore content, navigate to '/Settings/Library Service/Library ignore services/Edit/'
+>
+></details>
+>
+><details>
+>  <summary><u><b>:clipboard: Local Ignore List:</u></b></summary>
+>  
+>  - To use a local text file of queries to ignore content, navigate to '/Settings/Library Service/Library ignore services/Edit/'
+>
+></details>
 
 ### :magnet: Debrid Services and Scraper Settings
 
@@ -340,7 +386,8 @@ more personal media server setup instructions to come soon.
 >  <summary><b><u>Defining versions to download:</u></b></summary>
 >  
 >  - You can define what release qualities plex_debrid should download by defining a "version". You can add an unlimited amount of versions by navigating to '/Settings/Scraper Settings/versions'. By default, plex_debrid comes with 2 version definitons ([2160 SDR], [1080p SDR])
->  - versions consist of an unlimited amount of completely customizable rules. Rules can be either formulated as a requirement or as a preference. The first rule has the highest priority, the last one the lowest. To give some examples, here are the rules that make up the default [1080p SDR] version:
+>  - versions consist of an unlimited amount of completely customizable "rules" and "triggers". 
+>  - "Rules" can be either formulated as a requirement or as a preference. The first rule has the highest priority, the last one the lowest. To give some examples, here are the rules that make up the default [1080p SDR] version:
 >      
 >        1) cache status  requirement :   cached
 >        2) resolution    requirement :       <=  1080
@@ -352,8 +399,14 @@ more personal media server setup instructions to come soon.
 >        8) seeders       preference  :  highest
 >        9) size          requirement :       >=  0.1
 >      
->  - plex_debrid will continue looking for your defined versions, even if one version was already successfuly downloaded.
->  - more features to come in the near future! Each version will have an option to only affect a particular media type (example: you only want movies to be downloaded in 4k, not shows). You will also be able to define versions to only affect a few media items by providing their titles (example: you only want "House of the Dragon" and "The rings of power" to be downloaded in 4k).
+>  - "Triggers" define when plex_debrid should look for a version. You can add triggers that limit a version to a specific media type, or to specific movies/shows. You can define how many times plex_debrid should attempt to download a version and how many attempts should be made with other versions, before a version is attempted to be downloaded. Here are some of the possible triggers, given in an example of a 720p version that should only be looked for, if the media items in question are "shows" that have been released "before 2010", are not "Family Guy" or "Last week tonight", and no other version has been found for "5 attempts":
+>      
+>        A) media type    requirement :   shows
+>        B) retries       requirement :       >=  5
+>        C) retries       requirement :       <=  48
+>        D) title         requirement :  exclude  (family.guy|last.week.tonight)
+>        E) year          requirement :       <=  2010
+>      
 >
 ></details>
 >
