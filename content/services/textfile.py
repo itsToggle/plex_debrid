@@ -34,8 +34,9 @@ class library():
                     lines = f.readlines()
                 with open(library.ignore.path + "ignored.txt", "w") as f:
                     for line in lines:
-                        if not self.query() + '\n' == line:
-                            f.write(line)
+                        if self.query().lower() + '\n' == line.lower() or self.query().lower() == line.lower() or self.query().lower()[:-1] == line.lower():
+                            continue
+                        f.write(line)
                 f.close()
                 if self in classes.ignore.ignored:
                     classes.ignore.ignored.remove(self)
