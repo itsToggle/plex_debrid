@@ -270,7 +270,7 @@ more personal media server setup instructions to come soon.
 ><details>
 >  <summary><b><u><img src="https://hotio.dev/webhook-avatars/overseerr.png" height="16"> Overseerr requests:</u></b></summary>
 > 
->  - You can connect plex_debrid to overseerr to instantly and automatically download approved requests from selected users.
+>  - You can connect plex_debrid to overseerr to instantly and automatically download approved requests from selected users. For this to work, you need to connect plex_debrid to either Plex or Trakt, since these services can be used to gather more information on the requested media items.
 >  - To connect the script to overseerr, navigate to '/Settings/Content Services/Overseerr'. 
 >  - By default, all approved requests from all overseerr users are downloaded by plex_debrid. To limit this feature to specific users, navigate to '/Settings/Content Services/Overseerr/Overseerr users'
 >
@@ -279,9 +279,9 @@ more personal media server setup instructions to come soon.
 ><details>
 >  <summary><b><u><img src="https://raw.githubusercontent.com/Fallenbagel/jellyseerr/main/public/android-chrome-512x512.png" height="16"> Jellyseerr requests:</u></b></summary>
 > 
->  - You can connect plex_debrid to jellyseerr to instantly and automatically download approved requests from selected users. Since the api endpoints are the same, simply set it up in the same way as overseerr!
+>  - You can connect plex_debrid to jellyseerr to instantly and automatically download approved requests from selected users. For this to work, you need to connect plex_debrid to either Plex or Trakt, since these services can be used to gather more information on the requested media items. Since jellyseer and overseerr use the exact same api endpoints, simply set up jellyseer in the plex_debrid overseerr menu:
 >  - To connect the script to jellyseerr, navigate to '/Settings/Content Services/Overseerr'. 
->  - By default, all approved requests from all overseerr users are downloaded by plex_debrid. To limit this feature to specific users, navigate to '/Settings/Content Services/Overseerr/Overseerr users'
+>  - By default, all approved requests from all jellyseerr users are downloaded by plex_debrid. To limit this feature to specific users, navigate to '/Settings/Content Services/Overseerr/Overseerr users'
 >
 ></details>
 
@@ -385,9 +385,9 @@ more personal media server setup instructions to come soon.
 ><details>
 >  <summary><b><u>Defining versions to download:</u></b></summary>
 >  
->  - You can define what release qualities plex_debrid should download by defining a "version". You can add an unlimited amount of versions by navigating to '/Settings/Scraper Settings/versions'. By default, plex_debrid comes with 2 version definitons ([2160 SDR], [1080p SDR])
+>  - You can define what release qualities plex_debrid should download by defining a "version". You can add an unlimited amount of versions by navigating to '/Settings/Scraper Settings/versions'. By default, plex_debrid only comes with 1 version definiton ([1080p SDR])
 >  - versions consist of an unlimited amount of completely customizable "rules" and "triggers". 
->  - "Rules" can be either formulated as a requirement or as a preference. The first rule has the highest priority, the last one the lowest. To give some examples, here are the rules that make up the default [1080p SDR] version:
+>  - "Rules" define the quality requirements of your versions. The rules can be either formulated as a requirement or as a preference. The first rule has the highest priority, the last one the lowest. To give some examples, here are the rules that make up the default [1080p SDR] version:
 >      
 >        1) cache status  requirement :   cached
 >        2) resolution    requirement :       <=  1080
