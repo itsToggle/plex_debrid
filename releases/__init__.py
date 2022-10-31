@@ -1,3 +1,4 @@
+from operator import truediv
 from base import *
 from ui.ui_print import *
 
@@ -58,6 +59,7 @@ class rename:
         return string
 
 class sort:
+
     def setup(cls, new=False):
         back = False
         while not back:
@@ -105,25 +107,40 @@ class sort:
         return
 
     class version:
+        
         def setup(name, version_, new=False):
             back = False
             default = version_[3]
             while not back:
                 version_[0] = name
+                if version_[1] == "both":
+                    version_[1] = sort.default_triggers
                 if new:
                     ui_cls('Options/Settings/Scraper Settings/Versions/Add')
                     print(
-                        'Your new version [' + name + '] has been filled with some default rules. You can add new ones or edit the existing rules.')
+                        'Your new version [' + name + '] has been filled with some default rules and triggers. You can add new ones or edit the existing.')
                 else:
                     ui_cls('Options/Settings/Scraper Settings/Versions/Edit')
                 print()
                 print('Current settigns for version [' + name + ']:')
                 print()
-                print("name     : " + version_[0])
-                print("media    : " + str(version_[1]) + " (not editable yet)")
-                print("required : " + version_[2] + " (not editable yet)")
-                print()
                 print("0) Back")
+                print()
+                print("Triggers:")
+                letters = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
+                letter_choice = []
+                l_o = 0
+                l_a = 0
+                for index, rule in enumerate(version_[1]):
+                    letter_choice += [letters[index]]
+                    if len(rule[0]) >= l_a:
+                        l_a = len(rule[0]) + 1
+                    if len(rule[2]) >= l_o:
+                        l_o = len(rule[1]) + 1
+                for index, rule in enumerate(version_[1]):
+                    print(str(letter_choice[index]) + ') ' + rule[0] + ' ' * (l_a - len(rule[0])) + ' requirement : ' + ' ' * (l_o - len(rule[1])) + rule[1] + '  ' + rule[2])
+                print()
+                print("Rules:")
                 indices = []
                 l_o = 0
                 l_a = 0
@@ -144,7 +161,8 @@ class sort:
                                 l_a - len(rule[0])) + ' ' + rule[1] + ' ' * (l_s - len(rule[1])) + ': ' + ' ' * (
                                         l_o - len(rule[2])) + rule[2] + '  ' + rule[3])
                 print()
-                print("Choose a rule to edit or add a new rule by typing 'add'")
+                print("To edit a rule or a trigger enter their index or letter")
+                print("To add a rule or a trigger type 'rule' or 'trigger'")
                 print("To rename this version, type 'rename'")
                 if len(sort.versions) > 1:
                     print("To delete this version, type 'remove'")
@@ -153,10 +171,14 @@ class sort:
                 print()
                 if choice in indices:
                     sort.version.rule.setup(choice, default, new=False)
+                elif choice in letter_choice:
+                    sort.version.trigger.setup(choice, version_[1], new=False)
                 elif choice == '0':
                     back = True
-                elif choice == 'add':
+                elif choice == 'rule':
                     sort.version.rule.setup(choice, default, new=True)
+                elif choice == 'trigger':
+                    sort.version.trigger.setup(choice, version_[1], new=True)
                 elif choice == 'rename':
                     ui_cls('Options/Settings/Scraper Settings/Versions/Add')
                     names = []
@@ -175,6 +197,124 @@ class sort:
                             if version[0] == name:
                                 sort.versions.remove(version)
                         back = True
+
+        class trigger:
+            def setup(choice, default, new=True):
+                letters = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
+                for index,letter in enumerate(letters):
+                    if letter == choice:
+                        choice = str(index + 1)
+                        break
+                if choice in letters:
+                    return
+                back = False
+                while not back:
+                    if not new:
+                        ui_cls('Options/Settings/Scraper Settings/Versions/Edit')
+                        print("Current settings for trigger #" + choice + ":")
+                        print()
+                        print("0) Back")
+                        print("1) Edit  attribute : " + default[int(choice) - 1][0])
+                        print("2) Edit  operator  : " + default[int(choice) - 1][1])
+                        if not default[int(choice) - 1][0] == "media type":
+                            print("3) Edit  value     : " + default[int(choice) - 1][2])
+                        print()
+                        print(
+                            "Choose a value to edit, move this trigger by typing 'move' or delete this trigger by typing 'remove' ")
+                        print()
+                        choice2 = input("Choose an action: ")
+                    else:
+                        ui_cls('Options/Settings/Scraper Settings/Versions/Add')
+                        default += [["", "", ""]]
+                        choice = str(len(default))
+                        choice2 = '1'
+                    print()
+                    if choice2 == '0':
+                        back = True
+                    elif choice2 == '1':
+                        if not new:
+                            print("You cannot change the attribute of an existing trigger.")
+                            print()
+                            time.sleep(2)
+                        else:
+                            print("Please choose an attribute on which this trigger should act.")
+                            print()
+                            indices = []
+                            for index, attribute in enumerate(sort.version.trigger.__subclasses__()):
+                                print(str(index + 1) + ') ' + attribute.name)
+                                indices += [str(index + 1)]
+                            print()
+                            choice3 = input("Please choose an attribute: ")
+                            if choice3 in indices:
+                                default[int(choice) - 1][int(choice2) - 1] = \
+                                sort.version.trigger.__subclasses__()[int(choice3) - 1].name
+                            choice2 = '2'
+                    if choice2 == '2':
+                        print("Please choose an operator for this trigger.")
+                        print()
+                        operators = []
+                        for subclass in sort.version.trigger.__subclasses__():
+                            if subclass.name == default[int(choice) - 1][0]:
+                                operators = subclass.operators
+                                break
+                        indices = []
+                        for index, attribute in enumerate(operators):
+                            print(str(index + 1) + ') ' + attribute)
+                            indices += [str(index + 1)]
+                        print()
+                        choice3 = input("Please choose an operator: ")
+                        if choice3 in indices:
+                            default[int(choice) - 1][int(choice2) - 1] = subclass.operators[int(choice3) - 1]
+                        if new and not default[int(choice) - 1][0] == "media type":
+                            choice2 = '3'
+                        elif new:
+                            print("New trigger added!")
+                            time.sleep(2)
+                            new = False
+                    if choice2 == '3':
+                        working = False
+                        for subclass in sort.version.trigger.__subclasses__():
+                            if subclass.name == default[int(choice) - 1][0]:
+                                break
+                        while not working:
+                            print(
+                                "Please choose a value for this trigger. Make sure that the value you enter matches your chosen operator.")
+                            print()
+                            choice3 = input("Please enter a value: ")
+                            if subclass.check(choice3):
+                                working = True
+                        default[int(choice) - 1][int(choice2) - 1] = choice3
+                        if new:
+                            print("New trigger added!")
+                            time.sleep(2)
+                            new = False
+                    if choice2 == 'remove':
+                        del default[int(choice) - 1]
+                        back = True
+                    if choice2 == 'move':
+                        print('0) Back')
+                        indices = []
+                        for i, rule in enumerate(default):
+                            print(str(i + 1) + ') Position ' + str(i + 1))
+                            indices += [str(i + 1)]
+                        print()
+                        choice3 = input('Move trigger #' + choice + ' to: ')
+                        if choice in indices:
+                            temp = copy.deepcopy(default[int(choice) - 1])
+                            del default[int(choice) - 1]
+                            default.insert(int(choice3) - 1, temp)
+                            back = True
+                    print()
+
+            operators = [""]
+
+            def __init__(self, attribute, operator, value=None) -> None:
+                self.attribute = attribute
+                self.operator = operator
+                self.value = value
+
+            def check(self):
+                return True
 
         class rule:
             def setup(choice, default, new=True):
@@ -552,15 +692,147 @@ class sort:
                     ui_print("version rule exception - ignoring this rule")
                     return scraped_releases
 
-        def __init__(self, name, media, required, rules) -> None:
+        class retries(trigger):
+            name = "retries"
+            operators = ["==",">=", "<="]
+
+            def check(self):
+                try:
+                    float(self)
+                    return True
+                except:
+                    print()
+                    print("This value is not in the correct format. Please enter a number (e.g. '420' or '69.69')")
+                    print()
+                    return False
+
+            def apply(self,element):
+                if hasattr(element,'ignored_count'):
+                    if self.operator == "==":
+                        if float(self.value) == element.ignored_count:
+                            return True
+                        return False
+                    if self.operator == ">=":
+                        if float(self.value) >= element.ignored_count:
+                            return True
+                        return False
+                    if self.operator == "<=":
+                        if float(self.value) <= element.ignored_count:
+                            return True
+                        return False
+                else:
+                    if self.operator == "==" and float(self.value) == 0:
+                        return True
+                    if self.operator == ">=":
+                        return False
+                    if self.operator == "<=":
+                        return True
+                return True
+
+        class year(trigger):
+            name = "year"
+            operators = ["==",">=", "<="]
+
+            def check(self):
+                try:
+                    float(self)
+                    return True
+                except:
+                    print()
+                    print("This value is not in the correct format. Please enter a number (e.g. '420' or '69.69')")
+                    print()
+                    return False
+
+            def apply(self,element):
+                if hasattr(element,'year') or hasattr(element,'parentYear') or hasattr(element,'grandparentYear'):
+                    if hasattr(element,'year'):
+                        year = element.year
+                    if hasattr(element,'parentYear'):
+                        year = element.parentYear
+                    if hasattr(element,'grandparentYear'):
+                        year = element.parentYear
+                    if self.operator == "==":
+                        if float(self.value) == year:
+                            return True
+                        return False
+                    if self.operator == ">=":
+                        if float(self.value) >= year:
+                            return True
+                        return False
+                    if self.operator == "<=":
+                        if float(self.value) <= year:
+                            return True
+                        return False
+                return False
+
+        class media_type(trigger):
+            name = "media type"
+            operators = ["all", "movies", "shows"]
+
+            def apply(self,element):
+                if self.operator == "all":
+                    return True
+                elif self.operator == "movies" and element.type == "movie":
+                    return True
+                elif self.operator == "shows" and element.type in ["show","season","episode"]:
+                    return True
+                return False
+
+        class query(trigger):
+            name = "title"
+            operators = ["==", "include", "exclude"]
+
+            def check(self):
+                try:
+                    regex.search(self, self, regex.I)
+                    return True
+                except:
+                    print()
+                    print(
+                        "This value is not in the correct format. Please make sure this value is a valid regex expression and no characters are escaped accidentally.")
+                    print()
+                    return False
+            def apply(self,element):
+                if self.operator == "==":
+                    if element.query() == self.value:
+                        return True
+                elif self.operator == "include":
+                    if regex.search(self.value,element.query(),regex.I):
+                        return True
+                elif self.operator == "exclude":
+                    if regex.search(self.value,element.query(),regex.I):
+                        return False
+                    return True
+                return False
+
+        def __init__(self, name, triggers, required, rules) -> None:
             self.name = name
-            self.media = media
+            self.triggers = triggers
+            if self.triggers == "both":
+                self.triggers = sort.default_triggers
             self.required = required
             self.rules = rules
 
+        def applies(self,element):
+            for trigger in self.triggers:
+                for subtrigger in sort.version.trigger.__subclasses__():
+                    if subtrigger.name == trigger[0]:
+                        trigger = subtrigger(trigger[0], trigger[1], trigger[2])
+                        break
+                if not trigger.apply(element):
+                    return False
+            return True
+
+    default_triggers = [["retries","<=","48"],["media type","all",""],]
     unwanted = ['sample']
     versions = [
-        ["1080p SDR", "both", "true", [
+        ["1080p SDR",
+         [
+            ["retries","<=","48"],
+            ["media type","all",""],
+         ],
+         "true", 
+         [
             ["cache status", "requirement", "cached", ""],
             ["resolution", "requirement", "<=", "1080"],
             ["resolution", "preference", "highest", ""],
@@ -572,8 +844,7 @@ class sort:
             ["size", "requirement", ">=", "0.1"],
         ]],
     ]
-    always_on_rules = [version.rule("wanted", "preference", "highest", ""),
-                        version.rule("unwanted", "preference", "lowest", "")]
+    always_on_rules = [version.rule("wanted", "preference", "highest", ""),version.rule("unwanted", "preference", "lowest", "")]
 
     def __new__(self, scraped_releases: list, version: version):
         if len(scraped_releases) > 0:

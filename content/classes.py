@@ -343,6 +343,12 @@ class media:
                         break
                 if not missing:
                     versions.remove(version)   
+        if self in media.ignore_queue:
+            match = next((x for x in media.ignore_queue if self == x), None)
+            self.ignored_count = match.ignored_count
+        for version in versions[:]:
+            if not version.applies(self):
+                versions.remove(version)
         return versions
 
     def version_missing(self):
