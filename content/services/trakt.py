@@ -572,8 +572,8 @@ class library(classes.library):
                 hdr = 'hdr10'
             # add release quality to element
             if element.type == 'show':
-                if hasattr(element, 'seasons'):
-                    for season in element.seasons:
+                if hasattr(element, 'Seasons'):
+                    for season in element.Seasons:
                         for attribute in season.__dict__.copy():
                             if not (attribute == 'ids' or attribute == 'episodes' or attribute == 'number'):
                                 delattr(season, attribute)
@@ -588,6 +588,7 @@ class library(classes.library):
                 else:
                     ui_print("[trakt] error: couldnt find seasons in show object", debug=ui_settings.debug)
                 # remove unwanted attributes from element
+                element.seasons = element.Seasons
                 for ids in element.ids.__dict__.copy():
                     value = getattr(element.ids, ids)
                     if not value:
@@ -715,14 +716,15 @@ class library(classes.library):
                 seasons = []
                 episodes = []
                 if element.type == 'show':
-                    if hasattr(element, 'seasons'):
-                        for season in element.seasons:
+                    if hasattr(element, 'Seasons'):
+                        for season in element.Seasons:
                             for attribute in season.__dict__.copy():
                                 if not (attribute == 'ids' or attribute == 'episodes' or attribute == 'number'):
                                     delattr(season, attribute)
                     else:
                         ui_print("[trakt] error: couldnt find seasons in show object", debug=ui_settings.debug)
                     # remove unwanted attributes from element
+                    element.seasons = element.Seasons
                     for ids in element.ids.__dict__.copy():
                         value = getattr(element.ids, ids)
                         if not value:
@@ -795,14 +797,15 @@ class library(classes.library):
                 seasons = []
                 episodes = []
                 if element.type == 'show':
-                    if hasattr(element, 'seasons'):
-                        for season in element.seasons:
+                    if hasattr(element, 'Seasons'):
+                        for season in element.Seasons:
                             for attribute in season.__dict__.copy():
                                 if not (attribute == 'ids' or attribute == 'episodes' or attribute == 'number'):
                                     delattr(season, attribute)
                     else:
                         ui_print("[trakt] error: couldnt find seasons in show object", debug=ui_settings.debug)
                     # remove unwanted attributes from element
+                    element.seasons = element.Seasons
                     for ids in element.ids.__dict__.copy():
                         value = getattr(element.ids, ids)
                         if not value:
