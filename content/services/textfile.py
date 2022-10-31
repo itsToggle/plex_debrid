@@ -20,7 +20,7 @@ class library():
                 with open(library.ignore.path + "ignored.txt",'r') as f:
                     lines = f.read()
                 with open(library.ignore.path + "ignored.txt",'a') as f:
-                    if not self.query() in lines:
+                    if not self.query() + '\n' in lines:
                         f.write(self.query() + '\n')
                 f.close()
                 if not self in classes.ignore.ignored:
@@ -34,7 +34,7 @@ class library():
                     lines = f.readlines()
                 with open(library.ignore.path + "ignored.txt", "w") as f:
                     for line in lines:
-                        if not self.query() in line:
+                        if not self.query() + '\n' == line:
                             f.write(line)
                 f.close()
                 if self in classes.ignore.ignored:
@@ -46,10 +46,10 @@ class library():
             try:
                 if os.path.exists(library.ignore.path + "ignored.txt"):
                     with open(library.ignore.path + "ignored.txt") as f:
-                        ignored = f.read()
+                        ignored = f.readlines()
                     f.close()
-                    if self.query() in ignored:
-                        if not self in  classes.ignore.ignored:
+                    if self.query() + '\n' in ignored:
+                        if not self in classes.ignore.ignored:
                             classes.ignore.ignored += [self]
                         return True
                     return False
