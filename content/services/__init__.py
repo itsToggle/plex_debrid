@@ -5,6 +5,7 @@ from content.services import plex
 from content.services import trakt
 from content.services import overseerr
 from content.services import textfile
+from content.services import jellyfin
 
 #define subclass method
 def __subclasses__():

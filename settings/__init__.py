@@ -347,6 +347,9 @@ settings_list = [
         setting('Plex ignore user', '', content.services.plex.library.ignore, 'user', hidden=True),
         setting('Trakt ignore user', '', content.services.trakt.library.ignore, 'user', hidden=True),
         setting('Local ignore list path', 'Please provide a path where the list ignored media items should be saved: ', content.services.textfile.library.ignore, 'path', hidden=True),
+        setting('Jellyfin API Key', 'Please specify your Jellyfin API Key: ', content.services.jellyfin, 'api_key', hidden=True),
+        setting('Jellyfin server address', 'Please enter your Jellyfin server address: ', content.services.jellyfin.library, 'url', hidden=True),
+    
     ]
         ],
     ['Scraper Settings', [

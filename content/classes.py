@@ -457,7 +457,7 @@ class media:
 
     def collect(self):
         for refresh_service in refresh():
-            if refresh_service.__module__ == self.__module__ or (self.__module__ in ["content.services.trakt","releases","content.services.overseerr"] and refresh_service.__module__ == "content.services.plex"):
+            if refresh_service.__module__ == self.__module__ or (self.__module__ in ["content.services.trakt","releases","content.services.overseerr","content.services.plex"] and refresh_service.__module__ in ["content.services.plex","content.services.jellyfin"]):
                 refresh_service(self)
             elif self.__module__ in ["content.services.plex","content.services.overseerr"] and refresh_service.__module__ == "content.services.trakt":
                 try:
@@ -466,7 +466,7 @@ class media:
                 except:
                     ui_print("[trakt] error: adding item to trakt collection failed")
             else:
-                ui_print("error: library update service could not be determined")
+                ui_print("error: library update service could not be determined",ui_settings.debug)
 
     def collected(self, list):
         import content.services.plex as plex
