@@ -352,7 +352,13 @@ class media:
         return versions
 
     def version_missing(self):
-        return (len(self.versions()) > 0) and not (len(self.versions()) == len(releases.sort.versions))
+        all_versions = []
+        for version in releases.sort.versions:
+            all_versions += [releases.sort.version(version[0], version[1], version[2], version[3])]
+        for version in all_versions[:]:
+            if not version.applies(self):
+                all_versions.remove(version)
+        return (len(self.versions()) > 0) and not (len(self.versions()) == len(all_versions))
 
     def watch(self):
         if not self in media.ignore_queue:
