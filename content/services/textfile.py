@@ -17,11 +17,12 @@ class library():
         
         def add(self):
             try:
-                with open(library.ignore.path + "ignored.txt",'r') as file:
-                    ignored = [line.rstrip() for line in file]
-                with open(library.ignore.path + "ignored.txt",'a') as file:
-                    if not self.query() in ignored:
-                        file.write(self.query() + '\n')
+                with open(library.ignore.path + "ignored.txt",'r') as f:
+                    lines = f.read()
+                with open(library.ignore.path + "ignored.txt",'a') as f:
+                    if not self.query() in lines:
+                        f.write(self.query() + '\n')
+                f.close()
                 if not self in classes.ignore.ignored:
                     classes.ignore.ignored += [self]
             except Exception as e:
@@ -33,8 +34,9 @@ class library():
                     lines = f.readlines()
                 with open(library.ignore.path + "ignored.txt", "w") as f:
                     for line in lines:
-                        if not line.strip("\n") == self.query():
+                        if not self.query() in line:
                             f.write(line)
+                f.close()
                 if self in classes.ignore.ignored:
                     classes.ignore.ignored.remove(self)
             except Exception as e:
@@ -43,8 +45,9 @@ class library():
         def check(self):
             try:
                 if os.path.exists(library.ignore.path + "ignored.txt"):
-                    with open(library.ignore.path + "ignored.txt") as file:
-                        ignored = [line.rstrip() for line in file]
+                    with open(library.ignore.path + "ignored.txt") as f:
+                        ignored = f.read()
+                    f.close()
                     if self.query() in ignored:
                         if not self in  classes.ignore.ignored:
                             classes.ignore.ignored += [self]
