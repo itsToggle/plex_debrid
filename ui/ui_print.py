@@ -32,16 +32,16 @@ def ui_print(string: str, debug="true"):
             sameline = False
         elif sameline and string.endswith('...'):
             print('done')
-            print('[' + str(datetime.datetime.now()) + '] ' + string, end=' ')
+            print('[' + str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S")) + '] ' + string, end=' ')
             sameline = True
         elif string.endswith('...'):
-            print('[' + str(datetime.datetime.now()) + '] ' + string, end=' ')
+            print('[' + str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S")) + '] ' + string, end=' ')
             sameline = True
         elif not string.startswith('done') and sameline:
             print('done')
-            print('[' + str(datetime.datetime.now()) + '] ' + string)
+            print('[' + str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S")) + '] ' + string)
             sameline = False
         elif not string.startswith('done'):
-            print('[' + str(datetime.datetime.now()) + '] ' + string)
+            print('[' + str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S")) + '] ' + string)
             sameline = False
         sys.stdout.flush()

@@ -167,6 +167,20 @@ def oauth(code=""):
             time.sleep(1)
         return response.access_token
 
+def setEID(self):
+    EID = []
+    if hasattr(self,"ids"):
+        if hasattr(self.ids,"imdb"):
+            if not self.ids.imdb == None:
+                EID += ['imdb://' + str(self.ids.imdb)]
+        if hasattr(self.ids,"tmdb"):
+            if not self.ids.tmdb == None:
+                EID += ['tmdb://' + str(self.ids.tmdb)]
+        if hasattr(self.ids,"tvdb"):
+            if not self.ids.tvdb == None:
+                EID += ['tvdb://' + str(self.ids.tvdb)]
+    return EID
+
 class watchlist(classes.watchlist):
     autoremove = "movie"
 
@@ -330,6 +344,7 @@ class season(classes.media):
     def __init__(self, other):
         self.watchlist = watchlist
         self.__dict__.update(other.__dict__)
+        self.EID = setEID(self)
         self.Episodes = []
         if hasattr(self, 'ids.trakt'):
             self.guid = self.ids.trakt
@@ -353,7 +368,9 @@ class season(classes.media):
             episode_.grandparentYear = self.parentYear
             episode_.grandparentTitle = self.parentTitle
             episode_.grandparentGuid = self.parentGuid
+            episode_.grandparentEID = self.parentEID
             episode_.parentIndex = self.index
+            episode_.parentEID = self.EID
             self.Episodes += [episode(episode_)]
         self.leafCount = len(self.Episodes)
 
@@ -361,6 +378,7 @@ class episode(classes.media):
     def __init__(self, other):
         self.watchlist = watchlist
         self.__dict__.update(other.__dict__)
+        self.EID = setEID(self)
         if hasattr(self, 'ids.trakt'):
             self.guid = self.ids.trakt
         else:
@@ -386,6 +404,7 @@ class show(classes.media):
         self.__dict__.update(other.__dict__)
         self.Seasons = []
         self.guid = self.ids.trakt
+        self.EID = setEID(self)
         try:
             self.originallyAvailableAt = datetime.datetime.strptime(self.first_aired,
                                                                     '%Y-%m-%dT%H:%M:%S.000Z').strftime('%Y-%m-%d')
@@ -399,6 +418,7 @@ class show(classes.media):
                 season_.parentYear = self.year
                 season_.parentTitle = self.title
                 season_.parentGuid = self.guid
+                season_.parentEID = self.EID
                 self.Seasons += [season(season_)]
         for season_ in self.Seasons:
             leafCount += season_.leafCount
@@ -413,6 +433,7 @@ class movie(classes.media):
         except:
             self.originallyAvailableAt = datetime.datetime.utcnow().strftime('%Y-%m-%d')
         self.__dict__.update(other.__dict__)
+        self.EID = setEID(self)
 
 class library(classes.library):
     name = 'Trakt Collection'
@@ -462,24 +483,24 @@ class library(classes.library):
                     element.show.type = 'show'
                     element.show.user = library.user
                     element.show.guid = element.show.ids.trakt
+                    element.show.EID = setEID(element.show)
                     element.show.Seasons = []
                     for season_ in element.seasons:
                         season_.parentYear = element.show.year
                         season_.parentTitle = element.show.title
                         season_.parentGuid = element.show.guid
+                        season_.parentEID = element.show.EID
                         element.show.Seasons += [season(season_)]
                     leafCount = 0
                     for season_ in element.show.Seasons:
                         leafCount += season_.leafCount
-                        collection.append(season_)
-                        for episode in season_.Episodes:
-                            collection.append(episode)
                     element.show.leafCount = leafCount
                     collection.append(classes.media(element.show))
                 elif hasattr(element, 'movie'):
                     element.movie.type = 'movie'
                     element.movie.user = library.user
                     element.movie.guid = element.movie.ids.trakt
+                    element.movie.EID = setEID(element.movie)
                     collection.append(classes.media(element.movie))
             ui_print('done')
             return collection
@@ -551,8 +572,8 @@ class library(classes.library):
                 hdr = 'hdr10'
             # add release quality to element
             if element.type == 'show':
-                if hasattr(element, 'seasons'):
-                    for season in element.seasons:
+                if hasattr(element, 'Seasons'):
+                    for season in element.Seasons:
                         for attribute in season.__dict__.copy():
                             if not (attribute == 'ids' or attribute == 'episodes' or attribute == 'number'):
                                 delattr(season, attribute)
@@ -567,6 +588,7 @@ class library(classes.library):
                 else:
                     ui_print("[trakt] error: couldnt find seasons in show object", debug=ui_settings.debug)
                 # remove unwanted attributes from element
+                element.seasons = element.Seasons
                 for ids in element.ids.__dict__.copy():
                     value = getattr(element.ids, ids)
                     if not value:
@@ -600,7 +622,336 @@ class library(classes.library):
             response = post('https://api.trakt.tv/sync/collection',
                                     json.dumps(data, default=lambda o: o.__dict__))
             ui_print('[trakt] item: ' + element.title + ' added to ' + library.refresh.user[0] + "'s collection")
-            sys.stdout.flush()
+
+    class ignore(classes.ignore):
+
+        name = 'Trakt Watch Status'
+        user = ""
+        last_check = None
+        watched = []
+
+        def setup(cls, new=False):
+            ui_cls("Options/Settings/Library Services/Library ignore services")
+            from settings import settings_list
+            settings = []
+            for category, allsettings in settings_list:
+                for setting in allsettings:
+                    settings += [setting]
+            if len(users) == 0:
+                print("It looks like you havent setup a trakt user. Please set up a trakt user first.")
+                print()
+                for setting in settings:
+                    if setting.name == "Trakt users":
+                        setting.setup()
+            if not new:
+                print("Current trakt user, whos watch status is used to ignore content: '" + library.ignore.user + "'")
+                print()
+                print("0) Back")
+                print("1) Change trakt user")
+                print()
+                choice = input("Choose an action: ")
+                if choice == '1':
+                    addable_users = []
+                    for index,plexuser in enumerate(users):
+                        addable_users += [plexuser[0]]
+                    if len(addable_users) == 0:
+                        print()
+                        print("It seems there only is one trakt user!")
+                        time.sleep(3)
+                        return
+                    indices = []
+                    print("Please choose a trakt users, whos watch status should be used to ignore content: ")
+                    print()
+                    print("0) Back")
+                    for index,ignoreuser in enumerate(addable_users):
+                        print(str(index+1) + ") Trakt user '" + ignoreuser + "'")
+                        indices += [str(index+1)]
+                    print()
+                    choice = input("Please choose a trakt user: ")
+                    if choice in indices:
+                        library.ignore.user = addable_users[int(choice)-1]
+                        print()
+                        print("Successfully changed to trakt user '" + addable_users[int(choice)-1] + "'")
+                        print()
+                        time.sleep(3)
+            else:
+                addable_users = []
+                for index,plexuser in enumerate(users):
+                    addable_users += [plexuser[0]]
+                print("Please choose a trakt user, whos watch status should be used to ignore content: ")
+                print()
+                indices = []
+                for index,ignoreuser in enumerate(addable_users):
+                    print(str(index+1) + ") Trakt user '" + ignoreuser + "'")
+                    indices += [str(index+1)]
+                print()
+                choice = input("Please choose a trakt user: ")
+                if choice in indices:
+                    library.ignore.user = addable_users[int(choice)-1]
+                    if not library.ignore.name in classes.ignore.active:
+                        classes.ignore.active += [library.ignore.name]
+                    print()
+                    print("Successfully added trakt user '" + addable_users[int(choice)-1] + "'")
+                    print()
+                    time.sleep(3)
+
+        def add(self):
+            global current_user
+            try:
+                ignoreuser = library.ignore.user
+                user = None
+                for plexuser in users:
+                    if plexuser[0] == ignoreuser:
+                        user = plexuser
+                        break
+                if user == None:
+                    print("[trakt] error: Could not find trakt ignore service user: '"+ignoreuser+"'. Make sure this trakt user exists.")
+                    return
+                current_user = user
+                ui_print('[trakt] ignoring item: ' + self.query() + " for user: '" + ignoreuser + "'")
+                element = copy.deepcopy(self)
+                data = []
+                shows = []
+                movies = []
+                seasons = []
+                episodes = []
+                if element.type == 'show':
+                    if hasattr(element, 'Seasons'):
+                        for season in element.Seasons:
+                            for attribute in season.__dict__.copy():
+                                if not (attribute == 'ids' or attribute == 'episodes' or attribute == 'number'):
+                                    delattr(season, attribute)
+                    else:
+                        ui_print("[trakt] error: couldnt find seasons in show object", debug=ui_settings.debug)
+                    # remove unwanted attributes from element
+                    element.seasons = element.Seasons
+                    for ids in element.ids.__dict__.copy():
+                        value = getattr(element.ids, ids)
+                        if not value:
+                            delattr(element.ids, ids)
+                    for attribute in element.__dict__.copy():
+                        if not (attribute == 'ids' or attribute == 'seasons' or attribute == 'title' or attribute == 'year'):
+                            delattr(element, attribute)
+                    shows += [element]
+                elif element.type == 'season':
+                    if hasattr(element, 'seasons'):
+                        for episode in element.episodes:
+                            for attribute in episode.__dict__.copy():
+                                if not (attribute == 'ids' or attribute == 'number'):
+                                    delattr(episode, attribute)
+                    # remove unwanted attributes from element
+                    for ids in element.ids.__dict__.copy():
+                        value = getattr(element.ids, ids)
+                        if not value:
+                            delattr(element.ids, ids)
+                    for attribute in element.__dict__.copy():
+                        if not (attribute == 'ids' or attribute == 'episodes' or attribute == 'title' or attribute == 'year'):
+                            delattr(element, attribute)
+                    seasons += [element]
+                elif element.type == 'movie':
+                    # remove unwanted attributes from element
+                    for ids in element.ids.__dict__.copy():
+                        value = getattr(element.ids, ids)
+                        if not value:
+                            delattr(element.ids, ids)
+                    for attribute in element.__dict__.copy():
+                        if not (attribute == 'ids' or attribute == 'resolution' or attribute == 'media_type' or attribute == 'hdr' or attribute == 'title' or attribute == 'year'):
+                            delattr(element, attribute)
+                    movies += [element]
+                elif element.type == 'episode':
+                    # remove unwanted attributes from element
+                    for ids in element.ids.__dict__.copy():
+                        value = getattr(element.ids, ids)
+                        if not value:
+                            delattr(element.ids, ids)
+                    for attribute in element.__dict__.copy():
+                        if not (attribute == 'ids' or attribute == 'resolution' or attribute == 'media_type' or attribute == 'hdr' or attribute == 'title' or attribute == 'year'):
+                            delattr(element, attribute)
+                    episodes += [element]
+                # add element to collection
+                data = {'movies': movies, 'shows': shows, 'seasons': seasons, 'episodes': episodes}
+                response = post('https://api.trakt.tv/sync/history',json.dumps(data, default=lambda o: o.__dict__))
+                if not self in classes.ignore.ignored:
+                    classes.ignore.ignored += [self]
+            except Exception as e:
+                ui_print("trakt error: couldnt ignore item: " + str(e), debug=ui_settings.debug)
+
+        def remove(self):
+            global current_user
+            try:
+                ignoreuser = library.ignore.user
+                user = None
+                for plexuser in users:
+                    if plexuser[0] == ignoreuser:
+                        user = plexuser
+                        break
+                if user == None:
+                    print("[trakt] error: Could not find trakt ignore service user: '"+ignoreuser+"'. Make sure this trakt user exists.")
+                    return
+                current_user = user
+                ui_print('[trakt] un-ignoring item: ' + self.query() + " for user: '" + ignoreuser + "'")
+                element = copy.deepcopy(self)
+                data = []
+                shows = []
+                movies = []
+                seasons = []
+                episodes = []
+                if element.type == 'show':
+                    if hasattr(element, 'Seasons'):
+                        for season in element.Seasons:
+                            for attribute in season.__dict__.copy():
+                                if not (attribute == 'ids' or attribute == 'episodes' or attribute == 'number'):
+                                    delattr(season, attribute)
+                    else:
+                        ui_print("[trakt] error: couldnt find seasons in show object", debug=ui_settings.debug)
+                    # remove unwanted attributes from element
+                    element.seasons = element.Seasons
+                    for ids in element.ids.__dict__.copy():
+                        value = getattr(element.ids, ids)
+                        if not value:
+                            delattr(element.ids, ids)
+                    for attribute in element.__dict__.copy():
+                        if not (attribute == 'ids' or attribute == 'seasons' or attribute == 'title' or attribute == 'year'):
+                            delattr(element, attribute)
+                    shows += [element]
+                elif element.type == 'season':
+                    if hasattr(element, 'seasons'):
+                        for episode in element.episodes:
+                            for attribute in episode.__dict__.copy():
+                                if not (attribute == 'ids' or attribute == 'number'):
+                                    delattr(episode, attribute)
+                    # remove unwanted attributes from element
+                    for ids in element.ids.__dict__.copy():
+                        value = getattr(element.ids, ids)
+                        if not value:
+                            delattr(element.ids, ids)
+                    for attribute in element.__dict__.copy():
+                        if not (attribute == 'ids' or attribute == 'episodes' or attribute == 'title' or attribute == 'year'):
+                            delattr(element, attribute)
+                    seasons += [element]
+                elif element.type == 'movie':
+                    # remove unwanted attributes from element
+                    for ids in element.ids.__dict__.copy():
+                        value = getattr(element.ids, ids)
+                        if not value:
+                            delattr(element.ids, ids)
+                    for attribute in element.__dict__.copy():
+                        if not (attribute == 'ids' or attribute == 'resolution' or attribute == 'media_type' or attribute == 'hdr' or attribute == 'title' or attribute == 'year'):
+                            delattr(element, attribute)
+                    movies += [element]
+                elif element.type == 'episode':
+                    # remove unwanted attributes from element
+                    for ids in element.ids.__dict__.copy():
+                        value = getattr(element.ids, ids)
+                        if not value:
+                            delattr(element.ids, ids)
+                    for attribute in element.__dict__.copy():
+                        if not (attribute == 'ids' or attribute == 'resolution' or attribute == 'media_type' or attribute == 'hdr' or attribute == 'title' or attribute == 'year'):
+                            delattr(element, attribute)
+                    episodes += [element]
+                # add element to collection
+                data = {'movies': movies, 'shows': shows, 'seasons': seasons, 'episodes': episodes}
+                response = post('https://api.trakt.tv/sync/history/remove',json.dumps(data, default=lambda o: o.__dict__))
+                if self in classes.ignore.ignored:
+                    classes.ignore.ignored.remove(self)
+            except Exception as e:
+                ui_print("trakt error: couldnt un-ignore item: " + str(e), debug=ui_settings.debug)
+
+        def check(self):
+            global current_user
+            try:
+                ignoreuser = library.ignore.user
+                user = None
+                for plexuser in users:
+                    if plexuser[0] == ignoreuser:
+                        user = plexuser
+                        break
+                if user == None:
+                    print("[trakt] error: Could not find trakt ignore service user: '"+ignoreuser+"'. Make sure this trakt user exists.")
+                    return False
+                current_user = user
+                history = library.ignore.history()
+                if self.type == "movie":
+                    if self in history:
+                        if not self in  classes.ignore.ignored:
+                            classes.ignore.ignored += [self]
+                        return True
+                if self.type == "episode":
+                    for show in history:
+                        if show.type == "show":
+                            for season in show.Seasons:
+                                for episode in season.Episodes:
+                                    if episode == self:
+                                        if not self in  classes.ignore.ignored:
+                                            classes.ignore.ignored += [self]
+                                        return True
+                if self.type == "show":
+                    match = next((x for x in history if x == self), None)
+                    if match == None:
+                        return False
+                    if not len(match.Seasons) == len(self.Seasons):
+                        return False
+                    for season in self.Seasons:
+                        matching_season = next((x for x in match.Seasons if x == season), None)
+                        if len(season.Episodes) == len(matching_season.Episodes):
+                            return False
+                    if not self in  classes.ignore.ignored:
+                        classes.ignore.ignored += [self]
+                    return True
+                if self.type == "season":
+                    for show in history:
+                        if show.type == "show":
+                            for season in show.Seasons:
+                                if season == self:
+                                    if not self in  classes.ignore.ignored:
+                                        classes.ignore.ignored += [self]
+                                    return True
+                return False
+            except Exception as e:
+                ui_print("[trakt] error: couldnt check ignore status for item: " + str(e), debug=ui_settings.debug)
+                return False
+    
+        def history():
+            data = []
+            history = []
+            try:
+                if not library.ignore.last_check == None:
+                    if time.time() - library.ignore.last_check < 20:
+                        return library.ignore.watched
+                library.ignore.last_check = time.time()
+                response = get("https://api.trakt.tv/sync/watched/shows")
+                data += response[0]
+                response = get("https://api.trakt.tv/sync/watched/movies")
+                data += response[0]
+                for element in data:
+                    if hasattr(element, 'show'):
+                        element.show.type = 'show'
+                        element.show.user = library.ignore.user
+                        element.show.guid = element.show.ids.trakt
+                        element.show.EID = setEID(element.show)
+                        element.show.Seasons = []
+                        for season_ in element.seasons:
+                            season_.parentYear = element.show.year
+                            season_.parentTitle = element.show.title
+                            season_.parentGuid = element.show.guid
+                            season_.parentEID = element.show.EID
+                            element.show.Seasons += [season(season_)]
+                        leafCount = 0
+                        for season_ in element.show.Seasons:
+                            leafCount += season_.leafCount
+                        element.show.leafCount = leafCount
+                        history.append(classes.media(element.show))
+                    elif hasattr(element, 'movie'):
+                        element.movie.type = 'movie'
+                        element.movie.user = library.ignore.user
+                        element.movie.guid = element.movie.ids.trakt
+                        element.movie.EID = setEID(element.movie)
+                        history.append(classes.media(element.movie))
+                library.ignore.watched = history
+                return history
+            except Exception as e:
+                ui_print("[trakt] error: couldnt check ignore status for item: " + str(e), debug=ui_settings.debug)
+                return None
 
 def search(query, type):
     global current_user
@@ -619,34 +970,31 @@ def search(query, type):
         response, header = get('https://api.trakt.tv/search/tvdb?query=' + str(query))
     return response
 
-def match(query, service, type):
+def match(self):
     global current_user
     current_user = users[0]
-    if service == 'imdb':
-        response, header = get(
-            'https://api.trakt.tv/search/imdb/' + str(query) + '?type=' + type + '&extended=full,episodes')
-    elif service == 'tmdb':
-        response, header = get(
-            'https://api.trakt.tv/search/tmdb/' + str(query) + '?type=' + type + '&extended=full,episodes')
-    elif service == 'tvdb':
-        response, header = get(
-            'https://api.trakt.tv/search/tvdb/' + str(query) + '?type=' + type + '&extended=full,episodes')
-    try:
-        if type == 'movie':
-            response[0].movie.type = 'movie'
-            response[0].movie.guid = response[0].movie.ids.trakt
-            return movie(response[0].movie)
-        elif type == 'show':
-            response[0].show.type = 'show'
-            response[0].show.guid = response[0].show.ids.trakt
-            return show(response[0].show)
-        elif type == 'season':
-            response[0].season.type = 'season'
-            response[0].season.guid = response[0].season.ids.trakt
-            return season(response[0].season)
-        elif type == 'episode':
-            response[0].episode.type = 'episode'
-            response[0].episode.guid = response[0].episode.ids.trakt
-            return episode(response[0].episode)
-    except:
-        return None
+    for EID in self.EID:
+        type = self.type
+        service,query = EID.split('://')
+        response, header = get('https://api.trakt.tv/search/' + service + '/' + query + '?type=' + type + '&extended=full,episodes')
+        try:
+            if type == 'movie':
+                response[0].movie.type = 'movie'
+                response[0].movie.guid = response[0].movie.ids.trakt
+                return movie(response[0].movie)
+            elif type == 'show':
+                response[0].show.type = 'show'
+                response[0].show.guid = response[0].show.ids.trakt
+                return show(response[0].show)
+            elif type == 'season':
+                #response[0].season.type = 'season'
+                #response[0].season.guid = response[0].season.ids.trakt
+                #return season(response[0].season)
+                return None
+            elif type == 'episode':
+                response[0].episode.type = 'episode'
+                response[0].episode.guid = response[0].episode.ids.trakt
+                return episode(response[0].episode)
+        except:
+            continue
+    return None

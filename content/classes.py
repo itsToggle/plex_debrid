@@ -25,6 +25,7 @@ class watchlist(Sequence):
         self.data.append(item)
 
 class library:
+
     active = []
 
     def setup(cls, new=False):
@@ -111,7 +112,74 @@ class refresh:
                     activeservices += [service]
         return activeservices
 
+class ignore:
+    
+    active = []
+    ignored = []
+
+    def setup(cls, new=False):
+        from settings import settings_list
+        settings = []
+        for category, allsettings in settings_list:
+            for setting in allsettings:
+                if setting.cls == cls or setting.name.startswith(cls.name):
+                    settings += [setting]
+        back = False
+        if not new:
+            while not back:
+                print("0) Back")
+                indices = []
+                for index, setting in enumerate(settings):
+                    print(str(index + 1) + ') ' + setting.name)
+                    indices += [str(index + 1)]
+                print()
+                choice = input("Choose an action: ")
+                if choice in indices:
+                    settings[int(choice) - 1].input()
+                    if not cls.name in ignore.active:
+                        ignore.active += [cls.name]
+                    back = True
+                elif choice == '0':
+                    back = True
+        else:
+            print()
+            indices = []
+            for setting in settings:
+                setting.setup()
+                if not cls.name in ignore.active:
+                    ignore.active += [cls.name]
+    
+    def __new__(cls):
+        activeservices = []
+        for servicename in ignore.active:
+            for service in cls.__subclasses__():
+                if service.name == servicename:
+                    activeservices += [service]
+        return activeservices
+
+    def add(self):
+        for service in ignore():
+            ui_print("ignoring item of type '" + self.__module__ + "' on service '" + service.__module__ + "'",ui_settings.debug)
+            self.match(service.__module__)
+            service.add(self)
+    
+    def remove(self):
+        for service in ignore():
+            ui_print("un-ignoring item of type '" + self.__module__ + "' on service '" + service.__module__ + "'",ui_settings.debug)
+            self.match(service.__module__)
+            service.remove(self)
+    
+    def check(self):
+        check = False
+        for service in ignore():
+            ui_print("checking ignore status for item of type '" + self.__module__ + "' on service '" + service.__module__ + "'",ui_settings.debug)
+            self.match(service.__module__)
+            if service.check(self):
+                check = True
+        return check
+
 class media:
+    
     ignore_queue = []
     downloaded_versions = []
 
@@ -120,19 +188,98 @@ class media:
 
     def __eq__(self, other) -> bool:
         try:
+            if type(other) == type(None):
+                if type(self) == type(None):
+                    return True
+                return False
             if not self.type == other.type:
                 return False
             if self.type == 'movie' or self.type == 'show':
+                if hasattr(self,"EID") and hasattr(other,"EID"):
+                    for EID in self.EID:
+                        if EID in other.EID:
+                            return True
+                    return False
                 return self.guid == other.guid
             elif self.type == 'season':
+                if hasattr(self,"parentEID") and hasattr(other,"parentEID"):
+                    for EID in self.parentEID:
+                        if EID in other.parentEID and self.index == other.index:
+                            return True
+                    return False
                 return self.parentGuid == other.parentGuid and self.index == other.index
             elif self.type == 'episode':
+                if hasattr(self,"grandparentEID") and hasattr(other,"grandparentEID"):
+                    for EID in self.grandparentEID:
+                        if EID in other.grandparentEID and self.parentIndex == other.parentIndex and self.index == other.index:
+                            return True
+                    return False
                 return self.grandparentGuid == other.grandparentGuid and self.parentIndex == other.parentIndex and self.index == other.index
         except:
             return False
 
     def __repr__(self):
         return str(self.__dict__)
+
+    def match(self,service):
+        if not hasattr(self,"services"):
+            self.services = [self.__module__]
+        if self.type == "show":
+            for season in self.Seasons:
+                if not hasattr(season,"services"):
+                    season.services = [self.__module__]
+                for episode in season.Episodes:
+                    if not hasattr(episode,"services"):
+                        episode.services = [self.__module__]
+        if self.type == "season":
+            for episode in self.Episodes:
+                if not hasattr(episode,"services"):
+                    episode.services = [self.__module__]
+        if not service in self.services:
+            match = sys.modules[service].match(self)
+            if match == None:
+                return False
+            delattr(match,'watchlist')
+            if self.type in ["movie","episode"]:
+                self.__dict__.update(match.__dict__)
+                self.services += [service]
+                return True
+            elif self.type == "show":
+                for season in match.Seasons[:]:
+                    if not season in self.Seasons:
+                        match.Seasons.remove(season)
+                    else:
+                        matching_season = next((x for x in self.Seasons if x == season), None)
+                        for episode in season.Episodes:
+                            if not episode in matching_season.Episodes:
+                                season.Episodes.remove(episode)
+                for season in match.Seasons:
+                    matching_season = next((x for x in self.Seasons if x == season), None)
+                    for episode in season.Episodes:
+                        matching_episode = next((x for x in matching_season.Episodes if x == episode), None)
+                        delattr(episode,"guid")
+                        matching_episode.__dict__.update(episode.__dict__)
+                    season.__dict__.update(matching_season.__dict__)
+                delattr(match,"guid")
+                self.__dict__.update(match.__dict__)
+                self.services += [service]
+                for season in self.Seasons:
+                    season.services += [service]
+                    for episode in season.Episodes:
+                        episode.services += [service]
+                return True
+            elif self.type == "season":
+                for episode in match.Episodes[:]:
+                    if not episode in self.Episodes:
+                        match.Episodes.remove(episode)
+                for episode in match.Episodes:
+                    matching_episode = next((x for x in self.Episodes if x == episode), None)
+                    episode.__dict__.update(matching_episode.__dict__)
+                self.__dict__.update(match.__dict__)
+                self.services += [service]
+                for episode in self.Episodes:
+                    episode.services += [service]
+                return True
 
     def query(self):
         if self.type == 'movie':
@@ -200,15 +347,27 @@ class media:
                         break
                 if not missing:
                     versions.remove(version)   
+        if self in media.ignore_queue:
+            match = next((x for x in media.ignore_queue if self == x), None)
+            self.ignored_count = match.ignored_count
+        for version in versions[:]:
+            if not version.applies(self):
+                versions.remove(version)
         return versions
 
     def version_missing(self):
-        return (len(self.versions()) > 0) and not (len(self.versions()) == len(releases.sort.versions))
+        all_versions = []
+        if self in media.ignore_queue:
+            match = next((x for x in media.ignore_queue if self == x), None)
+            self.ignored_count = match.ignored_count
+        for version in releases.sort.versions:
+            all_versions += [releases.sort.version(version[0], version[1], version[2], version[3])]
+        for version in all_versions[:]:
+            if not version.applies(self):
+                all_versions.remove(version)
+        return (len(self.versions()) > 0) and not (len(self.versions()) == len(all_versions))
 
     def watch(self):
-        import content.services.plex as plex
-        import content.services.trakt as trakt
-        import content.services.overseerr as overseerr
         if not self in media.ignore_queue:
             self.ignored_count = 1
             media.ignore_queue += [self]
@@ -222,33 +381,13 @@ class media:
                     match.ignored_count) + '/48')
             else:
                 media.ignore_queue.remove(match)
-                if library.active == ['Plex Library']:
-                    try:
-                        ui_print('[plex] ignoring item: ' + self.query())
-                        url = 'https://metadata.provider.plex.tv/actions/scrobble?identifier=tv.plex.provider.metadata&key=' + self.ratingKey + '&X-Plex-Token=' + \
-                                plex.users[0][1]
-                        plex.get(url)
-                        if not self in plex.ignored:
-                            plex.ignored += [self]
-                    except Exception as e:
-                        ui_print("plex error: couldnt ignore item: " + str(e), debug=ui_settings.debug)
-                elif library.active == ['Trakt Collection']:
-                    pass
+                ignore.add(self)
 
     def unwatch(self):
-        import content.services.plex as plex
-        import content.services.trakt as trakt
-        import content.services.overseerr as overseerr
-        if library.active == ['Plex Library']:
-            try:
-                url = 'https://metadata.provider.plex.tv/actions/unscrobble?identifier=tv.plex.provider.metadata&key=' + self.ratingKey + '&X-Plex-Token=' + \
-                        plex.users[0][1]
-                plex.get(url)
-                plex.ignored.remove(self)
-            except Exception as e:
-                ui_print("plex error: couldnt un-ignore item: " + str(e), debug=ui_settings.debug)
-        elif library.active == ['Trakt Collection']:
-            pass
+        ignore.remove(self)
+
+    def watched(self):
+        return ignore.check(self)
 
     def released(self):
         try:
@@ -278,17 +417,8 @@ class media:
         import content.services.overseerr as overseerr
         if (self.watchlist == plex.watchlist and len(trakt.users) > 0) or self.watchlist == trakt.watchlist:
             if self.watchlist == plex.watchlist:
-                try:
-                    for guid in self.Guid:
-                        service, guid = guid.id.split('://')
-                        trakt_match = trakt.match(guid, service, self.type)
-                        if not trakt_match == None:
-                            break
-                except Exception as e:
-                    ui_print("plex error: (attr exception): " + str(e), debug=ui_settings.debug)
-                    return True
-            else:
-                trakt_match = self
+                self.match('content.services.trakt')
+            trakt_match = self
             if not trakt_match == None:
                 trakt.current_user = trakt.users[0]
                 try:
@@ -344,157 +474,51 @@ class media:
                 return False
         return True
 
-    def watched(self):
-        import content.services.plex as plex
-        import content.services.trakt as trakt
-        import content.services.overseerr as overseerr
-        if library.active == ['Plex Library']:
-            try:
-                if self.type == 'movie' or self.type == 'episode':
-                    if hasattr(self, 'viewCount'):
-                        if self.viewCount > 0:
-                            if not self in plex.ignored:
-                                plex.ignored += [self]
-                            return True
-                else:
-                    if hasattr(self, 'viewedLeafCount'):
-                        if self.viewedLeafCount >= self.leafCount:
-                            if not self in plex.ignored:
-                                plex.ignored += [self]
-                            return True
-                return False
-            except Exception as e:
-                ui_print("plex error: (attr exception): " + str(e), debug=ui_settings.debug)
-                return False
-        elif library.active == ['Trakt Collection']:
-            return False
-
     def collect(self):
         for refresh_service in refresh():
-            if refresh_service.__module__ == self.__module__ or (self.__module__ in ["content.services.trakt","releases"] and refresh_service.__module__ == "content.services.plex"):
+            if refresh_service.__module__ == self.__module__ or (self.__module__ in ["content.services.trakt","releases","content.services.overseerr","content.services.plex"] and refresh_service.__module__ in ["content.services.plex","content.services.jellyfin"]):
                 refresh_service(self)
-            elif self.__module__ == "content.services.plex" and refresh_service.__module__ == "content.services.trakt":
+            elif self.__module__ in ["content.services.plex","content.services.overseerr"] and refresh_service.__module__ == "content.services.trakt":
                 try:
-                    for guid in self.Guid:
-                        service, guid = guid.id.split('://')
-                        trakt_match = sys.modules["content.services.trakt"].match(guid, service, self.type)
-                    if not trakt_match == None:
-                        refresh_service(trakt_match)
+                    self.match('content.services.trakt')
+                    refresh_service(self)
                 except:
-                    print("[trakt] error: adding item to trakt collection failed")
+                    ui_print("[trakt] error: adding item to trakt collection failed")
             else:
-                print("error: library update service could not be determined")
+                ui_print("error: library update service could not be determined",ui_settings.debug)
 
     def collected(self, list):
         import content.services.plex as plex
         import content.services.trakt as trakt
         import content.services.overseerr as overseerr
-        if self.watchlist == plex.watchlist and library.active == ['Plex Library']:
-            try:
-                if self.type == 'show' or self.type == 'season':
-                    match = next((x for x in list if x == self), None)
-                    if not hasattr(match, 'leafCount'):
-                        return False
-                    if match.leafCount == self.leafCount:
-                        return True
+        if self.type in ["movie","show"]:
+            if self in list:
+                if self.type == "movie":
+                    return True
+                match = next((x for x in list if x == self), None)
+                if not hasattr(match, 'leafCount'):
                     return False
-                else:
-                    return self in list
-            except Exception as e:
-                ui_print("plex error: (plex to plex library check exception): " + str(e), debug=ui_settings.debug)
-                return False
-        elif self.watchlist == trakt.watchlist and library.active == ['Plex Library']:
-            try:
-                if self.type in ['movie', 'show']:
-                    if hasattr(self.ids, 'imdb'):
-                        result = plex.match("imdb-" + self.ids.imdb, self.type, library=list)
-                    elif hasattr(self.ids, 'tmdb'):
-                        result = plex.match("tmdb-" + str(self.ids.tmdb), self.type, library=list)
-                    elif hasattr(self.ids, 'tvdb'):
-                        result = plex.match("tvdb-" + str(self.ids.tvdb), self.type, library=list)
-                    if hasattr(self, 'Seasons'):
-                        for season in self.Seasons:
-                            matching_season = next((x for x in result[0].Seasons if x.index == season.index), None)
-                            if hasattr(matching_season, 'viewedLeafCount'):
-                                season.viewedLeafCount = matching_season.viewedLeafCount
-                            if hasattr(matching_season, 'ratingKey'):
-                                season.ratingKey = matching_season.ratingKey
-                            season.parentGuid = result[0].guid
-                            for episode in season.Episodes:
-                                if hasattr(matching_season, 'Episodes'):
-                                    matching_episode = next(
-                                        (x for x in matching_season.Episodes if x.index == episode.index), None)
-                                    if hasattr(matching_episode, 'viewCount'):
-                                        episode.viewCount = matching_episode.viewCount
-                                    if hasattr(matching_episode, 'ratingKey'):
-                                        episode.ratingKey = matching_episode.ratingKey
-                                episode.grandparentGuid = result[0].guid
-                    if hasattr(result[0], 'viewCount'):
-                        self.viewCount = result[0].viewCount
-                    if hasattr(result[0], 'viewedLeafCount'):
-                        self.viewedLeafCount = result[0].viewedLeafCount
-                    if hasattr(result[0], 'ratingKey'):
-                        self.ratingKey = result[0].ratingKey
-                    return media.collected(result[0], list)
-                elif self.type == 'season':
-                    match = next((x for x in list if x == self), None)
-                    if not hasattr(match, 'leafCount'):
-                        return False
-                    if match.leafCount == self.leafCount:
-                        return True
-                    return False
-                elif self.type == 'episode':
-                    return self in list
-            except Exception as e:
-                ui_print("trakt error: (trakt to plex library check exception): " + str(e), debug=ui_settings.debug)
-                return False
-        elif self.watchlist == trakt.watchlist and library.active == ['Trakt Collection']:
-            try:
-                if self.type == 'show' or self.type == 'season':
-                    match = next((x for x in list if x == self), None)
-                    if not hasattr(match, 'leafCount'):
-                        return False
-                    if match.leafCount == self.leafCount:
-                        return True
-                    return False
-                else:
-                    return self in list
-            except Exception as e:
-                ui_print("trakt error: (trakt to trakt library check exception): " + str(e),
-                            debug=ui_settings.debug)
-                return False
-        elif self.watchlist == plex.watchlist and library.active == ['Trakt Collection']:
-            try:
-                if self.type in ['movie', 'show']:
-                    for guid in self.Guid:
-                        service, guid = guid.id.split('://')
-                        trakt_match = trakt.match(guid, service, self.type)
-                        if trakt_match:
-                            break
-                    if hasattr(self, 'Seasons'):
-                        for season in self.Seasons:
-                            season.parentGuid = trakt_match.guid
-                            for episode in season.Episodes:
-                                episode.grandparentGuid = trakt_match.guid
-                        self.seasons = trakt_match.Seasons
-                    self.ids = trakt_match.ids
-                    return media.collected(trakt_match, list)
-                elif self.type == 'season':
-                    match = next((x for x in list if x == self), None)
-                    if not hasattr(match, 'leafCount'):
-                        return False
-                    if match.leafCount == self.leafCount:
-                        return True
-                    return False
-                else:
-                    return self in list
-            except Exception as e:
-                ui_print("trakt error: (plex to trakt library check exception): " + str(e), debug=ui_settings.debug)
-                return False
-        else:
-            ui_print("library check error: (no library check performed): " + str(e), debug=ui_settings.debug)
+                if match.leafCount == self.leafCount:
+                    return True
             return False
-
+        if self.type == "season":
+            for show in list:
+                if show.type == "show":
+                    for season in show.Seasons:
+                        if self == season:
+                            if season.leafCount == self.leafCount:
+                                return True
+                            return False
+            return False
+        if self.type == "episode":
+            for show in list:
+                if show.type == "show":
+                    for season in show.Seasons:
+                        for episode in season.Episodes:
+                            if self == episode:
+                                return True
+            return False
+    
     def uncollected(self, list):
         if self.type == 'movie':
             if not self.collected(list):
@@ -753,6 +777,5 @@ class media:
             files += ['S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index)) + '']
         return files
 
-# Multiprocessing download method
 def download(cls, library, parentReleases, result, index):
     result[index] = cls.download(library=library, parentReleases=parentReleases)

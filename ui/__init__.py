@@ -22,7 +22,7 @@ def ignored():
     back = False
     while not back:
         ui_cls('Options/Ignored Media/')
-        if len(content.services.plex.ignored) == 0:
+        if len(content.classes.ignore.ignored) == 0:
             library = content.classes.library()[0]()
             if len(library) > 0:
                 # get entire plex_watchlist
@@ -32,19 +32,20 @@ def ignored():
                 print('checking new content ...')
                 for iterator in itertools.zip_longest(plex_watchlist, trakt_watchlist):
                     for element in iterator:
-                        if hasattr(element, 'uncollected'):
+                        if hasattr(element, 'uncollected') and hasattr(element, 'watched'):
+                            element.watched()
                             element.uncollected(library)
             print()
         print('0) Back')
         indices = []
-        for index, element in enumerate(content.services.plex.ignored):
+        for index, element in enumerate(content.classes.ignore.ignored):
             print(str(index + 1) + ') ' + element.query())
             indices += [str(index + 1)]
         print()
         choice = input('Choose a media item that you want to remove from the ignored list: ')
         if choice in indices:
-            print("Media item: " + content.services.plex.ignored[int(choice) - 1].query() + ' removed from ignored list.')
-            content.services.plex.ignored[int(choice) - 1].unwatch()
+            print("Media item: " + content.classes.ignore.ignored[int(choice) - 1].query() + ' removed from ignored list.')
+            content.classes.ignore.ignored[int(choice) - 1].unwatch()
             time.sleep(3)
         elif choice == '0':
             back = True
@@ -217,24 +218,24 @@ def options():
 
 def setup():
     if os.path.exists('./settings.json'):
-        with open('settings.json', 'r') as f:
-            settings = json.loads(f.read())
-        if settings['Show Menu on Startup'] == "false":
-            return False
-        load()
-        return True
-    else:
-        ui_cls('Initial Setup')
-        input('Press Enter to continue: ')
-        for category, settings in settings_list:
-            for setting in settings:
-                if setting.required:
-                    ui_cls('Options/Settings/' + category + '/' + setting.name)
-                    setting.setup()
-        ui_cls('Done!')
-        input('Press Enter to continue to the main menu: ')
-        save()
-        return True
+        if os.path.getsize('./settings.json') > 0:
+            with open('settings.json', 'r') as f:
+                settings = json.loads(f.read())
+            if settings['Show Menu on Startup'] == "false":
+                return False
+            load()
+            return True
+    ui_cls('Initial Setup')
+    input('Press Enter to continue: ')
+    for category, settings in settings_list:
+        for setting in settings:
+            if setting.required:
+                ui_cls('Options/Settings/' + category + '/' + setting.name)
+                setting.setup()
+    ui_cls('Done!')
+    input('Press Enter to continue to the main menu: ')
+    save()
+    return True
 
 def save():
     save_settings = {}
@@ -255,18 +256,27 @@ def load(doprint=False, updated=False):
     elif not settings['version'][0] == ui_settings.version[0] and not ui_settings.version[2] == []:
         update(settings, ui_settings.version)
         updated = True
-    if 'Library Service' in settings: #compatability code for updating from <2.10 
+    #compatability code for updating from <2.10 
+    if 'Library Service' in settings: 
         settings['Library collection service'] = settings['Library Service']
         if settings['Library Service'] == ["Plex Library"]:
-            if 'Plex \"movies\" library' in settings and 'Plex \"shows\" library' in settings: #compatability code for updating from <2.10 
+            if 'Plex \"movies\" library' in settings and 'Plex \"shows\" library' in settings: 
                 settings['Plex library refresh'] = [settings['Plex \"movies\" library'],settings['Plex \"shows\" library']]
             settings['Library update services'] = ["Plex Libraries"]
         elif settings['Library Service'] == ["Trakt Collection"]:
             settings['Library update services'] = ["Trakt Collection"]
             settings['Trakt refresh user'] = settings['Trakt library user']
+    #compatability code for updating from <2.20
+    if not 'Library ignore services' in settings: 
+        if settings['Library collection service'] == ["Plex Library"]:
+            settings['Library ignore services'] = ["Plex Discover Watch Status"]
+            settings["Plex ignore user"] = settings["Plex users"][0][0]
+        elif settings['Library collection service'] == ["Trakt Collection"]:
+            settings['Library ignore services'] = ["Trakt Watch Status"]
+            settings["Trakt ignore user"] = settings["Trakt users"][0]
     for category, load_settings in settings_list:
         for setting in load_settings:
-            if setting.name in settings and not setting.name == 'version':
+            if setting.name in settings and not setting.name == 'version' and not setting.name == 'Content Services':
                 setting.set(settings[setting.name])
     if doprint:
         print('Last settings loaded!')
@@ -319,7 +329,6 @@ def update(settings, version):
                 elif setting.name == 'version':
                     settings[setting.name] = setting.get()
 
-# Multiprocessing run method
 def threaded(stop):
     ui_cls()
     print("Type 'exit' to return to the main menu.")
@@ -332,9 +341,12 @@ def threaded(stop):
         plex_watchlist = content.services.plex.watchlist()
         # get entire trakt_watchlist
         trakt_watchlist = content.services.trakt.watchlist()
-        # get all overseerr request, match content to plex media type and add to monitored list
+        # get all overseerr request, match content to available media type and add to monitored list
         overseerr_requests = content.services.overseerr.requests()
-        overseerr_requests.sync(plex_watchlist, library)
+        if len(plex_watchlist) > 0:
+            overseerr_requests.sync(plex_watchlist)
+        else:
+            overseerr_requests.sync(trakt_watchlist)
         ui_print('checking new content ...')
         for iterator in itertools.zip_longest(plex_watchlist, trakt_watchlist):
             for element in iterator:
@@ -344,7 +356,10 @@ def threaded(stop):
         while not stop():
             if plex_watchlist.update() or overseerr_requests.update() or trakt_watchlist.update():
                 library = content.classes.library()[0]()
-                overseerr_requests.sync(plex_watchlist, library)
+                if len(plex_watchlist) > 0:
+                    overseerr_requests.sync(plex_watchlist)
+                else:
+                    overseerr_requests.sync(trakt_watchlist)
                 if len(library) == 0:
                     continue
                 ui_print('checking new content ...')
@@ -360,7 +375,10 @@ def threaded(stop):
                 trakt_watchlist = content.services.trakt.watchlist()
                 # get all overseerr request, match content to plex media type and add to monitored list
                 overseerr_requests = content.services.overseerr.requests()
-                overseerr_requests.sync(plex_watchlist, library)
+                if len(plex_watchlist) > 0:
+                    overseerr_requests.sync(plex_watchlist)
+                else:
+                    overseerr_requests.sync(trakt_watchlist)
                 library = content.classes.library()[0]()
                 timeout_counter = 0
                 if len(library) == 0:
