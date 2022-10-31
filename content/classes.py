@@ -253,10 +253,12 @@ class media:
                                 season.Episodes.remove(episode)
                 for season in match.Seasons:
                     matching_season = next((x for x in self.Seasons if x == season), None)
-                    season.__dict__.update(matching_season.__dict__)
                     for episode in season.Episodes:
                         matching_episode = next((x for x in matching_season.Episodes if x == episode), None)
-                        episode.__dict__.update(matching_episode.__dict__)
+                        delattr(episode,"guid")
+                        matching_episode.__dict__.update(episode.__dict__)
+                    season.__dict__.update(matching_season.__dict__)
+                delattr(match,"guid")
                 self.__dict__.update(match.__dict__)
                 self.services += [service]
                 for season in self.Seasons:

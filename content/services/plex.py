@@ -150,9 +150,14 @@ class season(classes.media):
         self.__dict__.update(other.__dict__)
         self.EID = setEID(self)
         self.Episodes = []
+        token = users[0][1]
+        if library.ignore.name in classes.ignore.active:
+            for user in users:
+                if library.ignore.user == user[0]:
+                    token = user[1]
         while len(self.Episodes) < self.leafCount:
             url = 'https://metadata.provider.plex.tv/library/metadata/' + self.ratingKey + '/children?includeUserState=1&X-Plex-Container-Size=200&X-Plex-Container-Start=' + str(
-                len(self.Episodes)) + '&X-Plex-Token=' + users[0][1]
+                len(self.Episodes)) + '&X-Plex-Token=' + token
             response = get(url)
             if not response == None:
                 if hasattr(response, 'MediaContainer'):
