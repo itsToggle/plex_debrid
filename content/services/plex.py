@@ -636,6 +636,11 @@ class library(classes.library):
                     response = get(url)
                     item.__dict__.update(response.MediaContainer.Metadata[0].__dict__)
                     item.EID = setEID(item)
+                    if item.type == "show":
+                        for season in item.Seasons:
+                            season.parentEID = item.EID
+                            for episode in season.Episodes:
+                                episode.grandparentEID = item.EID
                 except:
                     ui_print('done')
                     ui_print("[plex error]: couldnt get extended metadata for library item: " + item.query())  
