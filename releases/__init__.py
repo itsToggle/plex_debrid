@@ -1,4 +1,3 @@
-from operator import truediv
 from base import *
 from ui.ui_print import *
 
