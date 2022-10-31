@@ -616,14 +616,20 @@ class library(classes.library):
                 "[plex error]: Your library seems empty. To prevent unwanted behaviour, no further downloads will be started. If your library really is empty, please add at least one media item manually.")
         for show in list_:
             if show.type == "show":
+                show.childCount = 0
+                show.leafCount = 0
                 show.Seasons = []
                 for season in list_:
                     if season.type == "season":
                         if season.parentGuid == show.guid:
+                            show.childCount += 1
                             season.Episodes = []
+                            season.leafCount = 0
                             for episode in list_:
                                 if episode.type == "episode":
                                     if episode.parentGuid == season.guid:
+                                        show.leafCount += 1
+                                        season.leafCount += 1
                                         season.Episodes += [episode]
                             show.Seasons += [season]
         for item in list_[:] :

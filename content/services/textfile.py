@@ -46,12 +46,13 @@ class library():
             try:
                 if os.path.exists(library.ignore.path + "ignored.txt"):
                     with open(library.ignore.path + "ignored.txt") as f:
-                        ignored = f.read()
+                        ignored = f.readlines()
                     f.close()
-                    if self.query().lower() in ignored.lower():
-                        if not self in classes.ignore.ignored:
-                            classes.ignore.ignored += [self]
-                        return True
+                    for line in ignored:
+                        if self.query().lower() + '\n' == line.lower() or self.query().lower() == line.lower() or self.query().lower()[:-1] == line.lower():
+                            if not self in classes.ignore.ignored:
+                                classes.ignore.ignored += [self]
+                            return True
                     return False
                 return False
             except Exception as e:
