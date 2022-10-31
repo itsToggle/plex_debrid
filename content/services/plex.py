@@ -476,8 +476,7 @@ class library(classes.library):
                 if choice == '1':
                     addable_users = []
                     for index,plexuser in enumerate(users):
-                        if not plexuser[0] == library.ignore.user:
-                            addable_users += [plexuser[0]]
+                        addable_users += [plexuser[0]]
                     if len(addable_users) == 0:
                         print()
                         print("It seems there only is one plex user!")
@@ -501,8 +500,7 @@ class library(classes.library):
             else:
                 addable_users = []
                 for index,plexuser in enumerate(users):
-                    if not plexuser[0] == library.ignore.user:
-                        addable_users += [plexuser[0]]
+                    addable_users += [plexuser[0]]
                 print("Please choose a plex user, whos plex discover watch status should be used to ignore content: ")
                 print()
                 indices = []

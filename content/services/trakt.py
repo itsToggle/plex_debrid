@@ -652,8 +652,7 @@ class library(classes.library):
                 if choice == '1':
                     addable_users = []
                     for index,plexuser in enumerate(users):
-                        if not plexuser[0] == library.ignore.user:
-                            addable_users += [plexuser[0]]
+                        addable_users += [plexuser[0]]
                     if len(addable_users) == 0:
                         print()
                         print("It seems there only is one trakt user!")
@@ -677,14 +676,13 @@ class library(classes.library):
             else:
                 addable_users = []
                 for index,plexuser in enumerate(users):
-                    if not plexuser[0] == library.ignore.user:
-                        addable_users += [plexuser[0]]
+                    addable_users += [plexuser[0]]
                 print("Please choose a trakt user, whos watch status should be used to ignore content: ")
                 print()
                 indices = []
                 for index,ignoreuser in enumerate(addable_users):
-                        print(str(index+1) + ") Trakt user '" + ignoreuser + "'")
-                        indices += [str(index+1)]
+                    print(str(index+1) + ") Trakt user '" + ignoreuser + "'")
+                    indices += [str(index+1)]
                 print()
                 choice = input("Please choose a trakt user: ")
                 if choice in indices:
