@@ -626,17 +626,25 @@ class library(classes.library):
                 show.Seasons = []
                 for season in list_:
                     if season.type == "season":
-                        if season.parentGuid == show.guid:
-                            show.childCount += 1
-                            season.Episodes = []
-                            season.leafCount = 0
-                            for episode in list_:
-                                if episode.type == "episode":
-                                    if episode.parentGuid == season.guid:
-                                        show.leafCount += 1
-                                        season.leafCount += 1
-                                        season.Episodes += [episode]
-                            show.Seasons += [season]
+                        if hasattr(season,"parentGuid"):
+                            if season.parentGuid == show.guid:
+                                show.childCount += 1
+                                season.Episodes = []
+                                season.leafCount = 0
+                                for episode in list_:
+                                    if episode.type == "episode":
+                                        if hasattr(episode,"parentGuid"):
+                                            if episode.parentGuid == season.guid:
+                                                show.leafCount += 1
+                                                season.leafCount += 1
+                                                season.Episodes += [episode]
+                                        elif hasattr(episode,'grandparentGuid') and hasattr(episode,'parentIndex') and hasattr(season,'index'):
+                                            if episode.grandparentGuid == season.parentGuid and episode.parentIndex == season.index:
+                                                episode.parentGuid = season.guid
+                                                show.leafCount += 1
+                                                season.leafCount += 1
+                                                season.Episodes += [episode]
+                                show.Seasons += [season]
         for item in list_[:] :
             if not item.type in ["show","movie"]:
                 list_.remove(item)
