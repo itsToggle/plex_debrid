@@ -368,17 +368,30 @@ class media:
         return (len(self.versions()) > 0) and not (len(self.versions()) == len(all_versions))
 
     def watch(self):
+        match = next((x for x in media.ignore_queue if self == x), None)
+        names = []
+        if match == None:
+            versions = self.versions()
+        else:
+            versions = match.versions()
+        retries = 0
+        for version in versions:
+            names += [version.name]
+            for trigger in version.triggers:
+                if trigger[0] == "retries" and trigger[1] == "<=":
+                    if int(float(trigger[2])) > retries:
+                        retries = int(float(trigger[2]))
+        if retries == 0:
+            return
         if not self in media.ignore_queue:
             self.ignored_count = 1
             media.ignore_queue += [self]
-            ui_print('retrying download in 30min for item: ' + self.query() + ' - attempt ' + str(
-                self.ignored_count) + '/48')
+            ui_print('retrying download in 30min for item: ' + self.query() + ' version/s [' + '],['.join(names) + '} - attempt ' + str(self.ignored_count) + '/' + str(retries))
         else:
             match = next((x for x in media.ignore_queue if self == x), None)
-            if match.ignored_count < 48:
+            if match.ignored_count < retries:
                 match.ignored_count += 1
-                ui_print('retrying download in 30min for item: ' + self.query() + ' - attempt ' + str(
-                    match.ignored_count) + '/48')
+                ui_print('retrying download in 30min for item: ' + self.query() + ' - attempt ' + str(match.ignored_count) + '/' + str(retries))
             else:
                 media.ignore_queue.remove(match)
                 ignore.add(self)
