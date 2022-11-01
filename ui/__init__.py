@@ -343,10 +343,12 @@ def threaded(stop):
         trakt_watchlist = content.services.trakt.watchlist()
         # get all overseerr request, match content to available media type and add to monitored list
         overseerr_requests = content.services.overseerr.requests()
-        if len(plex_watchlist) > 0:
+        if len(content.services.plex.users) > 0:
             overseerr_requests.sync(plex_watchlist)
-        else:
+        elif len(content.services.trakt.users) > 0:
             overseerr_requests.sync(trakt_watchlist)
+        else:
+            ui_print("couldnt match overseerr content to either plex or trakt.",ui_settings.debug)
         ui_print('checking new content ...')
         for iterator in itertools.zip_longest(plex_watchlist, trakt_watchlist):
             for element in iterator:
@@ -356,10 +358,12 @@ def threaded(stop):
         while not stop():
             if plex_watchlist.update() or overseerr_requests.update() or trakt_watchlist.update():
                 library = content.classes.library()[0]()
-                if len(plex_watchlist) > 0:
+                if len(content.services.plex.users) > 0:
                     overseerr_requests.sync(plex_watchlist)
-                else:
+                elif len(content.services.trakt.users) > 0:
                     overseerr_requests.sync(trakt_watchlist)
+                else:
+                    ui_print("couldnt match overseerr content to either plex or trakt.",ui_settings.debug)
                 if len(library) == 0:
                     continue
                 ui_print('checking new content ...')
@@ -375,10 +379,12 @@ def threaded(stop):
                 trakt_watchlist = content.services.trakt.watchlist()
                 # get all overseerr request, match content to plex media type and add to monitored list
                 overseerr_requests = content.services.overseerr.requests()
-                if len(plex_watchlist) > 0:
+                if len(content.services.plex.users) > 0:
                     overseerr_requests.sync(plex_watchlist)
-                else:
+                elif len(content.services.trakt.users) > 0:
                     overseerr_requests.sync(trakt_watchlist)
+                else:
+                    ui_print("couldnt match overseerr content to either plex or trakt.",ui_settings.debug)
                 library = content.classes.library()[0]()
                 timeout_counter = 0
                 if len(library) == 0:

@@ -755,11 +755,11 @@ class sort:
                             return True
                         return False
                     if self.operator == ">=":
-                        if float(self.value) >= year:
+                        if year >= float(self.value):
                             return True
                         return False
                     if self.operator == "<=":
-                        if float(self.value) <= year:
+                        if year <= float(self.value):
                             return True
                         return False
                 return False
