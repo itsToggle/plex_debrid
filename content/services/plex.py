@@ -683,6 +683,7 @@ def search(query, library=[]):
 
 def match(self):
     current_module = sys.modules[__name__]
+    some_local_media = None
     if not current_library == []:
         if self.type in ["movie","show"]:
             for element in current_library:
@@ -708,6 +709,9 @@ def match(self):
     else:
         ui_print(
             "[plex error]: couldnt match content to plex media type, because the plex library is empty. Please add at least one movie and one show!")
+        return None
+    if some_local_media == None:
+        ui_print("[plex error]: couldnt match content to plex media type, no media of the same type found!")
         return None
     if self.type == 'movie':
         agent = 'tv.plex.agents.movie'
