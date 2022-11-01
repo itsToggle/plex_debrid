@@ -390,12 +390,12 @@ class media:
         if not self in media.ignore_queue:
             self.ignored_count = 1
             media.ignore_queue += [self]
-            ui_print('retrying download in 30min for item: ' + self.query() + ' - version/s [' + '],['.join(names) + '} - attempt ' + str(self.ignored_count) + '/' + str(retries))
+            ui_print('retrying download in 30min for item: ' + self.query() + ' - version/s [' + '],['.join(names) + '] - attempt ' + str(self.ignored_count) + '/' + str(retries))
         else:
             match = next((x for x in media.ignore_queue if self == x), None)
             if match.ignored_count < retries:
                 match.ignored_count += 1
-                ui_print('retrying download in 30min for item: ' + self.query() + ' - version/s [' + '],['.join(names) + '} - attempt ' + str(match.ignored_count) + '/' + str(retries))
+                ui_print('retrying download in 30min for item: ' + self.query() + ' - version/s [' + '],['.join(names) + '] - attempt ' + str(match.ignored_count) + '/' + str(retries))
             else:
                 media.ignore_queue.remove(match)
                 ignore.add(self)
