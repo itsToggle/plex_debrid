@@ -638,6 +638,12 @@ class library(classes.library):
                                                 show.leafCount += 1
                                                 season.leafCount += 1
                                                 season.Episodes += [episode]
+                                        elif hasattr(episode,'grandparentGuid') and hasattr(episode,'parentIndex') and hasattr(season,'index'):
+                                            if episode.grandparentGuid == season.parentGuid and episode.parentIndex == season.index:
+                                                episode.parentGuid = season.guid
+                                                show.leafCount += 1
+                                                season.leafCount += 1
+                                                season.Episodes += [episode]
                                 show.Seasons += [season]
         for item in list_[:] :
             if not item.type in ["show","movie"]:
