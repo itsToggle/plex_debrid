@@ -712,11 +712,11 @@ class sort:
                             return True
                         return False
                     if self.operator == ">=":
-                        if float(self.value) >= element.ignored_count:
+                        if element.ignored_count >= float(self.value):
                             return True
                         return False
                     if self.operator == "<=":
-                        if float(self.value) <= element.ignored_count:
+                        if element.ignored_count <= float(self.value) :
                             return True
                         return False
                 else:

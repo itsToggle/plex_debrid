@@ -640,21 +640,25 @@ class library(classes.library):
         for item in list_[:] :
             if not item.type in ["show","movie"]:
                 list_.remove(item)
-        if not list_ == current_library:
-            for item in list_:
-                try:
+        for item in list_:
+            try:
+                if not item in current_library:
                     url = library.url + '/library/metadata/'+item.ratingKey+'?X-Plex-Token=' + users[0][1]
                     response = get(url)
                     item.__dict__.update(response.MediaContainer.Metadata[0].__dict__)
-                    item.EID = setEID(item)
-                    if item.type == "show":
-                        for season in item.Seasons:
-                            season.parentEID = item.EID
-                            for episode in season.Episodes:
-                                episode.grandparentEID = item.EID
-                except:
-                    ui_print('done')
-                    ui_print("[plex error]: couldnt get extended metadata for library item: " + item.query())  
+                else:
+                    match = next((x for x in current_library if item == x), None)
+                    if hasattr(match,"Guid"):
+                        item.Guid = match.Guid
+                item.EID = setEID(item)
+                if item.type == "show":
+                    for season in item.Seasons:
+                        season.parentEID = item.EID
+                        for episode in season.Episodes:
+                            episode.grandparentEID = item.EID
+            except:
+                ui_print('done')
+                ui_print("[plex error]: couldnt get extended metadata for library item: " + item.query())  
         ui_print('done')
         current_library = copy.deepcopy(list_)
         return list_
