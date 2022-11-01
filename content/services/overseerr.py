@@ -217,7 +217,27 @@ class media(classes.media):
     def __init__(self, other):
         super().__init__(other)
 
+class movie(classes.media):
+    def __init__(self, other):
+        self.__dict__.update(other.__dict__)
+        self.EID = setEID(self)
+
+class show(classes.media):
+    def __init__(self, other):
+        self.__dict__.update(other.__dict__)
+        self.type = 'show'
+        self.EID = setEID(self)
+        self.Seasons = []
+        if hasattr(self,'seasons'):
+            for season in self.seasons:
+                season.type = "season"
+                season.index = season.seasonNumber
+                season.parentEID = self.EID
+                season.Episodes = []
+                self.Seasons += [season]
+
 class requests(classes.watchlist):
+
     def __init__(self):
         self.data = []
         if len(users) > 0 and len(api_key) > 0:
@@ -239,8 +259,10 @@ class requests(classes.watchlist):
         add = []
         for element_ in self.data:
             element = copy.deepcopy(element_)
-            element = media(element)
-            element.EID = setEID(element)
+            if element.type == "movie":
+                element = movie(element)
+            elif element.type == "tv":
+                element = show(element)
             element.match(other.__module__)
             element.watchlist = sys.modules[other.__module__].watchlist
             add += [element]
