@@ -210,7 +210,7 @@ def setEID(self):
                 EID += ['tmdb://' + str(self.media.tmdbId)]
         if hasattr(self.media,"tvdbId"):
             if not self.media.tvdbId == None:
-                EID += ['tvdb://' + str(self.media.tmvbId)]
+                EID += ['tvdb://' + str(self.media.tvdbId)]
     return EID
 
 class media(classes.media):
