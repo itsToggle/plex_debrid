@@ -249,19 +249,27 @@ class media:
                 for season in match.Seasons[:]:
                     if not season in self.Seasons:
                         match.Seasons.remove(season)
-                    else:
+                    elif self.services != ["content.services.overseerr"]:
                         matching_season = next((x for x in self.Seasons if x == season), None)
                         for episode in season.Episodes:
                             if not episode in matching_season.Episodes:
                                 season.Episodes.remove(episode)
-                for season in match.Seasons:
-                    matching_season = next((x for x in self.Seasons if x == season), None)
-                    for episode in season.Episodes:
-                        matching_episode = next((x for x in matching_season.Episodes if x == episode), None)
-                        delattr(episode,"guid")
-                        matching_episode.__dict__.update(episode.__dict__)
-                    season.__dict__.update(matching_season.__dict__)
-                delattr(match,"guid")
+                if self.services != ["content.services.overseerr"]:
+                    for season in match.Seasons:
+                        matching_season = next((x for x in self.Seasons if x == season), None)
+                        for episode in season.Episodes:
+                            matching_episode = next((x for x in matching_season.Episodes if x == episode), None)
+                            delattr(episode,"guid")
+                            matching_episode.__dict__.update(episode.__dict__)
+                        season.__dict__.update(matching_season.__dict__)
+                    delattr(match,"guid")
+                else:
+                    for season in match.Seasons:
+                        if not hasattr(season,'services'):
+                            season.services = [self.__module__]
+                        for episode in season.Episodes:
+                            if not hasattr(episode,'services'):
+                                episode.services = [self.__module__]
                 self.__dict__.update(match.__dict__)
                 self.services += [service]
                 for season in self.Seasons:
@@ -382,12 +390,12 @@ class media:
         if not self in media.ignore_queue:
             self.ignored_count = 1
             media.ignore_queue += [self]
-            ui_print('retrying download in 30min for item: ' + self.query() + ' - version/s [' + '],['.join(names) + '} - attempt ' + str(self.ignored_count) + '/' + str(retries))
+            ui_print('retrying download in 30min for item: ' + self.query() + ' - version/s [' + '],['.join(names) + '] - attempt ' + str(self.ignored_count) + '/' + str(retries))
         else:
             match = next((x for x in media.ignore_queue if self == x), None)
             if match.ignored_count < retries:
                 match.ignored_count += 1
-                ui_print('retrying download in 30min for item: ' + self.query() + ' - version/s [' + '],['.join(names) + '} - attempt ' + str(match.ignored_count) + '/' + str(retries))
+                ui_print('retrying download in 30min for item: ' + self.query() + ' - version/s [' + '],['.join(names) + '] - attempt ' + str(match.ignored_count) + '/' + str(retries))
             else:
                 media.ignore_queue.remove(match)
                 ignore.add(self)
