@@ -655,6 +655,8 @@ class library(classes.library):
                 except:
                     ui_print('done')
                     ui_print("[plex error]: couldnt get extended metadata for library item: " + item.query())  
+        else:
+            list_ = copy.deepcopy(current_library)
         ui_print('done')
         current_library = copy.deepcopy(list_)
         return list_
