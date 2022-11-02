@@ -172,7 +172,6 @@ class ignore:
     def check(self):
         check = False
         for service in ignore():
-            ui_print("checking ignore status for item of type '" + self.__module__ + "' on service '" + service.__module__ + "'",ui_settings.debug)
             self.match(service.__module__)
             if service.check(self):
                 check = True
@@ -236,6 +235,16 @@ class media:
                 if not hasattr(episode,"services"):
                     episode.services = [self.__module__]
         if not service in self.services:
+            query = "unknown"
+            try:
+                query = self.query()
+            except:
+                try:
+                    query = self.EID[0]
+                except:
+                    query = "unknown"
+            if not service == "content.services.textfile":
+                ui_print("matching item: '"+query+"' of service '" + self.__module__ + "' to service '" + service + "'",ui_settings.debug)
             match = sys.modules[service].match(self)
             if match == None:
                 return False
@@ -257,11 +266,13 @@ class media:
                 if self.services != ["content.services.overseerr"]:
                     for season in match.Seasons:
                         matching_season = next((x for x in self.Seasons if x == season), None)
-                        for episode in season.Episodes:
-                            matching_episode = next((x for x in matching_season.Episodes if x == episode), None)
-                            delattr(episode,"guid")
-                            matching_episode.__dict__.update(episode.__dict__)
-                        season.__dict__.update(matching_season.__dict__)
+                        if not matching_season == None:
+                            for episode in season.Episodes:
+                                matching_episode = next((x for x in matching_season.Episodes if x == episode), None)
+                                if not matching_episode == None:
+                                    delattr(episode,"guid")
+                                    matching_episode.__dict__.update(episode.__dict__)
+                            season.__dict__.update(matching_season.__dict__)
                     delattr(match,"guid")
                 else:
                     for season in match.Seasons:
@@ -283,7 +294,8 @@ class media:
                         match.Episodes.remove(episode)
                 for episode in match.Episodes:
                     matching_episode = next((x for x in self.Episodes if x == episode), None)
-                    episode.__dict__.update(matching_episode.__dict__)
+                    if not matching_episode == None:
+                        episode.__dict__.update(matching_episode.__dict__)
                 self.__dict__.update(match.__dict__)
                 self.services += [service]
                 for episode in self.Episodes:

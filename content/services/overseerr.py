@@ -184,8 +184,9 @@ def get(url):
             'Content-type': "application/json", "X-Api-Key": api_key})
         logerror(response)
         response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
-    except:
-        response = None
+    except Exception as e:
+        ui_print("[overseerr] error: (exception): " + str(e), debug=ui_settings.debug)
+        return None
     return response
 
 def post(url, data):
@@ -195,8 +196,9 @@ def post(url, data):
             'Content-type': "application/json", "X-Api-Key": api_key}, data=data)
         logerror(response)
         response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
-    except:
-        response = None
+    except Exception as e:
+        ui_print("[overseerr] error: (exception): " + str(e), debug=ui_settings.debug)
+        return None
     return response
 
 def setEID(self):
@@ -272,7 +274,6 @@ class requests(classes.watchlist):
 
     def update(self):
         if len(users) > 0 and len(api_key) > 0:
-            ui_print('[overseerr] updating all overseerr requests ...', debug=ui_settings.debug)
             refresh = False
             try:
                 response = get(base_url + '/api/v1/request')
@@ -284,10 +285,8 @@ class requests(classes.watchlist):
                 for element in self.data[:]:
                     if not element in response.results:
                         self.data.remove(element)
-                ui_print('done', debug=ui_settings.debug)
                 if refresh:
                     return True
             except:
-                ui_print('done', debug=ui_settings.debug)
                 return False
         return False

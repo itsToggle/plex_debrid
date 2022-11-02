@@ -105,7 +105,11 @@ class setting:
                         lists = getattr(self.cls, self.key)
                         for prompt in self.prompt:
                             if "code" in prompt:
-                                device_code, user_code = self.cls.oauth()
+                                try:
+                                    device_code, user_code = self.cls.oauth()
+                                except:
+                                    print("It seems that this authentification service could not be reached. Please try again at a later time.")
+                                    return
                                 print(prompt + str(user_code))
                                 edit += [self.cls.oauth(device_code)]
                             else:
@@ -242,7 +246,11 @@ class setting:
                         lists = getattr(self.cls, self.key)
                         for prompt in self.prompt:
                             if "code" in prompt:
-                                device_code, user_code = self.cls.oauth()
+                                try:
+                                    device_code, user_code = self.cls.oauth()
+                                except:
+                                    print("it seems this authentification service could not be reached right now. Please try again later.")
+                                    return
                                 print(prompt + str(user_code))
                                 edit += [self.cls.oauth(device_code)]
                             else:
@@ -400,6 +408,7 @@ settings_list = [
     ['UI Settings', [
         setting('Show Menu on Startup', 'Please enter "true" or "false": ', ui_settings, 'run_directly'),
         setting('Debug printing', 'Please enter "true" or "false": ', ui_settings, 'debug'),
+        setting('Log to file', 'Please enter "true" or "false": ', ui_settings, 'log'),
         setting('version', 'No snooping around! :D This is for compatability reasons.', ui_settings, 'version',
                 hidden=True),
     ]

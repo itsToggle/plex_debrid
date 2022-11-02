@@ -150,7 +150,7 @@ def post(url, data):
             "Authorization": "Bearer " + current_user[1]}, data=data)
         logerror(response)
         response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
-        time.sleep(1)
+        time.sleep(1.1)
     except:
         response = None
     return response
@@ -158,7 +158,11 @@ def post(url, data):
 def oauth(code=""):
     if code == "":
         response = post('https://api.trakt.tv/oauth/device/code', json.dumps({'client_id': client_id}))
-        return response.device_code, response.user_code
+        if not response == None:
+            return response.device_code, response.user_code
+        else:
+            print("trakt.tv could not be reached right now! Please try again later. The script will most likely exit after this message.")
+            time.sleep(5)
     else:
         response = None
         while response == None:
@@ -258,8 +262,6 @@ class watchlist(classes.watchlist):
     def update(self):
         global current_user
         global users
-        if len(lists) > 0:
-            ui_print('[trakt] updating all trakt watchlists ...', debug=ui_settings.debug)
         refresh = False
         new_watchlist = []
         for list in lists:
@@ -302,8 +304,6 @@ class watchlist(classes.watchlist):
         for element in self.data[:]:
             if not element in new_watchlist:
                 self.data.remove(element)
-        if len(lists) > 0:
-            ui_print('done', debug=ui_settings.debug)
         if refresh:
             return True
         return False
