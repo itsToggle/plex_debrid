@@ -97,7 +97,6 @@ def resolve(result):
             return scraped_releases
     except:
         return scraped_releases
-
     
 # Multiprocessing watchlist method
 def multi_init(cls, obj, result, index):
