@@ -804,6 +804,53 @@ class sort:
                     return True
                 return False
 
+        class user(trigger):
+            name = "user"
+            operators = ["==", "include", "exclude"]
+
+            def check(self):
+                try:
+                    regex.search(self, self, regex.I)
+                    return True
+                except:
+                    print()
+                    print(
+                        "This value is not in the correct format. Please make sure this value is a valid regex expression and no characters are escaped accidentally.")
+                    print()
+                    return False
+            def apply(self,element):
+                try:
+                    if hasattr(element,"user"):
+                        if len(element.user) > 0:
+                            if type(element.user[0]) == list:
+                                for user in element.user:
+                                    if self.operator == "==":
+                                        if user[0] == self.value:
+                                            return True
+                                    elif self.operator == "include":
+                                        if regex.search(self.value,user[0],regex.I):
+                                            return True
+                                    elif self.operator == "exclude":
+                                        if regex.search(self.value,user[0],regex.I):
+                                            return False
+                                if self.operator == "exclude":
+                                    return True
+                            else:
+                                if self.operator == "==":
+                                    if element.user[0] == self.value:
+                                        return True
+                                elif self.operator == "include":
+                                    if regex.search(self.value,element.user[0],regex.I):
+                                        return True
+                                elif self.operator == "exclude":
+                                    if regex.search(self.value,element.user[0],regex.I):
+                                        return False
+                                    return True
+                    return False
+                except:
+                    return False
+
+
         def __init__(self, name, triggers, required, rules) -> None:
             self.name = name
             self.triggers = triggers
