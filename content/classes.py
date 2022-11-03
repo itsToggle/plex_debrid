@@ -597,6 +597,12 @@ class media:
                         if not len(self.Releases) == 0:
                             self.year = year
                             break
+                    if len(self.Releases) <= 5:
+                        if hasattr(self,"EID"):
+                            for EID in self.EID:
+                                if EID.startswith("imdb"):
+                                    service,query = EID.split('://')
+                                    self.Releases += scraper.scrape(query,self.deviation())
                     debrid_downloaded, retry = self.debrid_download()
                     if debrid_downloaded:
                         refresh_ = True
@@ -616,6 +622,12 @@ class media:
                     # if there is more than one uncollected season
                     if len(self.Seasons) > 1:
                         self.Releases += scraper.scrape(self.query(), self.deviation())
+                        if len(self.Releases) <= 5:
+                            if hasattr(self,"EID"):
+                                for EID in self.EID:
+                                    if EID.startswith("imdb"):
+                                        service,query = EID.split('://')
+                                        self.Releases += scraper.scrape(query,self.deviation())
                         parentReleases = copy.deepcopy(self.Releases)
                         # if there are more than 3 uncollected seasons, look for multi-season releases before downloading single-season releases
                         if len(self.Seasons) > 3:
@@ -642,8 +654,7 @@ class media:
                                                 if regex.match(season_query, release.title, regex.I):
                                                     if version.wanted >= len(self.Seasons[index].files()) and \
                                                             season_releases[index] == None:
-                                                        quality = regex.search('(2160|1080|720|480)(?=p|i)',
-                                                                                release.title, regex.I)
+                                                        quality = regex.search('(2160|1080|720|480)(?=p|i)',release.title, regex.I)
                                                         if quality:
                                                             quality = int(quality.group())
                                                         else:
@@ -661,8 +672,7 @@ class media:
                                 # if all seasons of the show could also be downloaded as single-season packs, compare the quality of the best ranking multi season pack with the lowest quality of the single season packs.
                                 if not download_multi_season_release:
                                     season_quality = min(season_releases)
-                                    quality = regex.search('(2160|1080|720|480)(?=p|i)',
-                                                            multi_season_releases[0].title, regex.I)
+                                    quality = regex.search('(2160|1080|720|480)(?=p|i)',multi_season_releases[0].title, regex.I)
                                     if quality:
                                         quality = int(quality.group())
                                     else:
@@ -720,11 +730,23 @@ class media:
                 while len(self.Releases) == 0 and i <= retries:
                     self.Releases += scraper.scrape(self.query(), self.deviation())
                     i += 1
+                if len(self.Releases) <= 3:
+                    if hasattr(self,"parentEID"):
+                        for EID in self.parentEID:
+                            if EID.startswith("imdb"):
+                                service,query = EID.split('://')
+                                self.Releases += scraper.scrape(query,self.deviation())
             debrid_downloaded, retry = self.debrid_download()
             if not debrid_downloaded or retry:
                 if debrid_downloaded:
                     refresh_ = True
                 self.Releases += scraper.scrape(self.query()[:-1])
+                if len(self.Releases) <= 3:
+                    if hasattr(self,"parentEID"):
+                        for EID in self.parentEID:
+                            if EID.startswith("imdb"):
+                                service,query = EID.split('://')
+                                self.Releases += scraper.scrape(query)
                 for episode in self.Episodes:
                     downloaded, retry = episode.download(library=library, parentReleases=self.Releases)
                     if downloaded:
@@ -744,6 +766,12 @@ class media:
                 if debrid_downloaded:
                     refresh_ = True
                 self.Releases = scraper.scrape(self.query(), self.deviation())
+                if len(self.Releases) <= 3:
+                    if hasattr(self,"grandparentEID"):
+                        for EID in self.grandparentEID:
+                            if EID.startswith("imdb"):
+                                service,query = EID.split('://')
+                                self.Releases += scraper.scrape(query,self.deviation())
                 debrid_downloaded, retry = self.debrid_download()
                 if debrid_downloaded:
                     refresh_ = True
