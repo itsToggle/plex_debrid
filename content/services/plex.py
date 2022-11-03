@@ -108,8 +108,6 @@ class watchlist(classes.watchlist):
             self.data.append(movie(item.ratingKey))
 
     def update(self):
-        if len(users) > 0:
-            ui_print("[plex] updating all watchlists ...", debug=ui_settings.debug)
         update = False
         new_watchlist = []
         try:
@@ -137,11 +135,8 @@ class watchlist(classes.watchlist):
                     self.data.remove(entry)
             self.data.sort(key=lambda s: s.watchlistedAt, reverse=True)
         except Exception as e:
-            ui_print('done')
             ui_print("[plex error]: (watchlist exception): " + str(e), debug=ui_settings.debug)
             ui_print('[plex error]: could not reach plex')
-        if len(users) > 0:
-            ui_print('done')
         return update
 
 class season(classes.media):

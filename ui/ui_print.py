@@ -3,6 +3,7 @@ from base import *
 from ui import ui_settings
 
 sameline = False
+sameline_log = False
 
 def ui_cls(path=''):
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -23,6 +24,31 @@ def logo(path=''):
 
 def ui_print(string: str, debug="true"):
     global sameline
+    global sameline_log
+    #log
+    if ui_settings.log == "true":
+        with open('plex_debrid.log', 'a') as f:
+            if string == 'done' and sameline_log:
+                f.write('done' + '\n')
+                sameline_log = False
+            elif sameline_log and string.startswith('done'):
+                f.write(string + '\n')
+                sameline_log = False
+            elif sameline_log and string.endswith('...'):
+                f.write('done' + '\n')
+                f.write('[' + str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S")) + '] ' + string  + ' ')
+                sameline_log = True
+            elif string.endswith('...'):
+                f.write('[' + str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S")) + '] ' + string + ' ')
+                sameline_log = True
+            elif not string.startswith('done') and sameline_log:
+                f.write('done' + '\n')
+                f.write('[' + str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S")) + '] ' + string + '\n')
+                sameline_log = False
+            elif not string.startswith('done'):
+                f.write('[' + str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S")) + '] ' + string + '\n')
+                sameline_log = False
+    #ui
     if debug == "true":
         if string == 'done' and sameline:
             print('done')

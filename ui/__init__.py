@@ -8,6 +8,8 @@ from ui import ui_settings
 from ui.ui_print import *
 from settings import *
 
+config_dir = ""
+
 class option:
     def __init__(self, name, cls, key):
         self.name = name
@@ -217,9 +219,9 @@ def options():
     options()
 
 def setup():
-    if os.path.exists('./settings.json'):
-        if os.path.getsize('./settings.json') > 0:
-            with open('settings.json', 'r') as f:
+    if os.path.exists(config_dir + '/settings.json'):
+        if os.path.getsize(config_dir + '/settings.json') > 0 and os.path.isfile(config_dir + '/settings.json'):
+            with open(config_dir + '/settings.json', 'r') as f:
                 settings = json.loads(f.read())
             if settings['Show Menu on Startup'] == "false":
                 return False
@@ -242,13 +244,13 @@ def save():
     for category, settings in settings_list:
         for setting in settings:
             save_settings[setting.name] = setting.get()
-    with open('settings.json', 'w') as f:
+    with open(config_dir + '/settings.json', 'w') as f:
         json.dump(save_settings, f, indent=4)
     print('Current settings saved!')
     time.sleep(2)
 
 def load(doprint=False, updated=False):
-    with open('settings.json', 'r') as f:
+    with open(config_dir + '/settings.json', 'r') as f:
         settings = json.loads(f.read())
     if 'version' not in settings:
         update(settings, ui_settings.version)
@@ -301,7 +303,9 @@ def preflight():
         return False
     return True
 
-def run():
+def run(cdir = ""):
+    global config_dir
+    config_dir = cdir
     if setup():
         options()
     else:
@@ -319,7 +323,7 @@ def update(settings, version):
     print('A backup file (old.json) with your old settings will be created.')
     print()
     input('Press Enter to update your settings:')
-    with open("old.json", "w+") as f:
+    with open(config_dir + "/old.json", "w+") as f:
         json.dump(settings, f, indent=4)
     for category, load_settings in settings_list:
         for setting in load_settings:

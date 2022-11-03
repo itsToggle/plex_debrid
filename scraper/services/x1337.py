@@ -15,8 +15,8 @@ def scrape(query, altquery):
     scraped_releases = []
     if '1337x' in active:
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
-        url = 'https://1337x.to/search/' + str(query) + '/1/'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36'}
+        url = 'http://1337x.to/search/' + str(query) + '/1/'
         try:
             response = session.get(url, headers=headers)
             soup = BeautifulSoup(response.content, 'html.parser')
@@ -31,7 +31,7 @@ def scrape(query, altquery):
                     if regex.match(r'(' + altquery.replace('.', '\.').replace("\.*", ".*") + ')', title,
                                     regex.I):
                         link = torrent['href']
-                        response = session.get('https://1337x.to' + link, headers=headers)
+                        response = session.get('http://1337x.to' + link, headers=headers)
                         soup = BeautifulSoup(response.content, 'html.parser')
                         download = soup.select('a[href^="magnet"]')[0]['href']
                         size = sizeList[count].contents[0]

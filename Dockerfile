@@ -6,4 +6,4 @@ RUN pip install -r requirements.txt
 
 ENV TERM=xterm
 
-CMD [ "python", "./main.py", "-e", "TERM=xterm"]
+CMD [ "python", "./main.py --config-dir config", "-e", "TERM=xterm"]
