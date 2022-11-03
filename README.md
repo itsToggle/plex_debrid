@@ -215,7 +215,7 @@ more personal media server setup instructions to come soon.
 >  <summary><b><u>Dockerized Version:</u></b></summary>
 >   
 >  1. Run `docker pull itstoggle/plex_debrid .`or visit https://hub.docker.com/repository/docker/itstoggle/plex_debrid.
->  2. Run `docker run -ti plex_debrid -v /path/on/host:/settings.json` . Where `/path/on/host` is the path where you want to save settings file
+>  2. Run `docker run -v /path/to/config:/config -ti itstoggle/plex_debrid` . Where `/path/to/config` is the directory path where you want to save your plex_debrid config data.
 >  3. The script will guide you through the initial setup and the next steps. When setting up plex_debrid, you will be prompted to choose the 5 main services that this script connects:
 >  4. Pick and setup at least one **content service** which plex_debrid should monitor for new content
 >  5. Pick and setup a **library collection service**, which plex_debrid will use to determine your current media collection. If you intent to run a plex server, choose plex.
