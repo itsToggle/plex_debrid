@@ -449,8 +449,7 @@ class media:
                 trakt.current_user = trakt.users[0]
                 try:
                     if trakt_match.type == 'show':
-                        return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,
-                                                                                        '%Y-%m-%dT%H:%M:%S.000Z')
+                        return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')
                     elif trakt_match.type == 'movie':
                         release_date = None
                         releases, header = trakt.get(
@@ -459,21 +458,16 @@ class media:
                             if release.release_type == 'digital' or release.release_type == 'physical' or release.release_type == 'tv':
                                 if release_date == None:
                                     release_date = release.release_date
-                                elif datetime.datetime.strptime(release_date,
-                                                                '%Y-%m-%d') > datetime.datetime.strptime(
-                                        release.release_date, '%Y-%m-%d'):
+                                elif datetime.datetime.strptime(release_date,'%Y-%m-%d') > datetime.datetime.strptime(release.release_date, '%Y-%m-%d'):
                                     release_date = release.release_date
                         # If no release date was found, select the theatrical release date + 2 Month delay
                         if release_date == None:
                             for release in releases:
                                 if release_date == None:
                                     release_date = release.release_date
-                                elif datetime.datetime.strptime(release_date,
-                                                                '%Y-%m-%d') > datetime.datetime.strptime(
-                                        release.release_date, '%Y-%m-%d'):
+                                elif datetime.datetime.strptime(release_date,'%Y-%m-%d') > datetime.datetime.strptime(release.release_date, '%Y-%m-%d'):
                                     release_date = release.release_date
-                            release_date = datetime.datetime.strptime(release_date,
-                                                                        '%Y-%m-%d') + datetime.timedelta(days=60)
+                            release_date = datetime.datetime.strptime(release_date,'%Y-%m-%d') + datetime.timedelta(days=60)
                             release_date = release_date.strftime("%Y-%m-%d")
                         # Get trakt 'Latest HD/4k Releases' Lists to accept early releases
                         trakt_lists, header = trakt.get(
@@ -483,19 +477,18 @@ class media:
                             if regex.search(r'(latest|new).*?(releases)', trakt_list.name, regex.I):
                                 match = True
                         # if release_date and delay have passed or the movie was released early
-                        return datetime.datetime.utcnow() > datetime.datetime.strptime(release_date,
-                                                                                        '%Y-%m-%d') or match
+                        return datetime.datetime.utcnow() > datetime.datetime.strptime(release_date,'%Y-%m-%d') or match
                     elif trakt_match.type == 'season':
-                        return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,
-                                                                                        '%Y-%m-%dT%H:%M:%S.000Z')
+                        try:
+                            return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')
+                        except:
+                            return True
                     elif trakt_match.type == 'episode':
-                        return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,
-                                                                                        '%Y-%m-%dT%H:%M:%S.000Z')
+                        return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')
                 except:
                     return False
         elif self.type == 'movie':
-            released = datetime.datetime.today() - datetime.datetime.strptime(self.originallyAvailableAt,
-                                                                                '%Y-%m-%d')
+            released = datetime.datetime.today() - datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
             if released.days < 0:
                 return False
         return True
