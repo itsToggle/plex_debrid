@@ -329,18 +329,15 @@ class media:
         elif self.type == 'show':
             title = releases.rename(self.title)
             title = title.replace('.' + str(self.year), '')
-            return '(' + title + '.)((' + str(
-                self.year) + '.)|(complete.)|(seasons?.[0-9]+.[0-9]?[0-9]?.?)|(S[0-9]+.[0-9]?[0-9]?.?)|(S[0-9]+E[0-9]+))'
+            return '(' + title + '.)(series.)?((' + str(self.year) + '.)|(complete.)|(seasons?.[0-9]+.[0-9]?[0-9]?.?)|(S[0-9]+.[0-9]?[0-9]?.?)|(S[0-9]+E[0-9]+))'
         elif self.type == 'season':
             title = releases.rename(self.parentTitle)
             title = title.replace('.' + str(self.parentYear), '')
-            return '(' + title + '.)(' + str(self.parentYear) + '.)?(season.[0-9]+.)?' + '(S' + str(
-                "{:02d}".format(self.index)) + '.)'
+            return '(' + title + '.)(series.)?(' + str(self.parentYear) + '.)?(season.' + str(self.index) + '.|S' + str("{:02d}".format(self.index)) + '.)'
         elif self.type == 'episode':
             title = releases.rename(self.grandparentTitle)
             title = title.replace('.' + str(self.grandparentYear), '')
-            return '(' + title + '.)(' + str(self.grandparentYear) + '.)?(S' + str(
-                "{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index)) + '.)'
+            return '(' + title + '.)(series.)?(' + str(self.grandparentYear) + '.)?(S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index)) + '.)'
 
     def versions(self):
         versions = []
@@ -766,12 +763,6 @@ class media:
                 if debrid_downloaded:
                     refresh_ = True
                 self.Releases = scraper.scrape(self.query(), self.deviation())
-                if len(self.Releases) <= 3:
-                    if hasattr(self,"grandparentEID"):
-                        for EID in self.grandparentEID:
-                            if EID.startswith("imdb"):
-                                service,query = EID.split('://')
-                                self.Releases += scraper.scrape(query,self.deviation())
                 debrid_downloaded, retry = self.debrid_download()
                 if debrid_downloaded:
                     refresh_ = True

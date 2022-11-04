@@ -973,28 +973,44 @@ def search(query, type):
 def match(self):
     global current_user
     current_user = users[0]
-    for EID in self.EID:
-        type = self.type
-        service,query = EID.split('://')
-        response, header = get('https://api.trakt.tv/search/' + service + '/' + query + '?type=' + type + '&extended=full,episodes')
-        try:
-            if type == 'movie':
-                response[0].movie.type = 'movie'
-                response[0].movie.guid = response[0].movie.ids.trakt
-                return movie(response[0].movie)
-            elif type == 'show':
-                response[0].show.type = 'show'
-                response[0].show.guid = response[0].show.ids.trakt
-                return show(response[0].show)
-            elif type == 'season':
-                #response[0].season.type = 'season'
-                #response[0].season.guid = response[0].season.ids.trakt
-                #return season(response[0].season)
-                return None
-            elif type == 'episode':
-                response[0].episode.type = 'episode'
-                response[0].episode.guid = response[0].episode.ids.trakt
-                return episode(response[0].episode)
-        except:
-            continue
+    if self.type == "season":
+        if hasattr(self,"parentEID"):
+            for EID in self.parentEID:
+                type = "show"
+                service,query = EID.split('://')
+                response, header = get('https://api.trakt.tv/search/' + service + '/' + query + '?type=' + type + '&extended=full,episodes')
+                try:
+                    response[0].show.type = 'show'
+                    response[0].show.guid = response[0].show.ids.trakt
+                    trakt_show = show(response[0].show)
+                    for trakt_season in trakt_show.Seasons:
+                        if trakt_season == self:
+                            return trakt_season
+                except:
+                    continue
+    elif hasattr(self,"EID"):
+        for EID in self.EID:
+            type = self.type
+            service,query = EID.split('://')
+            response, header = get('https://api.trakt.tv/search/' + service + '/' + query + '?type=' + type + '&extended=full,episodes')
+            try:
+                if type == 'movie':
+                    response[0].movie.type = 'movie'
+                    response[0].movie.guid = response[0].movie.ids.trakt
+                    return movie(response[0].movie)
+                elif type == 'show':
+                    response[0].show.type = 'show'
+                    response[0].show.guid = response[0].show.ids.trakt
+                    return show(response[0].show)
+                elif type == 'season':
+                    #response[0].season.type = 'season'
+                    #response[0].season.guid = response[0].season.ids.trakt
+                    #return season(response[0].season)
+                    return None
+                elif type == 'episode':
+                    response[0].episode.type = 'episode'
+                    response[0].episode.guid = response[0].episode.ids.trakt
+                    return episode(response[0].episode)
+            except:
+                continue
     return None
