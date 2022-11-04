@@ -986,6 +986,8 @@ def match(self):
                     for trakt_season in trakt_show.Seasons:
                         if trakt_season == self:
                             return trakt_season
+                    ui_print("couldnt find season in matched show",ui_settings.debug)
+                    return None
                 except:
                     continue
     elif hasattr(self,"EID"):
