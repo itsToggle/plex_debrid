@@ -326,34 +326,31 @@ class media:
             return title + '.S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index)) + '.'
 
     def aliases(self,lan='en'):
-        if not hasattr(self,"alternate_titles") and len(sys.modules['content.services.trakt'].users) > 0:
+        if len(sys.modules['content.services.trakt'].users) > 0:
+            if not hasattr(self,"alternate_titles"):
+                self.alternate_titles = []
             self.match('content.services.trakt')
             aliases = sys.modules['content.services.trakt'].aliases(self,lan)
             translations = sys.modules['content.services.trakt'].translations(self,lan)
-            if self.isanime():
-                anime_aliases = sys.modules['content.services.trakt'].aliases(self,'jp')
-                anime_translations = sys.modules['content.services.trakt'].translations(self,'jp')
-                if not len(anime_aliases) == 0:
-                    aliases += anime_aliases
-                if not len(anime_translations) == 0:
-                    aliases += anime_translations
-            if not len(translations) == 0:
+            if not len(translations) == 0 and not len(aliases) == 0:
                 aliases = translations + aliases
-            if lan == 'en' or len(aliases) == 0:
+            elif not len(translations) == 0:
+                aliases = translations
+            if (lan == 'en' or len(aliases) == 0) and not releases.rename(self.title) in self.alternate_titles:
                 aliases.insert(0,self.title)
-            renamed_aliases = []
+            elif not releases.rename(self.title) in self.alternate_titles:
+                aliases += [self.title]
             for title in aliases:
                 title = releases.rename(title)
-                if not title in renamed_aliases:
-                    renamed_aliases += [title]
-            self.alternate_titles = renamed_aliases
+                if not title in self.alternate_titles:
+                    self.alternate_titles += [title]
             if self.type == "show":
                 if hasattr(self,'Seasons'):
                     for season in self.Seasons:
-                        season.alternate_titles = renamed_aliases
+                        season.alternate_titles = self.alternate_titles
                         if hasattr(season,'Episodes'):
                             for episode in season.Episodes:
-                                episode.alternate_titles = renamed_aliases
+                                episode.alternate_titles = self.alternate_titles
         else:
             self.alternate_titles = [releases.rename(self.title)]
     
@@ -675,7 +672,12 @@ class media:
                 if self.released() and not self.watched() and not self.downloading():
                     tic = time.perf_counter()
                     alternate_years = [self.year, self.year - 1, self.year + 1]
-                    self.aliases()
+                    langs = []
+                    for version in self.versions():
+                        if not version.lang in langs and not version.lang == 'en':
+                            self.aliases(version.lang)
+                            langs += [version.lang]
+                    self.aliases('en')
                     for year in alternate_years:
                         i = 0
                         while len(self.Releases) == 0 and i <= retries:
@@ -720,7 +722,12 @@ class media:
                 if len(self.Seasons) > 0:
                     tic = time.perf_counter()
                     self.isanime()
-                    self.aliases()
+                    langs = []
+                    for version in self.versions():
+                        if not version.lang in langs and not version.lang == 'en':
+                            self.aliases(version.lang)
+                            langs += [version.lang]
+                    self.aliases('en')
                     imdb_scraped = False
                     # if there is more than one uncollected season
                     if len(self.Seasons) > 1:

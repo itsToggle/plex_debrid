@@ -970,6 +970,7 @@ def aliases(self,lan):
     return aliases
 
 def translations(self,lan):
+    global current_user
     translations = []
     if not lan == 'en':
         if len(users) > 0:

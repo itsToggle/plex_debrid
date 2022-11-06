@@ -29,7 +29,7 @@ def scrape(query, altquery="(.*)"):
         release.title = ''.join([i if ord(i) < 128 else '' for i in release.title])
     ui_print('done - found ' + str(len(scraped_releases)) + ' releases')
     for release in scraped_releases:
-        ui_print("release: " + release.title,debug=ui_settings.debug)
+        ui_print("found release: " + release.title,debug=ui_settings.debug)
     return scraped_releases
 
 # Multiprocessing scrape method

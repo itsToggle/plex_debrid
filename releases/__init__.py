@@ -114,6 +114,8 @@ class sort:
                 version_[0] = name
                 if version_[1] == "both":
                     version_[1] = copy.deepcopy(sort.default_triggers)
+                if version_[2] == "true":
+                    version_[2] = copy.deepcopy(sort.default_language)
                 if new:
                     ui_cls('Options/Settings/Scraper Settings/Versions/Add')
                     print(
@@ -160,8 +162,11 @@ class sort:
                                 l_a - len(rule[0])) + ' ' + rule[1] + ' ' * (l_s - len(rule[1])) + ': ' + ' ' * (
                                         l_o - len(rule[2])) + rule[2] + '  ' + rule[3])
                 print()
+                print("[scraping language] : '" + version_[2] + "'")
+                print()
                 print("To edit a rule or a trigger enter their index or letter")
                 print("To add a rule or a trigger type 'rule' or 'trigger'")
+                print("To change the scraping language of this version, type 'lang'")
                 print("To rename this version, type 'rename'")
                 if len(sort.versions) > 1:
                     print("To delete this version, type 'remove'")
@@ -178,6 +183,14 @@ class sort:
                     sort.version.rule.setup(choice, default, new=True)
                 elif choice == 'trigger':
                     sort.version.trigger.setup(choice, version_[1], new=True)
+                elif choice == 'lang':
+                    lang = "not a lang"
+                    langs = []
+                    for l_c in lan_ctr:
+                        langs += [l_c[0]]
+                    while lang not in langs:
+                        lang = input("Please enter a 2-letter language code: ")
+                    version_[2] = lang
                 elif choice == 'rename':
                     ui_cls('Options/Settings/Scraper Settings/Versions/Add')
                     names = []
@@ -857,11 +870,16 @@ class sort:
             def check(self):
                 try:
                     regex.search(self, self, regex.I)
-                    return True
+                    if self in ["action","adventure","animation","anime","comedy","crime","disaster","documentary","Donghua","drama","eastern","family","fan-film","fantasy","film-noir","history","holiday","horror","indie","music","musical","mystery","none","road","romance","science-fiction","short","sports","sporting-event","suspense","thriller","tv-movie","war","western"]:
+                        return True
+                    print("This value is not in the correct format. Please enter a valid genre from this list:")
+                    print('["action","adventure","animation","anime","comedy","crime","disaster","documentary","Donghua","drama","eastern","family","fan-film","fantasy","film-noir","history","holiday","horror","indie","music","musical","mystery","none","road","romance","science-fiction","short","sports","sporting-event","suspense","thriller","tv-movie","war","western"]:')
+                    print()
+                    return False
                 except:
                     print()
-                    print(
-                        "This value is not in the correct format. Please make sure this value is a valid regex expression and no characters are escaped accidentally.")
+                    print("This value is not in the correct format. Please enter a valid genre from this list:")
+                    print('["action","adventure","animation","anime","comedy","crime","disaster","documentary","Donghua","drama","eastern","family","fan-film","fantasy","film-noir","history","holiday","horror","indie","music","musical","mystery","none","road","romance","science-fiction","short","sports","sporting-event","suspense","thriller","tv-movie","war","western"]:')
                     print()
                     return False
             def apply(self,element):
@@ -878,12 +896,14 @@ class sort:
                 except:
                     return False
 
-        def __init__(self, name, triggers, required, rules) -> None:
+        def __init__(self, name, triggers, lang, rules) -> None:
             self.name = name
             self.triggers = triggers
             if self.triggers == "both":
                 self.triggers = copy.deepcopy(sort.default_triggers)
-            self.required = required
+            self.lang = lang
+            if self.lang == "true":
+                self.lang = copy.deepcopy(sort.default_language)
             self.rules = rules
 
         def applies(self,element):
@@ -897,6 +917,7 @@ class sort:
             return True
 
     default_triggers = [["retries","<=","48"],["media type","all",""],]
+    default_language = "en"
     unwanted = ['sample']
     versions = [
         ["1080p SDR",
