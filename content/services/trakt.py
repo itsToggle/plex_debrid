@@ -206,8 +206,7 @@ class watchlist(classes.watchlist):
             current_user = user
             if list_type == "watchlist":
                 try:
-                    watchlist_items, header = get(
-                        'https://api.trakt.tv/users/me/watchlist/movies,shows?extended=full')
+                    watchlist_items, header = get('https://api.trakt.tv/users/me/watchlist/movies,shows?extended=full')
                     for element in watchlist_items:
                         if hasattr(element, 'show'):
                             element.show.type = 'show'
@@ -239,8 +238,7 @@ class watchlist(classes.watchlist):
                     continue
             else:
                 try:
-                    watchlist_items, header = get(
-                        'https://api.trakt.tv' + list + '/items/movies,shows?extended=full')
+                    watchlist_items, header = get('https://api.trakt.tv' + list + '/items/movies,shows?extended=full')
                     for element in watchlist_items:
                         if hasattr(element, 'show'):
                             element.show.type = 'show'
@@ -953,6 +951,37 @@ class library(classes.library):
                 ui_print("[trakt] error: couldnt check ignore status for item: " + str(e), debug=ui_settings.debug)
                 return None
 
+def aliases(self,lan):
+    global current_user
+    ctrs = []
+    for l in lan_ctr:
+        if lan == l[0]:
+            ctrs = l[1]
+    aliases = []
+    if len(users) > 0:
+        current_user = users[0]
+        type = ("shows" if self.type in ["show","season","episode"] else "movies")
+        response, header = get('https://api.trakt.tv/'+type+'/' + str(self.ids.trakt) + '/aliases')
+        if not response == None:
+            if len(response) > 0:
+                for alias in response:
+                    if alias.country in ctrs:
+                        aliases += [alias.title]
+    return aliases
+
+def translations(self,lan):
+    translations = []
+    if not lan == 'en':
+        if len(users) > 0:
+            current_user = users[0]
+            type = ("shows" if self.type in ["show","season","episode"] else "movies")
+            response, header = get('https://api.trakt.tv/'+type+'/' + str(self.ids.trakt) + '/translations/'+lan)
+            if not response == None:
+                if len(response) > 0:
+                    for alias in response:
+                        translations += [alias.title]
+    return translations
+    
 def search(query, type):
     global current_user
     current_user = users[0]

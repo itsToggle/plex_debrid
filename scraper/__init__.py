@@ -6,7 +6,10 @@ from scraper import services
 
 def scrape(query, altquery="(.*)"):
     ui_print('done')
-    ui_print('scraping sources for query "' + query + '" ...')
+    if regex.search(r'(tt[0-9]+)', query, regex.I):
+        ui_print('scraping sources for IMDB ID "' + query + '" ...')
+    else:
+        ui_print('scraping sources for query "' + query + '" ...')
     ui_print('accepting title that regex match "' + altquery + '" ...', debug=ui_settings.debug)
     scrapers = services.get()
     scraped_releases = []
@@ -25,6 +28,8 @@ def scrape(query, altquery="(.*)"):
     for release in scraped_releases:
         release.title = ''.join([i if ord(i) < 128 else '' for i in release.title])
     ui_print('done - found ' + str(len(scraped_releases)) + ' releases')
+    for release in scraped_releases:
+        ui_print("release: " + release.title,debug=ui_settings.debug)
     return scraped_releases
 
 # Multiprocessing scrape method
