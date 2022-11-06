@@ -341,6 +341,8 @@ class media:
             elif not releases.rename(self.title) in self.alternate_titles:
                 aliases += [self.title]
             for title in aliases:
+                if title == None or title == []:
+                    continue
                 title = releases.rename(title)
                 if not title in self.alternate_titles:
                     self.alternate_titles += [title]
@@ -521,8 +523,7 @@ class media:
 
     def released(self):
         try:
-            released = datetime.datetime.today() - datetime.datetime.strptime(self.originallyAvailableAt,
-                                                                                '%Y-%m-%d')
+            released = datetime.datetime.today() - datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
             if self.type == 'movie':
                 if released.days >= -30 and released.days <= 60:
                     if self.available():
