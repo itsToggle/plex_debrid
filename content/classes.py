@@ -353,6 +353,13 @@ class media:
                                 episode.alternate_titles = self.alternate_titles
         else:
             self.alternate_titles = [releases.rename(self.title)]
+            if self.type == "show":
+                if hasattr(self,'Seasons'):
+                    for season in self.Seasons:
+                        season.alternate_titles = self.alternate_titles
+                        if hasattr(season,'Episodes'):
+                            for episode in season.Episodes:
+                                episode.alternate_titles = self.alternate_titles
     
     def deviation(self):
         if not self.isanime():
@@ -433,6 +440,9 @@ class media:
                     genres += [gen.slug]
         return genres
 
+    def origin(self):
+        return None
+        
     def versions(self):
         versions = []
         for version in releases.sort.versions:
