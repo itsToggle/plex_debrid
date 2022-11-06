@@ -67,13 +67,21 @@ def setup(self, new=False):
                                 indices += [str(i + 1)]
                                 add_user += [user[0] + "'s collection"]
                                 i += 1
+                            current_user = user
+                            response, header = get('https://api.trakt.tv/users/me/lists')
+                            if not response == None:
+                                for p_list in response:
+                                    if not user[0] + "'s private list: " + p_list.name in lists:
+                                        print(str(i + 1) + ') add ' + user[0] + "'s private list: " + p_list.name)
+                                        indices += [str(i + 1)]
+                                        add_user += [user[0] + "'s private list: " + p_list.name]
+                                        i += 1
                         print()
                         choice = input("Choose a list: ")
                         if choice == '0':
                             back = True
                         elif choice == '1':
-                            print(
-                                "To add a public list, please enter the lists url in the format shown by this example: (Example URL: '/users/giladg/lists/latest-releases') ")
+                            print("To add a public list, please enter the lists url in the format shown by this example: (Example URL: '/users/giladg/lists/latest-releases') ")
                             print()
                             url = input("Please enter the public list url: ")
                             current_user = users[0]
@@ -203,6 +211,9 @@ class watchlist(classes.watchlist):
                 if list == user[0] + "'s collection":
                     list_type = "collection"
                     break
+                if list.startswith(user[0] + "'s private list:"):
+                    list_type = "private"
+                    break
             current_user = user
             if list_type == "watchlist":
                 try:
@@ -236,6 +247,32 @@ class watchlist(classes.watchlist):
                 except Exception as e:
                     ui_print("[trakt error]: (exception): " + str(e), debug=ui_settings.debug)
                     continue
+            elif list_type == "private":
+                try:
+                    response, header = get('https://api.trakt.tv/users/me/lists')
+                    p_list_id = None
+                    for p_list in response:
+                        if list == user[0] + "'s private list: " + p_list.name:
+                            p_list_id = p_list.ids.trakt
+                            break
+                    if not p_list_id == None:
+                        watchlist_items, header = get('https://api.trakt.tv/users/me/lists/'+str(p_list_id)+'/items/movies,shows?extended=full')
+                        for element in watchlist_items:
+                            if hasattr(element, 'show'):
+                                element.show.type = 'show'
+                                element.show.user = user
+                                element.show.guid = element.show.ids.trakt
+                                if not element.show in self.data:
+                                    self.data.append(show(element.show))
+                            elif hasattr(element, 'movie'):
+                                element.movie.type = 'movie'
+                                element.movie.user = user
+                                element.movie.guid = element.movie.ids.trakt
+                                if not element.movie in self.data:
+                                    self.data.append(movie(element.movie))
+                except Exception as e:
+                    ui_print("[trakt error]: (exception): " + str(e), debug=ui_settings.debug)
+                    continue
             else:
                 try:
                     watchlist_items, header = get('https://api.trakt.tv' + list + '/items/movies,shows?extended=full')
@@ -263,16 +300,18 @@ class watchlist(classes.watchlist):
         refresh = False
         new_watchlist = []
         for list in lists:
-            public = True
+            list_type = "public"
             for user in users:
                 if list == user[0] + "'s watchlist":
-                    public = False
+                    list_type = "watchlist"
+                    break
+                if list.startswith(user[0] + "'s private list:"):
+                    list_type = "private"
                     break
             current_user = user
-            if not public:
+            if list_type == "watchlist":
                 try:
-                    watchlist_items, header = get(
-                        'https://api.trakt.tv/users/me/watchlist/movies,shows?extended=full')
+                    watchlist_items, header = get('https://api.trakt.tv/users/me/watchlist/movies,shows?extended=full')
                     for element in watchlist_items:
                         if hasattr(element, 'show'):
                             element.show.type = 'show'
@@ -296,6 +335,38 @@ class watchlist(classes.watchlist):
                                         0] + "'s trakt watchlist.")
                                 self.data.append(movie(element.movie))
                             new_watchlist += [element.movie]
+                except Exception as e:
+                    ui_print("[trakt error]: (exception): " + str(e), debug=ui_settings.debug)
+                    continue
+            if list_type == "private":
+                try:
+                    response, header = get('https://api.trakt.tv/users/me/lists')
+                    p_list_id = None
+                    for p_list in response:
+                        if list == user[0] + "'s private list: " + p_list.name:
+                            p_list_id = p_list.ids.trakt
+                            break
+                    if not p_list_id == None:
+                        watchlist_items, header = get('https://api.trakt.tv/users/me/lists/'+str(p_list_id)+'/items/movies,shows?extended=full')
+                        for element in watchlist_items:
+                            if hasattr(element, 'show'):
+                                element.show.type = 'show'
+                                element.show.user = user
+                                element.show.guid = element.show.ids.trakt
+                                if not element.show in self.data:
+                                    refresh = True
+                                    ui_print('[trakt] item: "' + element.show.title + '" found in ' + current_user[0] + "'s private list: "+p_list.name+".")
+                                    self.data.append(show(element.show))
+                                new_watchlist += [element.show]
+                            elif hasattr(element, 'movie'):
+                                element.movie.type = 'movie'
+                                element.movie.user = user
+                                element.movie.guid = element.movie.ids.trakt
+                                if not element.movie in self.data:
+                                    refresh = True
+                                    ui_print('[trakt] item: "' + element.movie.title + '" found in ' + current_user[0] + "'s private list: "+p_list.name+".")
+                                    self.data.append(movie(element.movie))
+                                new_watchlist += [element.movie]
                 except Exception as e:
                     ui_print("[trakt error]: (exception): " + str(e), debug=ui_settings.debug)
                     continue
@@ -337,6 +408,23 @@ class watchlist(classes.watchlist):
         data = {'movies': movies, 'shows': shows}
         current_user = user
         post('https://api.trakt.tv/sync/watchlist/remove', json.dumps(data, default=lambda o: o.__dict__))
+        try:
+            p_lists = []
+            for list in lists:
+                if list.startswith(user[0] + "'s private list: "):
+                    p_lists += [list]
+            if len(p_lists) > 0:
+                response, header = get('https://api.trakt.tv/users/me/lists')
+                p_list_id = None
+                for list in p_lists:
+                    for p_list in response:
+                        if list == user[0] + "'s private list: " + p_list.name:
+                            p_list_id = p_list.ids.trakt
+                            break
+                    if not p_list_id == None:
+                        post('https://api.trakt.tv/users/me/lists/'+p_list_id+'/items/remove', json.dumps(data, default=lambda o: o.__dict__))
+        except Exception as e:
+            ui_print("[trakt error]: (exception): " + str(e), debug=ui_settings.debug)
 
 class season(classes.media):
     def __init__(self, other):
@@ -1034,11 +1122,6 @@ def match(self):
                     response[0].show.type = 'show'
                     response[0].show.guid = response[0].show.ids.trakt
                     return show(response[0].show)
-                elif type == 'season':
-                    #response[0].season.type = 'season'
-                    #response[0].season.guid = response[0].season.ids.trakt
-                    #return season(response[0].season)
-                    return None
                 elif type == 'episode':
                     response[0].episode.type = 'episode'
                     response[0].episode.guid = response[0].episode.ids.trakt

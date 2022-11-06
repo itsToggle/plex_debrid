@@ -341,6 +341,8 @@ class media:
             elif not releases.rename(self.title) in self.alternate_titles:
                 aliases += [self.title]
             for title in aliases:
+                if title == None or title == []:
+                    continue
                 title = releases.rename(title)
                 if not title in self.alternate_titles:
                     self.alternate_titles += [title]
