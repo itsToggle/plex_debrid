@@ -319,9 +319,7 @@ class watchlist(classes.watchlist):
                             element.show.guid = element.show.ids.trakt
                             if not element.show in self.data:
                                 refresh = True
-                                ui_print(
-                                    '[trakt] item: "' + element.show.title + '" found in ' + current_user[
-                                        0] + "'s trakt watchlist.")
+                                ui_print('[trakt] item: "' + element.show.title + '" found in ' + current_user[0] + "'s trakt watchlist.")
                                 self.data.append(show(element.show))
                             new_watchlist += [element.show]
                         elif hasattr(element, 'movie'):
@@ -330,9 +328,7 @@ class watchlist(classes.watchlist):
                             element.movie.guid = element.movie.ids.trakt
                             if not element.movie in self.data:
                                 refresh = True
-                                ui_print(
-                                    '[trakt] item: "' + element.movie.title + '" found in ' + current_user[
-                                        0] + "'s trakt watchlist.")
+                                ui_print('[trakt] item: "' + element.movie.title + '" found in ' + current_user[0] + "'s trakt watchlist.")
                                 self.data.append(movie(element.movie))
                             new_watchlist += [element.movie]
                 except Exception as e:

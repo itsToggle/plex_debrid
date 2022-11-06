@@ -523,8 +523,7 @@ class media:
 
     def released(self):
         try:
-            released = datetime.datetime.today() - datetime.datetime.strptime(self.originallyAvailableAt,
-                                                                                '%Y-%m-%d')
+            released = datetime.datetime.today() - datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
             if self.type == 'movie':
                 if released.days >= -30 and released.days <= 60:
                     if self.available():
