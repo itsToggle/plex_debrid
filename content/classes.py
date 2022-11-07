@@ -441,9 +441,6 @@ class media:
                 for gen in self.Genre:
                     genres += [gen.slug]
         return genres
-
-    def origin(self):
-        return None
         
     def versions(self):
         versions = []
@@ -939,9 +936,20 @@ class media:
         if self.type == "movie" or self.type == "episode":
             media.downloaded_versions += [self.query() + ' [' + self.version.name + ']']
         elif self.type == 'show':
+            filemode = False
             for season in self.Seasons:
-                season.version = self.version
-                season.downloaded()
+                for episode in season.Episodes:
+                    for file in self.Releases[0].files:
+                        if hasattr(file, 'match'):
+                            if file.match == episode.files()[0]:
+                                episode.version = self.version
+                                episode.downloaded()
+                                filemode = True
+                                break
+            if not filemode:
+                for season in self.Seasons:
+                    season.version = self.version
+                    season.downloaded()
         elif self.type == 'season':
             for episode in self.Episodes:
                 episode.version = self.version
