@@ -377,19 +377,20 @@ class watchlist(classes.watchlist):
         global current_user
         element = copy.deepcopy(original_element)
         user = copy.deepcopy(element.user)
+        if hasattr(element,"watchlist"):
+            delattr(element,"watchlist")
         data = []
         shows = []
         movies = []
+        deleted = False
         if element.type == 'tv':
             for ids in element.ids.__dict__.copy():
                 value = getattr(element.ids, ids)
                 if not value:
                     delattr(element.ids, ids)
             for attribute in element.__dict__.copy():
-                if not (
-                        attribute == 'ids' or attribute == 'seasons' or attribute == 'title' or attribute == 'year'):
+                if not (attribute == 'ids' or attribute == 'title' or attribute == 'year'):
                     delattr(element, attribute)
-            ui_print('[trakt] item: "' + element.title + '" removed from ' + user[0] + '`s watchlist')
             shows += [element]
         elif element.type == 'movie':
             for ids in element.ids.__dict__.copy():
@@ -399,12 +400,15 @@ class watchlist(classes.watchlist):
             for attribute in element.__dict__.copy():
                 if not (attribute == 'ids' or attribute == 'title' or attribute == 'year'):
                     delattr(element, attribute)
-            ui_print('[trakt] item: "' + element.title + '" removed from ' + user[0] + '`s watchlist')
             movies += [element]
         data = {'movies': movies, 'shows': shows}
         current_user = user
-        post('https://api.trakt.tv/sync/watchlist/remove', json.dumps(data, default=lambda o: o.__dict__))
         try:
+            response = post('https://api.trakt.tv/sync/watchlist/remove', json.dumps(data, default=lambda o: o.__dict__))
+            if hasattr(response,"deleted"):
+                if response.deleted.movies > 0 or response.deleted.shows > 0:
+                    ui_print('[trakt] item: "' + element.title + '" removed from ' + user[0] + '`s watchlist')
+                    deleted = True
             p_lists = []
             for list in lists:
                 if list.startswith(user[0] + "'s private list: "):
@@ -418,9 +422,15 @@ class watchlist(classes.watchlist):
                             p_list_id = p_list.ids.trakt
                             break
                     if not p_list_id == None:
-                        post('https://api.trakt.tv/users/me/lists/'+p_list_id+'/items/remove', json.dumps(data, default=lambda o: o.__dict__))
+                        response = post('https://api.trakt.tv/users/me/lists/'+str(p_list_id)+'/items/remove', json.dumps(data, default=lambda o: o.__dict__))
+                        if hasattr(response,"deleted"):
+                            if response.deleted.movies > 0 or response.deleted.shows > 0:
+                                ui_print('[trakt] item: "' + element.title + '" removed from ' + user[0] + "'s private list: " + p_list.name)
+                                deleted = True
         except Exception as e:
             ui_print("[trakt error]: (exception): " + str(e), debug=ui_settings.debug)
+        if not deleted:
+            ui_print("[trakt error]: couldnt delete media item from any trakt list.", debug=ui_settings.debug)
 
 class season(classes.media):
     def __init__(self, other):
@@ -652,14 +662,24 @@ class library(classes.library):
                 hdr = False
             if hdr:
                 hdr = 'hdr10'
+            # remove future episodes:
+            try:
+                if element.type == 'show':
+                    if hasattr(element, 'Seasons'):
+                        for season in element.Seasons[:]:
+                            if not season.released():
+                                element.Seasons.remove(season)
+                        for season in element.Seasons:
+                            for episode in season.Episodes[:]:
+                                if not episode.released():
+                                    season.Episodes.remove(episode)
+            except:
+                ui_print("[trakt] error: couldnt remove future episodes from show",ui_settings.debug)
             # add release quality to element
             if element.type == 'show':
                 if hasattr(element, 'Seasons'):
                     for season in element.Seasons:
-                        for attribute in season.__dict__.copy():
-                            if not (attribute == 'ids' or attribute == 'episodes' or attribute == 'number'):
-                                delattr(season, attribute)
-                        for episode in season.episodes:
+                        for episode in season.Episodes:
                             if hdr:
                                 episode.media_type = 'digital'
                                 episode.resolution = resolution
@@ -667,6 +687,13 @@ class library(classes.library):
                             else:
                                 episode.media_type = 'digital'
                                 episode.resolution = resolution
+                            for attribute in episode.__dict__.copy():
+                                if not (attribute == 'number' or attribute == 'resolution' or attribute == 'media_type' or attribute == 'hdr'):
+                                    delattr(episode, attribute)
+                        season.episodes = season.Episodes
+                        for attribute in season.__dict__.copy():
+                            if not (attribute == 'ids' or attribute == 'episodes' or attribute == 'number'):
+                                delattr(season, attribute)
                 else:
                     ui_print("[trakt] error: couldnt find seasons in show object", debug=ui_settings.debug)
                 # remove unwanted attributes from element
@@ -676,8 +703,7 @@ class library(classes.library):
                     if not value:
                         delattr(element.ids, ids)
                 for attribute in element.__dict__.copy():
-                    if not (
-                            attribute == 'ids' or attribute == 'seasons' or attribute == 'title' or attribute == 'year'):
+                    if not (attribute == 'ids' or attribute == 'seasons' or attribute == 'title' or attribute == 'year'):
                         delattr(element, attribute)
                 shows += [element]
             elif element.type == 'movie':
@@ -694,15 +720,13 @@ class library(classes.library):
                     if not value:
                         delattr(element.ids, ids)
                 for attribute in element.__dict__.copy():
-                    if not (
-                            attribute == 'ids' or attribute == 'resolution' or attribute == 'media_type' or attribute == 'hdr' or attribute == 'title' or attribute == 'year'):
+                    if not (attribute == 'ids' or attribute == 'resolution' or attribute == 'media_type' or attribute == 'hdr' or attribute == 'title' or attribute == 'year'):
                         delattr(element, attribute)
                 movies += [element]
             # add element to collection
             current_user = library.refresh.user
             data = {'movies': movies, 'shows': shows}
-            response = post('https://api.trakt.tv/sync/collection',
-                                    json.dumps(data, default=lambda o: o.__dict__))
+            response = post('https://api.trakt.tv/sync/collection',json.dumps(data, default=lambda o: o.__dict__))
             ui_print('[trakt] item: ' + element.title + ' added to ' + library.refresh.user[0] + "'s collection")
 
     class ignore(classes.ignore):
