@@ -90,8 +90,7 @@ class file:
                 break
         unwanted = False
         for key in unwanted_list:
-            if regex.search(r'(' + key + ')', self.name, regex.I) or self.name.endswith(
-                    '.exe') or self.name.endswith('.txt'):
+            if regex.search(r'(' + key + ')', self.name, regex.I) or self.name.endswith('.exe') or self.name.endswith('.txt'):
                 unwanted = True
                 break
         self.wanted = wanted
@@ -136,6 +135,7 @@ def download(element, stream=True, query='', force=False):
                                 response = post('https://api.real-debrid.com/rest/1.0/torrents/addMagnet',{'magnet': str(release.download[0])})
                                 torrent_id = str(response.id)
                             except:
+                                ui_print('[realdebrid] error: could not add magnet for release: ' + release.title, ui_settings.debug)
                                 continue
                             response = post('https://api.real-debrid.com/rest/1.0/torrents/selectFiles/' + torrent_id,{'files': str(','.join(cached_ids))})
                             response = get('https://api.real-debrid.com/rest/1.0/torrents/info/' + torrent_id)
@@ -146,7 +146,7 @@ def download(element, stream=True, query='', force=False):
                                     element.downloaded_releases += [response.filename]
                                 release.download = response.links
                             else:
-                                ui_print('[realdebrid] selecting this cached file combination returned a .rar archive - trying a different file combination.', ui_settings.debug)
+                                ui_print('[realdebrid] error: selecting this cached file combination returned a .rar archive - trying a different file combination.', ui_settings.debug)
                                 delete('https://api.real-debrid.com/rest/1.0/torrents/delete/' + torrent_id)
                                 continue
                             if len(release.download) > 0:
@@ -169,6 +169,8 @@ def download(element, stream=True, query='', force=False):
                     return True
                 except:
                     continue
+        else:
+            ui_print('[realdebrid] error: rejecting release: "' + release.title + '" because it doesnt match the allowed deviation', ui_settings.debug)
     return False
 
 # (required) Check Function
@@ -183,6 +185,7 @@ def check(element, force=False):
         if len(release.hash) == 40:
             hashes += [release.hash]
         else:
+            ui_print("[realdebrid] error (missing torrent hash): ignoring release '" + release.title + "' ",ui_settings.debug)
             element.Releases.remove(release)
     if len(hashes) > 0:
         response = get('https://api.real-debrid.com/rest/1.0/torrents/instantAvailability/' + '/'.join(hashes))

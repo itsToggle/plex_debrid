@@ -34,9 +34,10 @@ def scrape(query, altquery):
                 result.title = result.title.replace(':', '').replace("'", '')
                 result.title = regex.sub(r'\.+', ".", result.title)
                 variations = result.title.split('/')
-                for variation in variations:
-                    if regex.match(r'(' + altquery.replace('.', '\.').replace("\.*", ".*") + ')', variation,regex.I):
-                        result.title = variation
+                if not altquery == '(.*)':
+                    for variation in variations:
+                        if regex.match(r'(' + altquery.replace('.', '\.').replace("\.*", ".*") + ')', variation,regex.I):
+                            result.title = variation
                 if regex.match(r'(' + altquery.replace('.', '\.').replace("\.*", ".*") + ')', result.title,regex.I) and result.protocol == 'torrent':
                     if hasattr(result, 'magnetUrl'):
                         if not result.magnetUrl == None:
@@ -71,7 +72,7 @@ def scrape(query, altquery):
 def resolve(result):
     scraped_releases = []
     try:
-        link = session.get(result.downloadUrl, allow_redirects=False, timeout=1)
+        link = session.get(result.downloadUrl, allow_redirects=False, timeout=30)
         if 'Location' in link.headers:
             if regex.search(r'(?<=btih:).*?(?=&)', str(link.headers['Location']), regex.I):
                 if not result.indexer == None and not result.size == None:
