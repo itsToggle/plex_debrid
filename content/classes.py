@@ -989,7 +989,7 @@ class media:
     def files(self):
         files = []
         if self.type == 'movie':
-            files = [self.query()]
+            files = ['(mkv|mp4)']
         elif self.type == 'show':
             for season in self.Seasons:
                 for episode in season.Episodes:

@@ -33,10 +33,11 @@ def scrape(query, altquery):
                 result.Title = result.Title.replace(' ', '.')
                 result.Title = result.Title.replace(':', '').replace("'", '')
                 result.Title = regex.sub(r'\.+', ".", result.Title)
-                variations = result.Title.split('/')
-                for variation in variations:
-                    if regex.match(r'(' + altquery.replace('.', '\.').replace("\.*", ".*") + ')', variation,regex.I):
-                        result.Title = variation
+                if not altquery == '(.*)':
+                    variations = result.Title.split('/')
+                    for variation in variations:
+                        if regex.match(r'(' + altquery.replace('.', '\.').replace("\.*", ".*") + ')', variation,regex.I):
+                            result.Title = variation
                 if regex.match(r'(' + altquery.replace('.', '\.').replace("\.*", ".*") + ')', result.Title,regex.I):
                     if not result.MagnetUri == None:
                         if not result.Tracker == None and not result.Size == None:
