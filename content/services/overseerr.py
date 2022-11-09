@@ -245,11 +245,9 @@ class requests(classes.watchlist):
         if len(users) > 0 and len(api_key) > 0:
             ui_print('[overseerr] getting all overseerr requests ...')
             try:
-                response = get(base_url + '/api/v1/request')
+                response = get(base_url + '/api/v1/request?take=1000')
                 for element in response.results:
-                    if not element in self.data and (
-                            element.requestedBy.displayName in users or users == ['all']) and [
-                        str(element.status)] in allowed_status:
+                    if not element in self.data and (element.requestedBy.displayName in users or users == ['all']) and [str(element.status)] in allowed_status:
                         self.data.append(element)
             except:
                 ui_print(
@@ -276,7 +274,7 @@ class requests(classes.watchlist):
         if len(users) > 0 and len(api_key) > 0:
             refresh = False
             try:
-                response = get(base_url + '/api/v1/request')
+                response = get(base_url + '/api/v1/request?take=1000')
                 for element in response.results:
                     if not element in self.data and (element.requestedBy.displayName in users or users == ['all']) and [str(element.status)] in allowed_status:
                         ui_print('[overseerr] found new overseerr request by user "' + element.requestedBy.displayName + '".')
