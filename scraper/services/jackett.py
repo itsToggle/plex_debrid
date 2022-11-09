@@ -31,6 +31,7 @@ def scrape(query, altquery):
                 return []
             for result in response.Results[:]:
                 result.Title = result.Title.replace(' ', '.')
+                result.Title = regex.sub(r'\.+', ".", result.Title)
                 if regex.match(r'(' + altquery.replace('.', '\.').replace("\.*", ".*") + ')', result.Title,regex.I):
                     if not result.MagnetUri == None:
                         if not result.Tracker == None and not result.Size == None:
