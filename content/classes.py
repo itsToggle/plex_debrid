@@ -381,7 +381,7 @@ class media:
                 return '[^A-Za-z0-9]+(' + title + ':?.)\(?\[?(' + str(self.year) + '|' + str(self.year - 1) + '|' + str(self.year + 1) + ')'
             elif self.type == 'show':
                 title = title.replace('.' + str(self.year), '')
-                return '[^A-Za-z0-9]+(' + title + ':?.)(series.)?((\(?' + str(self.year) + '\)?.)|(complete.)|(seasons?.[0-9]+.[0-9]?[0-9]?.?)|(S[0-9]+.[0-9]?[0-9]?.?)|(S[0-9]+E[0-9]+))'
+                return '[^A-Za-z0-9]+(' + title + ':?.)(series.)?((\(?' + str(self.year) + '\)?.)|(complete.)|(seasons?.[0-9]+.[0-9]?[0-9]?.?)|(S[0-9]+.S?[0-9]?[0-9]?.?)|(S[0-9]+E[0-9]+))'
             elif self.type == 'season':
                 title = title.replace('.' + str(self.parentYear), '')
                 return '[^A-Za-z0-9]+(' + title + ':?.)(series.)?(\(?' + str(self.parentYear) + '\)?.)?(season.' + str(self.index) + '.|season.' + str("{:02d}".format(self.index)) + '.|S' + str("{:02d}".format(self.index)) + '.)'
