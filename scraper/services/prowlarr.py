@@ -72,7 +72,7 @@ def scrape(query, altquery):
 def resolve(result):
     scraped_releases = []
     try:
-        link = session.get(result.downloadUrl, allow_redirects=False, timeout=30)
+        link = session.get(result.downloadUrl, allow_redirects=False, timeout=1)
         if 'Location' in link.headers:
             if regex.search(r'(?<=btih:).*?(?=&)', str(link.headers['Location']), regex.I):
                 if not result.indexer == None and not result.size == None:
