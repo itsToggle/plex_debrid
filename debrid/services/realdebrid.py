@@ -10,24 +10,34 @@ short = "RD"
 api_key = ""
 # Define Variables
 session = requests.Session()
-
+errors = [
+    [202," action already done"],
+    [400," bad Request (see error message)"],
+    [403," permission denied (account locked, not premium)"],
+    [503," service unavailable (see error message)"],
+    [404," wrong parameter (invalid file id(s)) / unknown ressource (invalid id)"],
+    ]
 def setup(cls, new=False):
     from debrid.services import setup
     setup(cls,new)
 
 # Error Log
 def logerror(response):
-    if not response.status_code == 200:
-        ui_print("[realdebrid] error: " + str(response.content), debug=ui_settings.debug)
+    if not response.status_code in [200,201,204]:
+        desc = ""
+        for error in errors:
+            if response.status_code == error[0]:
+                desc = error[1]
+        ui_print("[realdebrid] error: (" + str(response.status_code) + desc + ") " + str(response.content), debug=ui_settings.debug)
     if response.status_code == 401:
-        ui_print(
-            "[realdebrid] error: (401 unauthorized): realdebrid api key does not seem to work. check your realdebrid settings.")
+        ui_print("[realdebrid] error: (401 unauthorized): realdebrid api key does not seem to work. check your realdebrid settings.")
+    if response.status_code == 403:
+        ui_print("[realdebrid] error: (403 unauthorized): your realdebrid account is either locked or you dont have premium.")
 
 # Get Function
 def get(url):
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36',
-        'authorization': 'Bearer ' + api_key}
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36','authorization': 'Bearer ' + api_key}
     try:
         response = session.get(url, headers=headers)
         logerror(response)
@@ -40,8 +50,7 @@ def get(url):
 # Post Function
 def post(url, data):
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36',
-        'authorization': 'Bearer ' + api_key}
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36','authorization': 'Bearer ' + api_key}
     try:
         response = session.post(url, headers=headers, data=data)
         logerror(response)
@@ -57,9 +66,7 @@ def post(url, data):
 
 # Delete Function
 def delete(url):
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36',
-        'authorization': 'Bearer ' + api_key}
+    headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36','authorization': 'Bearer ' + api_key}
     try:
         requests.delete(url, headers=headers)
         # time.sleep(1)
@@ -115,8 +122,7 @@ def download(element, stream=True, query='', force=False):
         wanted = element.files()
     for release in cached[:]:
         # if release matches query
-        if regex.match(r'(' + query.replace('.', '\.').replace("\.*", ".*") + ')', release.title,
-                        regex.I) or force:
+        if regex.match(r'(' + query.replace('.', '\.').replace("\.*", ".*") + ')', release.title,regex.I) or force:
             if stream:
                 release.size = 0
                 for version in release.files:
@@ -127,17 +133,12 @@ def download(element, stream=True, query='', force=False):
                                 cached_ids += [file.id]
                             # post magnet to real debrid
                             try:
-                                response = post(
-                                    'https://api.real-debrid.com/rest/1.0/torrents/addMagnet',
-                                    {'magnet': str(release.download[0])})
+                                response = post('https://api.real-debrid.com/rest/1.0/torrents/addMagnet',{'magnet': str(release.download[0])})
                                 torrent_id = str(response.id)
                             except:
                                 continue
-                            response = post(
-                                'https://api.real-debrid.com/rest/1.0/torrents/selectFiles/' + torrent_id,
-                                {'files': str(','.join(cached_ids))})
-                            response = get(
-                                'https://api.real-debrid.com/rest/1.0/torrents/info/' + torrent_id)
+                            response = post('https://api.real-debrid.com/rest/1.0/torrents/selectFiles/' + torrent_id,{'files': str(','.join(cached_ids))})
+                            response = get('https://api.real-debrid.com/rest/1.0/torrents/info/' + torrent_id)
                             if len(response.links) == len(cached_ids):
                                 if not hasattr(element,"downloaded_releases"):
                                     element.downloaded_releases = [response.filename]
@@ -145,15 +146,13 @@ def download(element, stream=True, query='', force=False):
                                     element.downloaded_releases += [response.filename]
                                 release.download = response.links
                             else:
-                                delete(
-                                    'https://api.real-debrid.com/rest/1.0/torrents/delete/' + torrent_id)
+                                ui_print('[realdebrid] selecting this cached file combination returned a .rar archive - trying a different file combination.', ui_settings.debug)
+                                delete('https://api.real-debrid.com/rest/1.0/torrents/delete/' + torrent_id)
                                 continue
                             if len(release.download) > 0:
                                 for link in release.download:
                                     try:
-                                        response = post(
-                                            'https://api.real-debrid.com/rest/1.0/unrestrict/link',
-                                            {'link': link})
+                                        response = post('https://api.real-debrid.com/rest/1.0/unrestrict/link',{'link': link})
                                     except:
                                         break
                                 release.files = version.files
@@ -163,12 +162,9 @@ def download(element, stream=True, query='', force=False):
                 return False
             else:
                 try:
-                    response = post('https://api.real-debrid.com/rest/1.0/torrents/addMagnet',
-                                                        {'magnet': release.download[0]})
+                    response = post('https://api.real-debrid.com/rest/1.0/torrents/addMagnet',{'magnet': release.download[0]})
                     time.sleep(0.1)
-                    post(
-                        'https://api.real-debrid.com/rest/1.0/torrents/selectFiles/' + str(response.id),
-                        {'files': 'all'})
+                    post('https://api.real-debrid.com/rest/1.0/torrents/selectFiles/' + str(response.id),{'files': 'all'})
                     ui_print('[realdebrid] adding uncached release: ' + release.title)
                     return True
                 except:
@@ -189,8 +185,7 @@ def check(element, force=False):
         else:
             element.Releases.remove(release)
     if len(hashes) > 0:
-        response = get(
-            'https://api.real-debrid.com/rest/1.0/torrents/instantAvailability/' + '/'.join(hashes))
+        response = get('https://api.real-debrid.com/rest/1.0/torrents/instantAvailability/' + '/'.join(hashes))
         for release in element.Releases:
             release.files = []
             if hasattr(response, release.hash.lower()):
@@ -199,10 +194,7 @@ def check(element, force=False):
                         for cashed_version in getattr(response, release.hash.lower()).rd:
                             version_files = []
                             for file_ in cashed_version.__dict__:
-                                debrid_file = file(file_,
-                                                                        getattr(cashed_version, file_).filename,
-                                                                        getattr(cashed_version, file_).filesize,
-                                                                        wanted, unwanted)
+                                debrid_file = file(file_,getattr(cashed_version, file_).filename,getattr(cashed_version, file_).filesize,wanted, unwanted)
                                 version_files.append(debrid_file)
                             release.files += [version(version_files), ]
                         # select cached version that has the most needed, most wanted, least unwanted files and most files overall

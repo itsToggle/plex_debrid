@@ -21,13 +21,13 @@ def scrape(query, altquery):
         try:
             response = session.get(url, timeout=60)
         except:
-            ui_print('jackett error: jackett request timed out.')
+            ui_print('[jackett] error: jackett request timed out.')
             return []
         if response.status_code == 200:
             try:
                 response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
             except:
-                ui_print('jackett error: jackett didnt return any data.')
+                ui_print('[jackett] error: jackett didnt return any data.')
                 return []
             for result in response.Results[:]:
                 result.Title = result.Title.replace(' ', '.')
@@ -69,7 +69,7 @@ def scrape(query, altquery):
 def resolve(result):
     scraped_releases = []
     try:
-        link = session.get(result.Link, allow_redirects=False, timeout=1)
+        link = session.get(result.Link, allow_redirects=False, timeout=30)
         if 'Location' in link.headers:
             if regex.search(r'(?<=btih:).*?(?=&)', str(link.headers['Location']), regex.I):
                 if not result.Tracker == None and not result.Size == None:
@@ -94,6 +94,7 @@ def resolve(result):
                     releases.release('[jackett: unnamed]', 'torrent', result.Title, [], float(result.Size) / 1000000000,[magnet], seeders=result.Seeders)]
             return scraped_releases
     except:
+        ui_print("[jackett] error: resolver couldnt get magnet/torrent for release: " + result.Title,ui_settings.debug)
         return scraped_releases
 
 # Multiprocessing watchlist method
