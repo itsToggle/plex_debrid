@@ -956,7 +956,11 @@ class media:
                 episode.downloaded()
 
     def debrid_download(self):
+        if len(self.Releases) > 0:
+            ui_print("checking cache status for scraped releases on: [" + "],[".join(debrid.services.active) + "] ...")
         debrid.check(self)
+        if len(self.Releases) > 0:
+            ui_print("done")
         scraped_releases = copy.deepcopy(self.Releases)
         downloaded = []
         if len(scraped_releases) > 0:
