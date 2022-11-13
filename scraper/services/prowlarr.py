@@ -35,7 +35,7 @@ def scrape(query, altquery):
                 result.title = regex.sub(r'\.+', ".", result.title)
                 if not altquery == '(.*)':
                     variations = result.title.split('/')
-                    variations += result.title.split[']']
+                    variations += result.title.split(']')
                     for variation in variations:
                         if regex.match(r'(' + altquery.replace('.', '\.').replace("\.*", ".*") + ')', variation,regex.I):
                             result.title = variation
