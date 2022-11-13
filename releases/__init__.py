@@ -31,11 +31,18 @@ class rename:
         ['&', 'and'],
         ['ü', 'ue'],
         ['ä', 'ae'],
+        ['â', 'a'],
+        ['á', 'a'],
+        ['à', 'a'],
         ['ö', 'oe'],
+        ['ô', 'o'],
         ['ß', 'ss'],
         ['é', 'e'],
         ['è', 'e'],
+        ['î', 'i'],
         ['sh!t', 'shit'],
+        ['f**k', 'fuck'],
+        ['f**king', 'fucking'],
         [':', ''],
         ['(', ''],
         [')', ''],
@@ -47,6 +54,7 @@ class rename:
         [' - ', ' '],
         ["'", ''],
         ["\u200b", ''],
+        ['*', ''],
         [' ', '.']
     ]
 
@@ -158,9 +166,10 @@ class sort:
                     if len(rule[2]) >= l_o:
                         l_o = len(rule[2]) + 1
                 for index, rule in enumerate(default):
-                    print(str(index + 1) + ')' + ' ' * (l_i - len(str(index + 1))) + rule[0] + ' ' * (
-                                l_a - len(rule[0])) + ' ' + rule[1] + ' ' * (l_s - len(rule[1])) + ': ' + ' ' * (
-                                        l_o - len(rule[2])) + rule[2] + '  ' + rule[3])
+                    if rule[2] in ["highest","lowest"]:
+                        print(str(index + 1) + ')' + ' ' * (l_i - len(str(index + 1))) + rule[0] + ' ' * (l_a - len(rule[0])) + ' ' + rule[1] + ' ' * (l_s - len(rule[1])) + ': ' + ' ' * (l_o - len(rule[2])) + rule[2] + '  ')
+                    else:
+                        print(str(index + 1) + ')' + ' ' * (l_i - len(str(index + 1))) + rule[0] + ' ' * (l_a - len(rule[0])) + ' ' + rule[1] + ' ' * (l_s - len(rule[1])) + ': ' + ' ' * (l_o - len(rule[2])) + rule[2] + '  ' + rule[3])
                 print()
                 print("[scraping language] : '" + version_[2] + "'")
                 print()
@@ -704,6 +713,112 @@ class sort:
                     ui_print("version rule exception - ignoring this rule")
                     return scraped_releases
 
+        class files(rule):
+            name = "files"
+            operators = ["include", "exclude"]
+
+            def apply(self, scraped_releases: list):
+                try:
+                    if self.required:
+                        if self.operator == "include":
+                            for release in scraped_releases[:]:
+                                remove = True
+                                if not hasattr(release,"files"):
+                                    continue
+                                if len(getattr(release, "files")) == 0:
+                                    continue
+                                for version in release.files[:]:
+                                    if hasattr(version,"name"):
+                                        if bool(regex.search(self.value, version.name, regex.I)):
+                                            remove = False
+                                    elif hasattr(version,"files"):
+                                        remove_version = True
+                                        for file in version.files:
+                                            if bool(regex.search(self.value, file.name, regex.I)):
+                                                remove = False
+                                                remove_version = False
+                                        if remove_version:
+                                            release.files.remove(version)
+                                if remove or len(release.files) == 0:
+                                    scraped_releases.remove(release)
+                            return scraped_releases
+                        elif self.operator == "exclude":
+                            for release in scraped_releases[:]:
+                                remove = False
+                                if not hasattr(release,"files"):
+                                    continue
+                                if len(getattr(release, "files")) == 0:
+                                    continue
+                                for version in release.files[:]:
+                                    if hasattr(version,"name"):
+                                        if bool(regex.search(self.value, version.name, regex.I)):
+                                            remove = True
+                                    elif hasattr(version,"files"):
+                                        remove_version = False
+                                        for file in version.files:
+                                            if bool(regex.search(self.value, file.name, regex.I)):
+                                                remove = True
+                                                remove_version = True
+                                        if remove_version:
+                                            release.files.remove(version)
+                                if remove or len(release.files) == 0:
+                                    scraped_releases.remove(release)
+                            return scraped_releases
+                    else:
+                        if self.operator == "cached":
+                            scraped_releases.sort(key=lambda s: len(getattr(s, self.attribute)), reverse=True)
+                            return scraped_releases
+                        if self.operator == "include":
+                            for release in scraped_releases:
+                                release.file_name_sorting = 0
+                                if not hasattr(release,"files"):
+                                    continue
+                                for version in release.files:
+                                    version.file_name_sorting = 0
+                                    if hasattr(version,"name"):
+                                        if bool(regex.search(self.value, version.name, regex.I)):
+                                            release.file_name_sorting = 1
+                                    elif hasattr(version,"files"):
+                                        for file in version.files:
+                                            if bool(regex.search(self.value, file.name, regex.I)):
+                                                release.file_name_sorting = 1
+                                                version.file_name_sorting = 1
+                                release.files.sort(key=lambda s: s.file_name_sorting, reverse=True)
+                            scraped_releases.sort(key=lambda s: s.file_name_sorting, reverse=True)
+                            return scraped_releases
+                        elif self.operator == "exclude":
+                            for release in scraped_releases:
+                                release.file_name_sorting = 1
+                                if not hasattr(release,"files"):
+                                    continue
+                                for version in release.files:
+                                    version.file_name_sorting = 1
+                                    if hasattr(version,"name"):
+                                        if bool(regex.search(self.value, version.name, regex.I)):
+                                            release.file_name_sorting = 0
+                                    elif hasattr(version,"files"):
+                                        for file in version.files:
+                                            if bool(regex.search(self.value, file.name, regex.I)):
+                                                release.file_name_sorting = 0
+                                                version.file_name_sorting = 0
+                                release.files.sort(key=lambda s: s.file_name_sorting, reverse=True)
+                            scraped_releases.sort(key=lambda s: s.file_name_sorting, reverse=True)
+                            return scraped_releases
+                except:
+                    ui_print("version rule exception - ignoring this rule")
+                    return scraped_releases
+
+            def check(self):
+                try:
+                    regex.search(self, self, regex.I)
+                    return True
+                except:
+                    print()
+                    print(
+                        "This value is not in the correct format. Please make sure this value is a valid regex expression and no characters are escaped accidentally.")
+                    print()
+                    return False
+
         class retries(trigger):
             name = "retries"
             operators = ["==",">=", "<="]
@@ -933,7 +1048,7 @@ class sort:
             ["title", "requirement", "exclude", "(\.DV\.|\.3D\.|\.H?D?.?CAM\.|\.HDTS\.)"],
             ["title", "requirement", "exclude", "(\.HDR\.)"],
             ["title", "preference", "include", "(EXTENDED|REMASTERED)"],
-            ["size", "preference", "lowest", ""],
+            ["size", "preference", "highest", ""],
             ["seeders", "preference", "highest", ""],
             ["size", "requirement", ">=", "0.1"],
         ]],
