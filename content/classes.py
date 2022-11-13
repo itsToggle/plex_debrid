@@ -324,6 +324,29 @@ class media:
         elif self.type == 'episode':
             title = title.replace('.' + str(self.grandparentYear), '')
             return title + '.S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index)) + '.'
+    
+    def anime_query(self,title=""):
+        if title == "":
+            if self.type == 'movie':
+                title = releases.rename(self.title)
+            elif self.type == 'show':
+                title = releases.rename(self.title)
+            elif self.type == 'season':
+                title = releases.rename(self.parentTitle)
+            elif self.type == 'episode':
+                title = releases.rename(self.grandparentTitle)
+        if self.type == 'movie':
+            title = title.replace('.' + str(self.year), '')
+            return title + '.' + str(self.year)
+        elif self.type == 'show':
+            title = title.replace('.' + str(self.year), '')
+            return title
+        elif self.type == 'season':
+            title = title.replace('.' + str(self.parentYear), '')
+            return title + '.' + str(self.anime_season) + '.'
+        elif self.type == 'episode':
+            title = title.replace('.' + str(self.grandparentYear), '')
+            return title + '.' + str(self.anime_count) + '.'
 
     def aliases(self,lan='en'):
         if len(sys.modules['content.services.trakt'].users) > 0:
@@ -420,12 +443,14 @@ class media:
                 if hasattr(self,'Seasons'):
                     for season in self.Seasons:
                         season.genres = ['anime']
+                        season.anime_season = str(self.anime_count)
                         if hasattr(season,'Episodes'):
                             for episode in season.Episodes:
                                 self.anime_count += 1
                                 episode.genres = ['anime']
                                 episode.anime_count = str(self.anime_count)
                         season.anime_count = '-0*(' + str(self.anime_count) + '|' + str(self.anime_count+1) + ')'
+                        season.anime_season = season.anime_season + '-' + str(self.anime_count)
                 self.anime_count = '-0*(' + str(self.anime_count) + '|' + str(self.anime_count+1) + ')'
             return True
         return False
@@ -725,11 +750,11 @@ class media:
                         self.watch()
         elif self.type == 'show':
             if self.released() and (not self.collected(library) or self.version_missing()) and not self.watched():
+                self.isanime()
                 self.Seasons = self.uncollected(library)
                 # if there are uncollected episodes
                 if len(self.Seasons) > 0:
                     tic = time.perf_counter()
-                    self.isanime()
                     langs = []
                     for version in self.versions():
                         if not version.lang in langs and not version.lang == 'en':
@@ -872,6 +897,11 @@ class media:
                         if len(self.Releases) > 0:
                             break
                     i += 1
+                if self.isanime():
+                    for title in self.alternate_titles:
+                        self.Releases += scraper.scrape(self.anime_query(title), self.deviation())
+                        if len(self.Releases) > 0:
+                            break
                 if len(self.Releases) <= 5:
                     imdb_scraped = True
                     if hasattr(self,"parentEID"):
@@ -924,6 +954,11 @@ class media:
                     self.Releases = scraper.scrape(self.query(title), self.deviation())
                     if len(self.Releases) > 0:
                         break
+                if self.isanime():
+                    for title in self.alternate_titles:
+                        self.Releases += scraper.scrape(self.anime_query(title), self.deviation())
+                        if len(self.Releases) > 0:
+                            break
                 debrid_downloaded, retry = self.debrid_download()
                 if debrid_downloaded:
                     refresh_ = True
