@@ -337,16 +337,16 @@ class media:
                 title = releases.rename(self.grandparentTitle)
         if self.type == 'movie':
             title = title.replace('.' + str(self.year), '')
-            return title + '.' + str(self.year)
+            return title.replace('.',' ') + ' ' + str(self.year)
         elif self.type == 'show':
             title = title.replace('.' + str(self.year), '')
-            return title
+            return title.replace('.',' ')
         elif self.type == 'season':
             title = title.replace('.' + str(self.parentYear), '')
-            return title + '.' + str(self.anime_season) + '.'
+            return title.replace('.',' ') + ' ' + str(self.anime_season) + ' '
         elif self.type == 'episode':
             title = title.replace('.' + str(self.grandparentYear), '')
-            return title + '.' + str(self.anime_count) + '.'
+            return title.replace('.',' ') + ' ' + str(self.anime_count)
 
     def aliases(self,lan='en'):
         if len(sys.modules['content.services.trakt'].users) > 0:
@@ -407,7 +407,7 @@ class media:
                 return '[^A-Za-z0-9]*(' + title + ':?.)(series.)?((\(?' + str(self.year) + '\)?.)|(complete.)|(seasons?.[0-9]+.[0-9]?[0-9]?.?)|(S[0-9]+.S?[0-9]?[0-9]?.?)|(S[0-9]+E[0-9]+))'
             elif self.type == 'season':
                 title = title.replace('.' + str(self.parentYear), '')
-                return '[^A-Za-z0-9]*(' + title + ':?.)(series.)?(\(?' + str(self.parentYear) + '\)?.)?(season.' + str(self.index) + '.|season.' + str("{:02d}".format(self.index)) + '.|S' + str("{:02d}".format(self.index)) + '.)'
+                return '[^A-Za-z0-9]*(' + title + ':?.)(series.)?(\(?' + str(self.parentYear) + '\)?.)?(season.' + str(self.index) + '|season.' + str("{:02d}".format(self.index)) + '|S' + str("{:02d}".format(self.index)) + ')'
             elif self.type == 'episode':
                 title = title.replace('.' + str(self.grandparentYear), '')
                 return '[^A-Za-z0-9]*(' + title + ':?.)(series.)?(\(?' + str(self.grandparentYear) + '\)?.)?(S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index)) + '.)'
@@ -431,10 +431,10 @@ class media:
                 return '(.*?)(' + title + '.)(.*?)('+self.anime_count+'|complete)'
             elif self.type == 'season':
                 title = title.replace('.' + str(self.parentYear), '')
-                return '(.*?)(' + title + '.)(.*?)(season.' + str(self.index) + '.|season.' + str("{:02d}".format(self.index)) + '.|S?' + str("{:02d}".format(self.index)) + '.|'+str(self.index)+'.|'+self.anime_count+'.)'
+                return '(.*?)(' + title + '.)(.*?)(season.' + str(self.index) + '|season.' + str("{:02d}".format(self.index)) + '|S?' + str("{:02d}".format(self.index)) + '|'+str(self.index)+'|'+self.anime_count+')'
             elif self.type == 'episode':
                 title = title.replace('.' + str(self.grandparentYear), '')
-                return '(.*?)(' + title + '.)(.*?)(S' + str("{:02d}".format(self.parentIndex)) + '.?E' + str("{:02d}".format(self.index)) + '.|'+self.anime_count+'.)'
+                return '(.*?)(' + title + '.)(.*?)(S' + str("{:02d}".format(self.parentIndex)) + '.?E' + str("{:02d}".format(self.index)) + '|'+self.anime_count+')'
 
     def isanime(self):
         if 'anime' in self.genre():
@@ -443,7 +443,7 @@ class media:
                 if hasattr(self,'Seasons'):
                     for season in self.Seasons:
                         season.genres = ['anime']
-                        season.anime_season = str(self.anime_count)
+                        season.anime_season = (str(self.anime_count + 1) if self.anime_count == 0 else str(self.anime_count))
                         if hasattr(season,'Episodes'):
                             for episode in season.Episodes:
                                 self.anime_count += 1
