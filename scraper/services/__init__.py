@@ -4,10 +4,11 @@ from scraper.services import rarbg
 from scraper.services import x1337
 from scraper.services import jackett
 from scraper.services import prowlarr
+from scraper.services import orionoid
 
 #define subclass method
 def __subclasses__():
-    return [rarbg,x1337,jackett,prowlarr]
+    return [rarbg,x1337,jackett,prowlarr,orionoid]
 
 active = ['rarbg', '1337x', ]
 
