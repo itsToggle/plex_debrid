@@ -2,12 +2,10 @@
 Plex/Emby/Jellyfin/Infuse torrent streaming through Debrid Services, using Plex Discover Watchlists, Trakt lists and Overseerr.
 
 Using content services like plex discover, trakt and overseerr, your personal media server users can add movies/shows to their watchlist and they become available to stream in seconds.
-
  
 ### In Action:
 
 ![ezgif com-gif-maker](https://user-images.githubusercontent.com/71379623/185643627-45217303-75d8-4c9d-8c8b-41bb2e27fd87.gif)
-
  
 ### Description:
 
@@ -16,7 +14,6 @@ plex_debrid provides an easy way to add media content to your debrid service/s, 
 **For any debrid-cached content (movies, one-season tv shows or even multi-season tv shows) the entire process from watchlisting content to watching it takes about 10-20 seconds.**
 
 This is a work in progress, and im not a professional programmer. shits not ready! Feel free to check it out though, I will continously improve the speed, reliability and user-friendlyness.
-
  
 ### Features:
 - Compatible with any OS (Mac, Linux, Windows, Android, FreeBSD, ...)
@@ -45,15 +42,12 @@ This is a work in progress, and im not a professional programmer. shits not read
 - Refreshing your personal media server libraries (fully or partially) to make the content available to watch for:
    - <img src="https://app.plex.tv/desktop/favicon.ico" height="16"> **[Plex](https://plex.tv/)**
    - <img src="https://jellyfin.org/images/favicon.ico" height="16"> **[Jellyfin](https://jellyfin.org/)**
-
  
 ### Community
 
 Feel free to ask any questions on github [discussions](https://github.com/itsToggle/plex_debrid/discussions) or create a new [issue](https://github.com/itsToggle/plex_debrid/issues) if you find a bug or have an idea for an improvement.
 
 If github is not your cup of tee, join the plex_debrid [discord server](https://discord.gg/UKkPeRdukx) or find me on [reddit](https://www.reddit.com/user/itsToggle)
-
- 
  
 ## Setup:
 For linux, mac and windows, the setup process does not require any additional preparation. For different operating systems, check out the information the fine people linked here have gathered or check our discord server:
@@ -65,7 +59,6 @@ For linux, mac and windows, the setup process does not require any additional pr
   - **Rooted Nvidia Shield guide from user "b u n n y" up on discord**
 </details>
 
- 
 ### 1) :open_file_folder: Mount your debrid services:
 
 *For this download automation to work, you need to mount at least one debrid service as a virtual drive. I highly recommend using RealDebrid, as this service will recieve updates and new features from plex_debrid first.*
@@ -175,7 +168,6 @@ For linux, mac and windows, the setup process does not require any additional pr
 >  *You can run rclone as a background service by adding the mounting tag '--no-console' (Windows) or '--deamon' (Linux, Mac, etc)*
 ></details>
 
- 
 ### 2) :tv: Setup your personal media server:
 
 *To stream content from your newly mounted virtual drive, its recommended to set up a personal media server like plex, emby or jellyfin. These services allow you to stream your content from outside your local network. You will have the best expirience when using plex, since you dont need any 3rd party website to download new content - you can simply add new movies/shows to your watchlist from inside any plex client app, wait a few seconds and then watch it (see the gif above). If you prefer emby or jellyfin as your personal media server, the only way to add new content is via trakt and jellyseerr. A different approach is to use media players like Infuse to access the mounted files, which too relies on trakt to add new content.*
@@ -193,9 +185,6 @@ For linux, mac and windows, the setup process does not require any additional pr
 >  **Please keep your libraries metadata agent as the default Plex metadata agent**
 >  </details>
 
-more personal media server setup instructions to come soon.
-
- 
 ### 3) :page_facing_up: Setup plex_debrid:
 
 *The plex_debrid script can be run as a docker container (dockerized version) or by simply executing it with python 3 (standard version).*
@@ -237,12 +226,9 @@ more personal media server setup instructions to come soon.
 >  
 ></details>
  
- 
- 
 ## Usage:
 
 *plex_debrid can be setup in a bunch of different ways, which this readme wont be able to cover. Feel free to ask any questions in the "discussions" section of this respository or join our discord server.*
- 
  
 ### :tv: Content Services:
 
@@ -314,7 +300,6 @@ more personal media server setup instructions to come soon.
 >
 ></details>
  
- 
 ### 🔁 Library Update Services
 
 *The services that plex_debrid can update/refresh after a successful download. You can add any combination of services.*
@@ -344,7 +329,6 @@ more personal media server setup instructions to come soon.
 >
 ></details>
  
- 
 ### :eyes: Library Ignore Services
 
 *The services that plex_debrid will use to ignore content. You can add any combination of services. You can explore the media thats currently ignored from the main plex_debrid menu.*
@@ -369,7 +353,6 @@ more personal media server setup instructions to come soon.
 >  - To use a local text file of queries to ignore content, navigate to '/Settings/Library Service/Library ignore services/Edit/'
 >
 ></details>
- 
  
 ### :magnet: Scraping Services:
 
@@ -408,7 +391,6 @@ more personal media server setup instructions to come soon.
 >
 ></details>
  
- 
 ### :arrow_down_small: Debrid Services:
 
 *The services that plex_debrid can use to download torrents. You can add any combination of services.* 
@@ -420,7 +402,6 @@ more personal media server setup instructions to come soon.
 >
 ></details>
 >
- 
  
 ### <img src="https://seeklogo.com/images/1/4k-logo-0B1F5255A1-seeklogo.com.png" height="16"> Defining versions to download:
 
@@ -452,8 +433,6 @@ more personal media server setup instructions to come soon.
 >
 ></details>
  
- 
- 
 ## Limitations:
 
 ><details>
@@ -464,9 +443,6 @@ more personal media server setup instructions to come soon.
 >  - The plex discover api only provides release dates, not precise release times. Its recommended to connect the script to trakt.tv, which enables plex_debrid to find more accurate release dates and even find out if movies can be downloaded before their actual release date.
 >
 ></details>
-
- 
- 
 
 ## Buy me a beer/coffee? :)
 
