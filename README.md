@@ -249,10 +249,7 @@ more personal media server setup instructions to come soon.
 >  - The script tries its best to avoid downloading unwanted (e.g. sample) files. If samples still show up on plex, you can create a .plexignore file and add it to the mounts parent directory (more info [here](https://support.plex.tv/articles/201381883-special-keyword-file-folder-exclusion/)).
 >  - The Plex Watchlist of your specified users will polled for changes every 5 seconds, which is when it will try to find newly added content. 
 >  - The Plex Watchlist will be updated entirely every 30 minutes, which is when it will try to find newly released episodes from watchlisted series. This is only done every 30 minutes, because building the whole watchlist can take more than a minute, depending on the amount of shows you have in there.
->  - If you dont want to download a specific episode or season of a show, navigate to that show in the discovery feature and mark the episodes/seasons that you want to ignore as 'watched'. The watch status inside the discovery feature is not connected to the watch status inside your libraries (by default).
->  - When some plex watchlisted content could repeatedly not be downloaded, it will be marked as 'watched' in the Discovery feature of the first specified user. This will cause the scraper to ignore the content, until its marked as 'unwatched' again.
->  - You can connect plex_debrid to trakt.tv to get more accurate release dates and times for your content.
->  - You can explore and remove ignored content in the main menu.
+>  - You can connect plex_debrid to trakt.tv to get more accurate release dates and times for your content, without needing to actually monitor any of your trakt content.
 >
 ></details>
 >
@@ -337,7 +334,7 @@ more personal media server setup instructions to come soon.
 
 ### :eyes: Library Ignore Services
 
-*The services that plex_debrid will use to ignore content. You can add any combination of services.*
+*The services that plex_debrid will use to ignore content. You can add any combination of services. You can explore the media thats currently ignored from the main plex_debrid menu.*
 
 ><details>
 >  <summary><b><u><img src="https://app.plex.tv/desktop/favicon.ico" height="16"> Plex Discover Watch Status:</u></b></summary>
@@ -360,29 +357,57 @@ more personal media server setup instructions to come soon.
 >
 ></details>
 
-### :magnet: Debrid Services and Scraper Settings
+### :magnet: Scraping Services:
 
-*The services that plex_debrid can use to find and download torrents.*
+*The services that plex_debrid can use to find torrents. You can add any combination of services. By default, only the legacy scrapers (rarbg, 1337x) are enabled. Its highly recommended to connect more scraping services to make sure you find high quality, cached releases.*
 
+>
 ><details>
->  <summary><b><u>Integrating your favorite torrent indexers (highly recommended):</u></b></summary>
+>  <summary><b><u><img src="https://progsoft.net/images/rarbg-icon-648af4dcc6ec63ee49d6c050af63d2547c74d46c.png" height="16"><img src="https://1337x.to/favicon.ico" height="16"> legacy scrapers (rarbg, 1337x):</u></b></summary>
 >  
->  - The only legacy scrapers currently integrated are for rarbg.to and 1337x.to 
->  - Its recommended to install "jackett", a program that wraps a huge amount of torrent indexers (https://github.com/Jackett/Jackett). Once installed and setup, you can enable jackett by navigating to '/Settings/Scraper/Sources/Edit/Add source/jackett'. Once enabled, you can delete the legacy scrapers, since jackett can handle both 1337x and rarbg.
->  - If you prefer Prowlarr over Jackett, you are able to integrate prowlarr in the same way as jackett. Prowlarr has stricted rate limits than jackett for some indexers (e.g. 1337x), which could cause plex_debrid to timeout the request to prowlarr and therefore find less releases than jackett.
+>  - The only "legacy" scrapers currently integrated are for rarbg.to and 1337x.to - you can turn these off or on by navigating to '/Settings/Scraper/Sources/Edit/'.
+>
+></details>
+>
+><details>
+>  <summary><b><u><img src="https://user-images.githubusercontent.com/27040483/28728094-99f3e3f6-73c7-11e7-8f8d-28912dc6ac0d.png" height="16"> jackett (highly recommended):</u></b></summary>
+>  
+>  - Its recommended to install "jackett", a program that wraps a huge amount of torrent indexers (https://github.com/Jackett/Jackett). Once installed and setup, you can enable jackett by navigating to '/Settings/Scraper/Sources/Edit/Add source/jackett'.
 >  - You can now choose to use a specific debrid service for a specific torrent tracker by navigating to "/Settings/Debrid Services/Tracker specific Debrid Services". This comes in handy if you are using a private tracker that forces you to use a debrid service that will seed your torrents (e.g. debridlink,put.io).
 >
 ></details>
 >
 ><details>
->  <summary><b><u>Debrid service and download automation settings:</u></b></summary>
+>  <summary><b><u><img src="https://prowlarr.com/img/favicon-32x32.png" height="16"> prowlarr:</u></b></summary>
 >  
->  - You can add more than one debrid service and change the order in which they should be checked for cached releases by navigating to '/Settings/Debrid Services/Edit'.
->  - In order to scrape for a movie/show, plex_debrid renames the movie/show title. by default, some special characters are removed and spaces are replaced with dots. You can edit the replacement of other special characters (for example replacing '&' with 'and', etc.) by navigating to '/Settings/Scraper/Special character renaming'
->  - If you don't want the main menu to show when you start the script and run the download automation right away, you can define this in the 'UI Settings' section of the 'Settings' menu. You can return to the main menu at any time by typing 'exit'.
+>  - If you prefer Prowlarr over Jackett, you can integrate prowlarr into plex_debrid by navigating to '/Settings/Scraper/Sources/Edit/Add source/prowlarr'. Prowlarr has stricted rate limits than jackett for some indexers (e.g. 1337x), which could cause plex_debrid to timeout the request to prowlarr and therefore find less releases than jackett.
+>  - You can now choose to use a specific debrid service for a specific torrent tracker by navigating to "/Settings/Debrid Services/Tracker specific Debrid Services". This comes in handy if you are using a private tracker that forces you to use a debrid service that will seed your torrents (e.g. debridlink,put.io).
 >
 ></details>
 >
+><details>
+>  <summary><b><u><img src="https://orionoid.com/web/images/logo/logo256.png" height="16"> orionoid:</u></b></summary>
+>  
+>  - You can integrate the orionoid scrapers into plex_debrid by navigating to '/Settings/Scraper/Sources/Edit/Add source/orionoid'.
+>  - By default, only the top 5 links are fetched per scraping attempt and the links are sorted by "popularity", not the premium-only "best" attribute. This is done to be "free" account friendly, you can change these parameters in the orionoid source settings '/Settings/Scraper/Sources/Edit/Edit sources/orionoid'.
+>  - You can find a full list of all possible parameters and their respective values at "https://panel.orionoid.com/" in the "Developers" menu, section "API Docs" under "Stream API".
+>
+></details>
+
+### :arrow_down_small: Debrid Services:
+
+*The services that plex_debrid can use to download torrents. You can add any combination of services.* 
+
+><details>
+>  <summary><b><u>Debrid services:</u></b></summary>
+>  
+>  - You can add more than one debrid service and change the order in which they should be checked for cached releases by navigating to '/Settings/Debrid Services/Edit'.
+>
+></details>
+>
+
+### <img src="https://seeklogo.com/images/1/4k-logo-0B1F5255A1-seeklogo.com.png" height="16"> Defining versions to download:
+
 ><details>
 >  <summary><b><u>Defining versions to download:</u></b></summary>
 >  
@@ -409,23 +434,6 @@ more personal media server setup instructions to come soon.
 >        E) year          requirement :       <=  2010
 >      
 >
-></details>
->
-><details>
->  <summary><b><u>How releases are scraped</u></b></summary>
->  
->  The scraping of movies is pretty simple, there is not a lot to explain.
->  
->  When scraping for shows however, the scraper follows the steps below:
->  - If more than 1 season is to be downloaded, the scraper searches for releases with the following query: 'some.show' - which usually returns all releases related to that show.
->    - If more than 3 seasons are to be downloaded, the scraper looks for multi-season packs within the already scraped releases and tries to download one.
->    - The scraper then looks for single-season packs for the remaining seasons within the already scraped releases.
->    - If not all seasons could be downloaded, the scraper specifically searches for the missing seasons with the following query: 'some.show.S0X.'
->  - If less than one entire season is to be downloaded or episodes are still missing, the scraper searches for releases with the following query: 'some.show.S0X' which usually returns all episodes and partial releases of that season.
->    - If missing episodes are found within the already scraped releases, they are downloaded.
->    - If there are still episodes missing, the scraper will look for the individual episodes with the following query: 'some.show.S0XE0X.'
->  
->  All that is done to minimize the amount of calls made to torrent indexers and to fetch the most episodes at once. The process is done via multiprosing to speed things up.
 ></details>
 
 ## Limitations:
