@@ -597,12 +597,13 @@ class media:
                             release_date = datetime.datetime.strptime(release_date,'%Y-%m-%d') + datetime.timedelta(days=60)
                             release_date = release_date.strftime("%Y-%m-%d")
                         # Get trakt 'Latest HD/4k Releases' Lists to accept early releases
-                        trakt_lists, header = trakt.get(
-                            'https://api.trakt.tv/movies/' + str(trakt_match.ids.trakt) + '/lists/personal/popular')
                         match = False
-                        for trakt_list in trakt_lists:
-                            if regex.search(r'(latest|new).*?(releases)', trakt_list.name, regex.I):
-                                match = True
+                        if trakt.early_releases == "true":
+                            trakt_lists, header = trakt.get(
+                                'https://api.trakt.tv/movies/' + str(trakt_match.ids.trakt) + '/lists/personal/popular')
+                            for trakt_list in trakt_lists:
+                                if regex.search(r'(latest|new).*?(releases)', trakt_list.name, regex.I):
+                                    match = True
                         # if release_date and delay have passed or the movie was released early
                         return datetime.datetime.utcnow() > datetime.datetime.strptime(release_date,'%Y-%m-%d') or match
                     elif trakt_match.type == 'season':
