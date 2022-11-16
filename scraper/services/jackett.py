@@ -6,11 +6,50 @@ import releases
 base_url = "http://127.0.0.1:9117"
 api_key = ""
 name = "jackett"
+resolver_timeout = '1'
 session = requests.Session()
 
 def setup(cls, new=False):
-    from scraper.services import setup
-    setup(cls,new)
+    from settings import settings_list
+    from scraper.services import active
+    settings = []
+    for category, allsettings in settings_list:
+        for setting in allsettings:
+            if setting.cls == cls:
+                settings += [setting]
+    if settings == []:
+        if not cls.name in active:
+            active += [cls.name]
+    back = False
+    if not new:
+        while not back:
+            print("0) Back")
+            indices = []
+            for index, setting in enumerate(settings):
+                print(str(index + 1) + ') ' + setting.name)
+                indices += [str(index + 1)]
+            print()
+            if settings == []:
+                print("Nothing to edit!")
+                print()
+                time.sleep(3)
+                return
+            choice = input("Choose an action: ")
+            if choice in indices:
+                settings[int(choice) - 1].input()
+                if not cls.name in active:
+                    active += [cls.name]
+                back = True
+            elif choice == '0':
+                back = True
+    else:
+        print()
+        indices = []
+        for setting in settings:
+            if setting.name == "Jackett API Key" or setting.name == "Jackett Base URL":
+                setting.setup()
+                if not cls.name in active:
+                    active += [cls.name]
 
 def scrape(query, altquery):
     from scraper.services import active
@@ -71,7 +110,7 @@ def scrape(query, altquery):
 def resolve(result):
     scraped_releases = []
     try:
-        link = session.get(result.Link, allow_redirects=False, timeout=1)
+        link = session.get(result.Link, allow_redirects=False, timeout=float(resolver_timeout))
         if 'Location' in link.headers:
             if regex.search(r'(?<=btih:).*?(?=&)', str(link.headers['Location']), regex.I):
                 if not result.Tracker == None and not result.Size == None:

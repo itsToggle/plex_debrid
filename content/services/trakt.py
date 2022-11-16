@@ -11,6 +11,7 @@ client_secret = "87109ed53fe1b4d6b0239e671f36cd2f17378384fa1ae09888a32643f83b7e6
 lists = []
 users = []
 current_user = ["", ""]
+early_releases = "false"
 session = requests.Session()
 
 def setup(self, new=False):
