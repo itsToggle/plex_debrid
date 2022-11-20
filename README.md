@@ -1,11 +1,7 @@
 # plex_debrid (android)
-Plex torrent streaming through Debrid Services, using the new Plex Discover feature.
+Please note that this readme is not up to date. Check the main branch for a more detailed readme!
 
 **Using the new Plex Discover Feature, your Plex Home users can add movies/shows to their watchlist and they become available to stream in seconds.**
-
-## In Action:
-
-![Alt Text](https://github.com/itsToggle/plex_debrid/blob/android/cool.gif)
 
 ## Description:
 
