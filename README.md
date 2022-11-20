@@ -2,12 +2,11 @@
 Plex/Emby/Jellyfin/Infuse torrent streaming through Debrid Services, using Plex Discover Watchlists, Trakt lists and Overseerr.
 
 Using content services like plex discover, trakt and overseerr, your personal media server users can add movies/shows to their watchlist and they become available to stream in seconds.
-
+ 
 ### In Action:
 
 ![ezgif com-gif-maker](https://user-images.githubusercontent.com/71379623/185643627-45217303-75d8-4c9d-8c8b-41bb2e27fd87.gif)
-
-
+ 
 ### Description:
 
 plex_debrid provides an easy way to add media content to your debrid service/s, which becomes instantly watchable when mounting your debrid service with a personal media server like plex/emby/jellyfin/infuse. The plex watchlists, trakt watchlists and overseer-requests of specified users are constantly checked for newly added movies/shows and newly released episodes of watchlisted shows. Once new content is found, torrent indexers are scraped for the best, cached release on selected debrid services. The torrent is then added to a suitable debrid service and a library refresh is performed to make the newly added content available. 
@@ -15,13 +14,14 @@ plex_debrid provides an easy way to add media content to your debrid service/s, 
 **For any debrid-cached content (movies, one-season tv shows or even multi-season tv shows) the entire process from watchlisting content to watching it takes about 10-20 seconds.**
 
 This is a work in progress, and im not a professional programmer. shits not ready! Feel free to check it out though, I will continously improve the speed, reliability and user-friendlyness.
-
+ 
 ### Features:
 - Compatible with any OS (Mac, Linux, Windows, Android, FreeBSD, ...)
 - Gathering new content **every 5s** from:
    - <img src="https://app.plex.tv/desktop/favicon.ico" height="16"> **[Plex Watchlists](https://plex.tv/)**
    - <img src="https://walter.trakt.tv/hotlink-ok/public/favicon.ico" height="16"> **[Trakt public lists, watchlists and collections](https://trakt.tv/)**
    - <img src="https://hotio.dev/webhook-avatars/overseerr.png" height="16"> **[Overseerr Requests](https://overseerr.dev/)**
+   - <img src="https://raw.githubusercontent.com/Fallenbagel/jellyseerr/main/public/android-chrome-512x512.png" height="16"> **[Jellyseerr Requests](https://github.com/Fallenbagel/jellyseerr)**
 - Checking and maintaining your library for:
    - <img src="https://app.plex.tv/desktop/favicon.ico" height="16"> **[Plex Library](https://plex.tv/)**
    - <img src="https://walter.trakt.tv/hotlink-ok/public/favicon.ico" height="16"> **[Trakt Collection](https://trakt.tv/)**
@@ -29,6 +29,7 @@ This is a work in progress, and im not a professional programmer. shits not read
 - Scraping Releases from:
    - <img src="https://user-images.githubusercontent.com/27040483/28728094-99f3e3f6-73c7-11e7-8f8d-28912dc6ac0d.png" height="16"> **[Jackett](https://github.com/Jackett/Jackett)**
    - <img src="https://prowlarr.com/img/favicon-32x32.png" height="16"> **[Prowlarr](https://github.com/Prowlarr/Prowlarr)**
+   - <img src="https://orionoid.com/web/images/logo/logo256.png" height="16"> **[Orionoid](https://orionoid.com/)**
    - <img src="https://progsoft.net/images/rarbg-icon-648af4dcc6ec63ee49d6c050af63d2547c74d46c.png" height="16"> **[RARBG](https://rarbg.to/)**
    - <img src="https://1337x.to/favicon.ico" height="16"> **[1337X](https://1337x.to/)**
 - Defining multiple, completely customizable versions to download (2160p HDR, 1080p SDR, etc)
@@ -38,15 +39,16 @@ This is a work in progress, and im not a professional programmer. shits not read
    - <img src="https://cdn.alldebrid.com/lib/images/default/favicon.png" height="16"> **[AllDebrid](https://alldebrid.com/)**
    - <img src="https://cdn.debrid-link.com/favicon.ico?i=2" height="16"> **[DebridLink](https://debrid-link.com/)**
    - <img src="https://app.put.io/assets/favicon-32x32.png" height="16"> **[PUT.io (no check for cached releases)](https://put.io/)**
-- Refreshing your personal media server libraries to make the content available to watch for:
+- Refreshing your personal media server libraries (fully or partially) to make the content available to watch for:
    - <img src="https://app.plex.tv/desktop/favicon.ico" height="16"> **[Plex](https://plex.tv/)**
-
+   - <img src="https://jellyfin.org/images/favicon.ico" height="16"> **[Jellyfin](https://jellyfin.org/)**
+ 
 ### Community
 
 Feel free to ask any questions on github [discussions](https://github.com/itsToggle/plex_debrid/discussions) or create a new [issue](https://github.com/itsToggle/plex_debrid/issues) if you find a bug or have an idea for an improvement.
 
 If github is not your cup of tee, join the plex_debrid [discord server](https://discord.gg/UKkPeRdukx) or find me on [reddit](https://www.reddit.com/user/itsToggle)
-
+ 
 ## Setup:
 For linux, mac and windows, the setup process does not require any additional preparation. For different operating systems, check out the information the fine people linked here have gathered or check our discord server:
 <details>
@@ -54,6 +56,7 @@ For linux, mac and windows, the setup process does not require any additional pr
   
   - **[FreeBSD (u/TheNicestRichtofen)](https://www.reddit.com/r/Piracy/comments/v5zpj7/comment/ibnikqh/?utm_source=share&utm_medium=web2x&context=3)**
   - **[Android](https://github.com/itsToggle/plex_debrid/tree/android)**
+  - **Rooted Nvidia Shield guide from user "b u n n y" up on discord**
 </details>
 
 ### 1) :open_file_folder: Mount your debrid services:
@@ -167,7 +170,7 @@ For linux, mac and windows, the setup process does not require any additional pr
 
 ### 2) :tv: Setup your personal media server:
 
-*To stream content from your newly mounted virtual drive, its recommended to set up a personal media server like plex, emby or jellyfin. These services allow you to stream your content from outside your local network. You will have the best expirience when using plex, since you dont need any 3rd party website to download new content - you can simply add new movies/shows to your watchlist from inside any plex client app, wait a few seconds and then watch it (see the gif above). If you prefer emby or jellyfin as your personal media server, the only way to add new content is via trakt (for now). A different approach is to use media players like Infuse to access the mounted files, which too relies on trakt to add new content.*
+*To stream content from your newly mounted virtual drive, its recommended to set up a personal media server like plex, emby or jellyfin. These services allow you to stream your content from outside your local network. You will have the best expirience when using plex, since you dont need any 3rd party website to download new content - you can simply add new movies/shows to your watchlist from inside any plex client app, wait a few seconds and then watch it (see the gif above). If you prefer emby or jellyfin as your personal media server, the only way to add new content is via trakt and jellyseerr. A different approach is to use media players like Infuse to access the mounted files, which too relies on trakt to add new content.*
 
 ><details>
 >  <summary><b><u><img src="https://app.plex.tv/desktop/favicon.ico" height="16"> Setting up Plex:</u></b></summary>
@@ -179,9 +182,8 @@ For linux, mac and windows, the setup process does not require any additional pr
 >  5. Disable the libary setting "Empty trash after every scan", to make sure that no content is removed accidentaly
 >  6. You and your home users can now stream cached torrents from your debrid service/s!
 >  
+>  **Please keep your libraries metadata agent as the default Plex metadata agent**
 >  </details>
-
-more personal media server setup instructions to come soon.
 
 ### 3) :page_facing_up: Setup plex_debrid:
 
@@ -193,39 +195,44 @@ more personal media server setup instructions to come soon.
 >  0. Clone this repository with git or click on "code" (top right) and then "download zip" 
 >  1. Run `pip install -r requirements.txt`
 >  2. Run the script!
->  3. The script will guide you through the initial setup and the next steps. When setting up plex_debrid, you will be prompted to choose the 3 main services that this script connects:
+>  3. The script will guide you through the initial setup and the next steps. When setting up plex_debrid, you will be prompted to choose the 5 main services that this script connects:
 >  4. Pick and setup at least one **content service** which plex_debrid should monitor for new content
->  5. Pick and setup a **library service**, which plex_debrid will use to determine your current media collection.
->  6. Pick and setup at least one **debrid service**, which plex_debrid will use to download content.
->  7. You're done!
->  8. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
->  6. Read the rest of the README!
+>  5. Pick and setup a **library collection service**, which plex_debrid will use to determine your current media collection. If you intend to run a plex server, choose plex.
+>  6. Pick and setup a **library update service**, which plex_debrid will update/refresh after a successful download. If you intent to run a plex server, choose plex.
+>  7. Pick and setup a **library ignore service**, which plex_debrid will use to ignore content. If you intent to run a plex server, choose plex.
+>  8. Pick and setup at least one **debrid service**, which plex_debrid will use to download content.
+>  9. You're done!
+>  10. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
+>  11. If you dont want the main menu to show when starting the script (for an auto-run setup), navigate to "/Settings/UI Settings/show menu on startup" and set the value to "false".
+>  12. Read the rest of the README!
 >  
 ></details>
 >
 ><details>
 >  <summary><b><u>Dockerized Version:</u></b></summary>
 >   
->  1. Run `docker pull itstoggle/plex_debrid .`or visit https://hub.docker.com/repository/docker/itstoggle/plex_debrid.
->  2. Run `docker run -ti plex_debrid -v /path/on/host:/settings.json` . Where `/path/on/host` is the path where you want to save settings file
->  3. The script will guide you through the initial setup and the next steps. When setting up plex_debrid, you will be prompted to choose the 3 main services that this script connects:
+>  1. Run `docker pull itstoggle/plex_debrid`or visit https://hub.docker.com/repository/docker/itstoggle/plex_debrid.
+>  2. Run `docker run -v /path/to/config:/config --net host -ti itstoggle/plex_debrid` . Where `/path/to/config` is the directory path where you want to save your plex_debrid config data.
+>  3. The script will guide you through the initial setup and the next steps. When setting up plex_debrid, you will be prompted to choose the 5 main services that this script connects:
 >  4. Pick and setup at least one **content service** which plex_debrid should monitor for new content
->  5. Pick and setup a **library service**, which plex_debrid will use to determine your current media collection. If you intend to run a plex server, choose plex.
->  6. Pick and setup at least one **debrid service**, which plex_debrid will use to download content.
->  7. You're done!
->  8. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
->  9. If you dont want the main menu to show when starting the script (for an auto-run setup), navigate to "/Settings/UI Settings/show menu on startup" and set the value to "false".
->  10. Read the rest of the README!
+>  5. Pick and setup a **library collection service**, which plex_debrid will use to determine your current media collection. If you intent to run a plex server, choose plex.
+>  6. Pick and setup a **library update service**, which plex_debrid will update/refresh after a successful download. If you intent to run a plex server, choose plex.
+>  7. Pick and setup a **library ignore service**, which plex_debrid will use to ignore content. If you intent to run a plex server, choose plex.
+>  8. Pick and setup at least one **debrid service**, which plex_debrid will use to download content.
+>  9. You're done!
+>  10. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
+>  11. If you dont want the main menu to show when starting the script (for an auto-run setup), navigate to "/Settings/UI Settings/show menu on startup" and set the value to "false".
+>  12. Read the rest of the README!
 >  
 ></details>
-
+ 
 ## Usage:
 
 *plex_debrid can be setup in a bunch of different ways, which this readme wont be able to cover. Feel free to ask any questions in the "discussions" section of this respository or join our discord server.*
-
+ 
 ### :tv: Content Services:
 
-*The services that plex_debrid can monitor for new content.*
+*The services that plex_debrid can monitor for new content. You can pick any combination of services.*
 
 ><details>
 >  <summary><b><u><img src="https://app.plex.tv/desktop/favicon.ico" height="16"> Plex watchlists:</u></b></summary>
@@ -238,10 +245,7 @@ more personal media server setup instructions to come soon.
 >  - The script tries its best to avoid downloading unwanted (e.g. sample) files. If samples still show up on plex, you can create a .plexignore file and add it to the mounts parent directory (more info [here](https://support.plex.tv/articles/201381883-special-keyword-file-folder-exclusion/)).
 >  - The Plex Watchlist of your specified users will polled for changes every 5 seconds, which is when it will try to find newly added content. 
 >  - The Plex Watchlist will be updated entirely every 30 minutes, which is when it will try to find newly released episodes from watchlisted series. This is only done every 30 minutes, because building the whole watchlist can take more than a minute, depending on the amount of shows you have in there.
->  - If you dont want to download a specific episode or season of a show, navigate to that show in the discovery feature and mark the episodes/seasons that you want to ignore as 'watched'. The watch status inside the discovery feature is not connected to the watch status inside your libraries (by default).
->  - When some plex watchlisted content could repeatedly not be downloaded, it will be marked as 'watched' in the Discovery feature of the first specified user. This will cause the scraper to ignore the content, until its marked as 'unwatched' again.
->  - You can connect plex_debrid to trakt.tv to get more accurate release dates and times for your content.
->  - You can explore and remove ignored content in the main menu.
+>  - You can connect plex_debrid to trakt.tv to get more accurate release dates and times for your content, without needing to actually monitor any of your trakt content.
 >
 ></details>
 >
@@ -260,61 +264,153 @@ more personal media server setup instructions to come soon.
 ><details>
 >  <summary><b><u><img src="https://hotio.dev/webhook-avatars/overseerr.png" height="16"> Overseerr requests:</u></b></summary>
 > 
->  - You can connect plex_debrid to overseerr to instantly and automatically download approved requests from selected users.
+>  - You can connect plex_debrid to overseerr to instantly and automatically download approved requests from selected users. For this to work, you need to connect plex_debrid to either Plex or Trakt, since these services can be used to gather more information on the requested media items.
 >  - To connect the script to overseerr, navigate to '/Settings/Content Services/Overseerr'. 
 >  - By default, all approved requests from all overseerr users are downloaded by plex_debrid. To limit this feature to specific users, navigate to '/Settings/Content Services/Overseerr/Overseerr users'
 >
 ></details>
-
-### :open_file_folder: Library Service
+>
+><details>
+>  <summary><b><u><img src="https://raw.githubusercontent.com/Fallenbagel/jellyseerr/main/public/android-chrome-512x512.png" height="16"> Jellyseerr requests:</u></b></summary>
+> 
+>  - You can connect plex_debrid to jellyseerr to instantly and automatically download approved requests from selected users. For this to work, you need to connect plex_debrid to either Plex or Trakt, since these services can be used to gather more information on the requested media items. Since jellyseer and overseerr use the exact same api endpoints, simply set up jellyseer in the plex_debrid overseerr menu:
+>  - To connect the script to jellyseerr, navigate to '/Settings/Content Services/Overseerr'. 
+>  - By default, all approved requests from all jellyseerr users are downloaded by plex_debrid. To limit this feature to specific users, navigate to '/Settings/Content Services/Overseerr/Overseerr users'
+>
+></details>
+ 
+ 
+### :open_file_folder: Library Collection Service
 
 *The services that plex_debrid can use to determine your current media collection.*
 
 ><details>
 >  <summary><b><u><img src="https://app.plex.tv/desktop/favicon.ico" height="16"> Plex library:</u></b></summary>
 >  
->  - To use your plex library as your library service, navigate to '/Settings/Library Service/Change library service/'
->  - If you choose your plex library as your library service, your *entire* Plex Library (including shares) is checked before downloading anything and the script will avoid duplicate downloads. To limit this library check to specific library sections, navigate to '/Settings/Library Service/Edit library service/Plex library check/Edit'
+>  - To use your plex library as your library service, navigate to '/Settings/Library Service/Library collection service/Change library service/'
+>  - If you choose your plex library as your library service, your *entire* Plex Library (including shares) is checked before downloading anything and the script will avoid duplicate downloads. To limit this library check to specific library sections, navigate to '/Settings/Library Service/Library collectikn service/Edit library service/Plex library check/Edit'
 >
 ></details>
 >
 ><details>
 >  <summary><b><u><img src="https://walter.trakt.tv/hotlink-ok/public/favicon.ico" height="16"> Trakt collection:</u></b></summary>
 >  
->  - To use one of your trakt users collections as your library service, navigate to '/Settings/Library Service/Change library service/'
->  - If you choose your trakt collection as your library service, your *entire* trakt collection is checked before downloading anything and the script will avoid duplicate downloads.
->  - Once content is downloaded, plex_debrid will mark it as collected for the specified trakt user. 
+>  - To use one of your trakt users collections as your library service, navigate to '/Settings/Library Service/Library collection service/Change library service/'
+>  - If you choose your trakt collection as your library service, your *entire* trakt collection is checked before downloading anything and the script will avoid duplicate downloads. 
 >
 ></details>
+ 
+### 🔁 Library Update Services
 
-### :magnet: Debrid Services and Scraper Settings
-
-*The services that plex_debrid can use to find and download torrents.*
+*The services that plex_debrid can update/refresh after a successful download. You can add any combination of services.*
 
 ><details>
->  <summary><b><u>Integrating your favorite torrent indexers (highly recommended):</u></b></summary>
+>  <summary><b><u><img src="https://app.plex.tv/desktop/favicon.ico" height="16"> Plex library:</u></b></summary>
 >  
->  - The only legacy scrapers currently integrated are for rarbg.to and 1337x.to 
->  - Its recommended to install "jackett", a program that wraps a huge amount of torrent indexers (https://github.com/Jackett/Jackett). Once installed and setup, you can enable jackett by navigating to '/Settings/Scraper/Sources/Edit/Add source/jackett'. Once enabled, you can delete the legacy scrapers, since jackett can handle both 1337x and rarbg.
->  - If you prefer Prowlarr over Jackett, you are able to integrate prowlarr in the same way as jackett. Prowlarr has stricted rate limits than jackett for some indexers (e.g. 1337x), which could cause plex_debrid to timeout the request to prowlarr and therefore find less releases than jackett.
+>  - To refresh your plex libraries after a succesful download, navigate to '/Settings/Library Service/Library update service/Edit/'
+>  - You can add an unlimited amount of libraries to be refreshed
+>  - plex_debrid is now capable of only partially scanning your libraries. This feature is currently only available for content that's downloaded through realdebrid.
+>
+></details>
+>
+><details>
+>  <summary><b><u><img src="https://walter.trakt.tv/hotlink-ok/public/favicon.ico" height="16"> Trakt collection:</u></b></summary>
+>  
+>  - To mark content as collected on Trakt after it has been successfully downloaded, navigate to '/Settings/Library Service/Library update service/Edit/'
+>  - plex_debrid will automatically add the downloaded resolution and other properties of the downloaded media to your trakt collection
+>
+></details>
+>
+><details>
+>  <summary><b><u><img src="https://jellyfin.org/images/favicon.ico" height="16"> Jellyfin Libraries:</u></b></summary>
+>  
+>  - To refresh your jellyfin libraries after a succesful download, navigate to '/Settings/Library Service/Library update service/Edit/'
+>  - plex_debrid is currently only able to refresh your entire jellyfinlibrary. Partial library scans to come shortly!
+>
+></details>
+ 
+### :eyes: Library Ignore Services
+
+*The services that plex_debrid will use to ignore content. You can add any combination of services. You can explore the media thats currently ignored from the main plex_debrid menu.*
+
+><details>
+>  <summary><b><u><img src="https://app.plex.tv/desktop/favicon.ico" height="16"> Plex Discover Watch Status:</u></b></summary>
+>  
+>  - To use a plex users plex discover watch status to ignore content, navigate to '/Settings/Library Service/Library ignore services/Edit/'
+>
+></details>
+>
+><details>
+>  <summary><b><u><img src="https://walter.trakt.tv/hotlink-ok/public/favicon.ico" height="16"> Trakt Watch Status:</u></b></summary>
+>  
+>  - To use a trakt users trakt watch status to ignore content, navigate to '/Settings/Library Service/Library ignore services/Edit/'
+>
+></details>
+>
+><details>
+>  <summary><u><b>:clipboard: Local Ignore List:</u></b></summary>
+>  
+>  - To use a local text file of queries to ignore content, navigate to '/Settings/Library Service/Library ignore services/Edit/'
+>
+></details>
+ 
+### :magnet: Scraping Services:
+
+*The services that plex_debrid can use to find torrents. You can add any combination of services. By default, only the legacy scrapers (rarbg, 1337x) are enabled. Its highly recommended to connect more scraping services to make sure you find high quality, cached releases.*
+
+>
+><details>
+>  <summary><b><u><img src="https://progsoft.net/images/rarbg-icon-648af4dcc6ec63ee49d6c050af63d2547c74d46c.png" height="16"><img src="https://1337x.to/favicon.ico" height="16"> legacy scrapers (rarbg, 1337x):</u></b></summary>
+>  
+>  - The only "legacy" scrapers currently integrated are for rarbg.to and 1337x.to - you can turn these off or on by navigating to '/Settings/Scraper/Sources/Edit/'.
+>
+></details>
+>
+><details>
+>  <summary><b><u><img src="https://user-images.githubusercontent.com/27040483/28728094-99f3e3f6-73c7-11e7-8f8d-28912dc6ac0d.png" height="16"> jackett (highly recommended):</u></b></summary>
+>  
+>  - Its recommended to install "jackett", a program that wraps a huge amount of torrent indexers (https://github.com/Jackett/Jackett). Once installed and setup, you can enable jackett by navigating to '/Settings/Scraper/Sources/Edit/Add source/jackett'.
 >  - You can now choose to use a specific debrid service for a specific torrent tracker by navigating to "/Settings/Debrid Services/Tracker specific Debrid Services". This comes in handy if you are using a private tracker that forces you to use a debrid service that will seed your torrents (e.g. debridlink,put.io).
 >
 ></details>
 >
 ><details>
->  <summary><b><u>Debrid service and download automation settings:</u></b></summary>
+>  <summary><b><u><img src="https://prowlarr.com/img/favicon-32x32.png" height="16"> prowlarr:</u></b></summary>
 >  
->  - You can add more than one debrid service and change the order in which they should be checked for cached releases by navigating to '/Settings/Debrid Services/Edit'.
->  - In order to scrape for a movie/show, plex_debrid renames the movie/show title. by default, some special characters are removed and spaces are replaced with dots. You can edit the replacement of other special characters (for example replacing '&' with 'and', etc.) by navigating to '/Settings/Scraper/Special character renaming'
->  - If you don't want the main menu to show when you start the script and run the download automation right away, you can define this in the 'UI Settings' section of the 'Settings' menu. You can return to the main menu at any time by typing 'exit'.
+>  - If you prefer Prowlarr over Jackett, you can integrate prowlarr into plex_debrid by navigating to '/Settings/Scraper/Sources/Edit/Add source/prowlarr'. Prowlarr has stricted rate limits than jackett for some indexers (e.g. 1337x), which could cause plex_debrid to timeout the request to prowlarr and therefore find less releases than jackett.
+>  - You can now choose to use a specific debrid service for a specific torrent tracker by navigating to "/Settings/Debrid Services/Tracker specific Debrid Services". This comes in handy if you are using a private tracker that forces you to use a debrid service that will seed your torrents (e.g. debridlink,put.io).
 >
 ></details>
 >
 ><details>
+>  <summary><b><u><img src="https://orionoid.com/web/images/logo/logo256.png" height="16"> orionoid:</u></b></summary>
+>  
+>  - You can integrate the orionoid scrapers into plex_debrid by navigating to '/Settings/Scraper/Sources/Edit/Add source/orionoid'.
+>  - By default, only the top 5 links are fetched per scraping attempt and the links are sorted by "popularity", not the premium-only "best" attribute. This is done to be "free" account friendly, you can change these parameters in the orionoid source settings '/Settings/Scraper/Sources/Edit/Edit sources/orionoid'.
+>  - You can find a full list of all possible parameters and their respective values at "https://panel.orionoid.com/" in the "Developers" menu, section "API Docs" under "Stream API".
+>
+></details>
+ 
+### :arrow_down_small: Debrid Services:
+
+*The services that plex_debrid can use to download torrents. You can add any combination of services.* 
+
+><details>
+>  <summary><b><u>Debrid services:</u></b></summary>
+>  
+>  - You can add more than one debrid service and change the order in which they should be checked for cached releases by navigating to '/Settings/Debrid Services/Edit'.
+>
+></details>
+>
+ 
+### <img src="https://seeklogo.com/images/1/4k-logo-0B1F5255A1-seeklogo.com.png" height="16"> Defining versions to download:
+
+><details>
 >  <summary><b><u>Defining versions to download:</u></b></summary>
 >  
->  - You can define what release qualities plex_debrid should download by defining a "version". You can add an unlimited amount of versions by navigating to '/Settings/Scraper Settings/versions'. By default, plex_debrid comes with 2 version definitons ([2160 SDR], [1080p SDR])
->  - versions consist of an unlimited amount of completely customizable rules. Rules can be either formulated as a requirement or as a preference. The first rule has the highest priority, the last one the lowest. To give some examples, here are the rules that make up the default [1080p SDR] version:
+>  - You can define what release qualities plex_debrid should download by defining a "version". You can add an unlimited amount of versions by navigating to '/Settings/Scraper Settings/versions'. By default, plex_debrid only comes with 1 version definiton ([1080p SDR])
+>  - versions consist of an unlimited amount of completely customizable "rules" and "triggers". 
+>  - "Rules" define the quality requirements of your versions. The rules can be either formulated as a requirement or as a preference. The first rule has the highest priority, the last one the lowest. To give some examples, here are the rules that make up the default [1080p SDR] version:
 >      
 >        1) cache status  requirement :   cached
 >        2) resolution    requirement :       <=  1080
@@ -326,34 +422,23 @@ more personal media server setup instructions to come soon.
 >        8) seeders       preference  :  highest
 >        9) size          requirement :       >=  0.1
 >      
->  - plex_debrid will continue looking for your defined versions, even if one version was already successfuly downloaded.
->  - more features to come in the near future! Each version will have an option to only affect a particular media type (example: you only want movies to be downloaded in 4k, not shows). You will also be able to define versions to only affect a few media items by providing their titles (example: you only want "House of the Dragon" and "The rings of power" to be downloaded in 4k).
+>  - "Triggers" define when plex_debrid should look for a version. You can add triggers that limit a version to a specific media type, or to specific movies/shows. You can define how many times plex_debrid should attempt to download a version and how many attempts should be made with other versions, before a version is attempted to be downloaded. Here are some of the possible triggers, given in an example of a 720p version that should only be looked for, if the media items in question are "shows" that have been released "before 2010", are not "Family Guy" or "Last week tonight", and no other version has been found for "5 attempts":
+>      
+>        A) media type    requirement :   shows
+>        B) retries       requirement :       >=  5
+>        C) retries       requirement :       <=  48
+>        D) title         requirement :  exclude  (family.guy|last.week.tonight)
+>        E) year          requirement :       <=  2010
+>      
 >
 ></details>
->
-><details>
->  <summary><b><u>How releases are scraped</u></b></summary>
->  
->  The scraping of movies is pretty simple, there is not a lot to explain.
->  
->  When scraping for shows however, the scraper follows the steps below:
->  - If more than 1 season is to be downloaded, the scraper searches for releases with the following query: 'some.show' - which usually returns all releases related to that show.
->    - If more than 3 seasons are to be downloaded, the scraper looks for multi-season packs within the already scraped releases and tries to download one.
->    - The scraper then looks for single-season packs for the remaining seasons within the already scraped releases.
->    - If not all seasons could be downloaded, the scraper specifically searches for the missing seasons with the following query: 'some.show.S0X.'
->  - If less than one entire season is to be downloaded or episodes are still missing, the scraper searches for releases with the following query: 'some.show.S0X' which usually returns all episodes and partial releases of that season.
->    - If missing episodes are found within the already scraped releases, they are downloaded.
->    - If there are still episodes missing, the scraper will look for the individual episodes with the following query: 'some.show.S0XE0X.'
->  
->  All that is done to minimize the amount of calls made to torrent indexers and to fetch the most episodes at once. The process is done via multiprosing to speed things up.
-></details>
-
+ 
 ## Limitations:
 
 ><details>
 >  <summary><b><u>Plex Limitations:</u></b></summary>
 >  
->  - If plex is chosen as the library service, trakt and overseerr content needs to be matched to the plex media type. In order to accurate match content from Overseerr and Trakt to Plex, its neccessary to have at least one movie and one show inside a library thats visible by plex_debrid. Thats because in order to accurately match content, a search by imdb/tmdb/tvdb ID is necessary - which currently only works by requesting a "Fix Match" call to an existing library item. Until Plex allows a universal search by ID, this is the best I can do.
+>  - If plex is chosen as the library collection service, trakt and overseerr content needs to be matched to the plex media type. In order to accurate match content from Overseerr and Trakt to Plex, its neccessary to have at least one movie and one show inside a library thats visible by plex_debrid. Thats because in order to accurately match content, a search by imdb/tmdb/tvdb ID is necessary - which currently only works by requesting a "Fix Match" call to an existing library item. Until Plex allows a universal search by ID, this is the best I can do.
 >  - plex_debrid cannot destinguish between a truly empty library and a library that couldnt be reached because its offline (or not reachable for any other reason). In order to avoid unwanted behaviour, the script simply stops running whenever an empty library is encountered. You will need to manually add at least one media item to the libraries visible by plex_debrid, before the download automation can run savely.
 >  - The plex discover api only provides release dates, not precise release times. Its recommended to connect the script to trakt.tv, which enables plex_debrid to find more accurate release dates and even find out if movies can be downloaded before their actual release date.
 >
