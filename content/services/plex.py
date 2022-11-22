@@ -299,6 +299,7 @@ class library(classes.library):
                         time.sleep(3)
                         return
                 except:
+                    working = False
                     print("It looks like your plex server could not be reached at '" + library.url + "'")
                     print()
                     for setting in settings:
