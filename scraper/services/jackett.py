@@ -98,7 +98,12 @@ def scrape(query, altquery):
             for index, result in enumerate(response.Results):
                 t = Thread(target=multi_init, args=(resolve, result, results, index))
                 threads.append(t)
-                t.start()
+                try:
+                    t.start()
+                except:
+                    ui_print("[jackett] error: couldnt start resolver thread - retrying.")
+                    time.sleep(1)
+                    t.start()
             # wait for the threads to complete
             for t in threads:
                 t.join()
