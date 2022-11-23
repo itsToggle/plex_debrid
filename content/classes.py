@@ -554,7 +554,7 @@ class media:
                         return False
                 return released.days > 0
             else:
-                if released.days >= 0 and released.days <= 1:
+                if released.days >= -1 and released.days <= 1:
                     if self.available():
                         return True
                     else:
@@ -615,11 +615,13 @@ class media:
                         return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')
                 except:
                     return False
-        elif self.type == 'movie':
+        try:
             released = datetime.datetime.today() - datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
             if released.days < 0:
                 return False
-        return True
+            return True
+        except:
+            return False
 
     def collect(self):
         for refresh_service in refresh():
