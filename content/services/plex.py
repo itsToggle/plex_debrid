@@ -296,11 +296,13 @@ class library(classes.library):
                     working = True
                     if len(response.MediaContainer.Directory) == 0:
                         print("It looks like this server does not have any libraries set-up! Please open the plex webui, setup at least one library and point it to your mounted debrid service drive.")
-                        time.sleep(3)
-                        return
+                        print()
+                        input("Press enter to try again: ")
+                        print()
+                        working = False
                 except:
                     working = False
-                    print("It looks like your plex server could not be reached at '" + library.url + "'")
+                    print("It looks like your plex server could not be reached at '" + library.url + "'. Make sure that plex media server is running, that you have claimed the server and that you have created at least one plex library.")
                     print()
                     for setting in settings:
                         if setting.name == "Plex server address":
