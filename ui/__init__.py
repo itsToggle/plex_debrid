@@ -239,15 +239,23 @@ def setup():
     save()
     return True
 
-def save():
+def save(doprint=True):
     save_settings = {}
     for category, settings in settings_list:
         for setting in settings:
             save_settings[setting.name] = setting.get()
-    with open(config_dir + '/settings.json', 'w') as f:
-        json.dump(save_settings, f, indent=4)
-    print('Current settings saved!')
-    time.sleep(2)
+    try:
+        with open(config_dir + '/settings.json', 'w') as f:
+            json.dump(save_settings, f, indent=4)
+        if doprint:
+            print('Current settings saved!')
+            time.sleep(2)
+    except:
+        print()
+        print("Error: It looks like plex_debrid can not write your settings into a config file. Make sure you are running the script with write or administator privilege.")
+        print()
+        input("Press enter to exit: ")
+        exit()
 
 def load(doprint=False, updated=False):
     with open(config_dir + '/settings.json', 'r') as f:

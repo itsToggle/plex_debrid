@@ -92,7 +92,7 @@ def scrape(query, altquery):
                 else:
                     response.Results.remove(result)
             # Multiprocess resolving of result.Link for remaining releases
-            results = [None] * len(response.Results)
+            results = [None] * len(response.Results[:200])
             threads = []
             # start thread for each remaining release
             for index, result in enumerate(response.Results):
