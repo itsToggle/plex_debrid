@@ -291,8 +291,7 @@ def load(doprint=False, updated=False):
     if doprint:
         print('Last settings loaded!')
         time.sleep(2)
-    if updated:
-        save()
+    save(doprint=updated)
 
 def preflight():
     missing = []
