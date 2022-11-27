@@ -59,9 +59,19 @@ For linux, mac and windows, the setup process does not require any additional pr
   - **Rooted Nvidia Shield guide from user "b u n n y" up on discord**
 </details>
 
+If you want to run plex_debrid on a VPS or Seedbox, please keep in mind that some debrid services block such IP addresses from accessing their servers:
+<details>
+  <summary><b><u>Help for a VPS/Seedbox Setup</u></b></summary>
+  
+  - **I do not encourage you to disregard your debrid services code of conduct.**
+  - Debrid services like realdebrid block common VPS or Seedbox IP addresses. They do however have a list of whitelisted VPNs, behind which you can run your server. For realdebrid you can find this list on https://real-debrid.com/vpn . You can also use this address to check wether or not your servers IP is blocked by running the commands `curl -4 https://real-debrid.com/vpn | grep blocked` and `curl -6 https://real-debrid.com/vpn | grep blocked`. If you have the option, you can try to request a different IP address from your VPS provider, preferably your own personal IPv4 address which will most likely not be blocked.
+</details>
+
+
 ### 1) :open_file_folder: Mount your debrid services:
 
-*For this download automation to work, you need to mount at least one debrid service as a virtual drive. I highly recommend using RealDebrid, as this service will recieve updates and new features from plex_debrid first.*
+*For this download automation to work, you need to mount at least one debrid service as a virtual drive. I highly recommend using RealDebrid, as this service will recieve updates and new features from plex_debrid first. Please keep in mind that most debrid services dont allow you to access their service from multiple IP addresses in parallel. This is not an issue if you have a Plex server running, since everything you stream through plex (from any location, no matter how many in parallel) is routed through your servers IP address. While you have your plex server running though, you should not download from your debrid service in any other way than through plex.*
+
 >
 ><details>
 >  <summary><b><u><img src="https://fcdn.real-debrid.com/0818/favicons/favicon.ico" height="16"> Mounting RealDebrid</u></b></summary>
