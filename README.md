@@ -203,8 +203,8 @@ If you want to run plex_debrid on a VPS or Seedbox, please keep in mind that som
 >  <summary><b><u>Standard Version:</u></b></summary>
 >  
 >  0. Clone this repository with git or click on "code" (top right) and then "download zip" 
->  1. Run `pip install -r requirements.txt`
->  2. Run the script!
+>  1. Open a terminal inside the downloaded plex_debrid-main folder. Run `pip install -r requirements.txt` - if you dont have pip yet, install it from https://pypi.org/project/pip/
+>  2. Start the script by running `python ./main.py`
 >  3. The script will guide you through the initial setup and the next steps. When setting up plex_debrid, you will be prompted to choose the 5 main services that this script connects:
 >  4. Pick and setup at least one [**content service**](https://github.com/itsToggle/plex_debrid#tv-content-services) which plex_debrid should monitor for new content
 >  5. Pick and setup a [**library collection service**](https://github.com/itsToggle/plex_debrid#open_file_folder-library-collection-service), which plex_debrid will use to determine your current media collection. If you intend to run a plex server, choose plex.
@@ -212,7 +212,7 @@ If you want to run plex_debrid on a VPS or Seedbox, please keep in mind that som
 >  7. Pick and setup a [**library ignore service**](https://github.com/itsToggle/plex_debrid#eyes-library-ignore-services), which plex_debrid will use to ignore content. If you intent to run a plex server, choose plex.
 >  8. Pick and setup at least one [**debrid service**](https://github.com/itsToggle/plex_debrid#arrow_down_small-debrid-services), which plex_debrid will use to download content.
 >  9. You're done!
->  10. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
+>  10. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run. 
 >  11. If you dont want the main menu to show when starting the script (for an auto-run setup), navigate to "/Settings/UI Settings/show menu on startup" and set the value to "false".
 >  12. Read the rest of the README!
 >  
