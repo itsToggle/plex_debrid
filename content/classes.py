@@ -706,6 +706,9 @@ class media:
         if self.type == 'movie':
             if len(self.uncollected(library)) > 0 or self.version_missing():
                 if self.released() and not self.watched() and not self.downloading():
+                    if not hasattr(self,"year") or self.year == None:
+                        ui_print("error: media item has no release year.")
+                        return
                     tic = time.perf_counter()
                     alternate_years = [self.year, self.year - 1, self.year + 1]
                     langs = []

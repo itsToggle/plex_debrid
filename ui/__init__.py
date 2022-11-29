@@ -9,6 +9,7 @@ from ui.ui_print import *
 from settings import *
 
 config_dir = ""
+service_mode = False
 
 class option:
     def __init__(self, name, cls, key):
@@ -223,7 +224,7 @@ def setup():
         if os.path.getsize(config_dir + '/settings.json') > 0 and os.path.isfile(config_dir + '/settings.json'):
             with open(config_dir + '/settings.json', 'r') as f:
                 settings = json.loads(f.read())
-            if settings['Show Menu on Startup'] == "false":
+            if settings['Show Menu on Startup'] == "false" or service_mode == True:
                 return False
             load()
             return True
@@ -291,8 +292,7 @@ def load(doprint=False, updated=False):
     if doprint:
         print('Last settings loaded!')
         time.sleep(2)
-    if updated:
-        save()
+    save(doprint=updated)
 
 def preflight():
     missing = []
@@ -311,9 +311,11 @@ def preflight():
         return False
     return True
 
-def run(cdir = ""):
+def run(cdir = "", smode = False):
     global config_dir
+    global service_mode
     config_dir = cdir
+    service_mode = smode
     if setup():
         options()
     else:
@@ -343,7 +345,10 @@ def update(settings, version):
 
 def threaded(stop):
     ui_cls()
-    print("Type 'exit' to return to the main menu.")
+    if service_mode == True:
+        print("Running in service mode, user input not supported.")
+    else:
+        print("Type 'exit' to return to the main menu.")
     timeout = 5
     regular_check = 1800
     timeout_counter = 0
@@ -417,12 +422,15 @@ def download_script_run():
         stop = False
         t = Thread(target=threaded, args=(lambda: stop,))
         t.start()
-        while not stop:
-            text = input("")
-            if text == 'exit':
-                stop = True
-            else:
-                print("Type 'exit' to return to the main menu.")
+        if service_mode == True:
+            print("Running in service mode, user input not supported.")
+        else:
+            while not stop:
+                text = input("")
+                if text == 'exit':
+                    stop = True
+                else:
+                    print("Type 'exit' to return to the main menu.")
         print("Waiting for the download automation to stop ... ")
         while t.is_alive():
             time.sleep(1)
