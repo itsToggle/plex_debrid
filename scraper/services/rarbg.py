@@ -23,10 +23,10 @@ def scrape(query, altquery):
         while not hasattr(response, "torrent_results") and retries < 4:
             if regex.search(r'(tt[0-9]+)', query, regex.I):
                 url = 'https://torrentapi.org/pubapi_v2.php?mode=search&search_imdb=' + str(
-                    query) + '&ranked=0&category=52;51;50;49;48;45;44;41;17;14&token=' + token + '&limit=100&format=json_extended&app_id=fuckshit'
+                    query) + '&ranked=0&category=52;51;50;49;48;46;45;44;41;17;14&token=' + token + '&limit=100&format=json_extended&app_id=fuckshit'
             else:
                 url = 'https://torrentapi.org/pubapi_v2.php?mode=search&search_string=' + str(
-                    query) + '&ranked=0&category=52;51;50;49;48;45;44;41;17;14&token=' + token + '&limit=100&format=json_extended&app_id=fuckshit'
+                    query) + '&ranked=0&category=52;51;50;49;48;46;45;44;41;17;14&token=' + token + '&limit=100&format=json_extended&app_id=fuckshit'
             try:
                 response = session.get(url, headers=headers)
                 if not response.status_code == 429:
