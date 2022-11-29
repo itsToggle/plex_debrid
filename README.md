@@ -59,9 +59,19 @@ For linux, mac and windows, the setup process does not require any additional pr
   - **Rooted Nvidia Shield guide from user "b u n n y" up on discord**
 </details>
 
+If you want to run plex_debrid on a VPS or Seedbox, please keep in mind that some debrid services block such IP addresses from accessing their servers:
+<details>
+  <summary><b><u>Help for a VPS/Seedbox Setup</u></b></summary>
+  
+  - **I do not encourage you to disregard your debrid services code of conduct.**
+  - Debrid services like realdebrid block common VPS or Seedbox IP addresses. They do however have a list of whitelisted VPNs, behind which you can run your server. For realdebrid you can find this list on https://real-debrid.com/vpn . You can also use this address to check wether or not your servers IP is blocked by running the commands `curl -4 https://real-debrid.com/vpn | grep blocked` and `curl -6 https://real-debrid.com/vpn | grep blocked`. If you have the option, you can try to request a different IP address from your VPS provider, preferably your own personal IPv4 address which will most likely not be blocked.
+</details>
+
+
 ### 1) :open_file_folder: Mount your debrid services:
 
-*For this download automation to work, you need to mount at least one debrid service as a virtual drive. I highly recommend using RealDebrid, as this service will recieve updates and new features from plex_debrid first.*
+*For this download automation to work, you need to mount at least one debrid service as a virtual drive. I highly recommend using RealDebrid, as this service will recieve updates and new features from plex_debrid first. Please keep in mind that most debrid services dont allow you to access their service from multiple IP addresses in parallel. This is not an issue if you have a Plex server running, since everything you stream through plex (from any location, no matter how many in parallel) is routed through your servers IP address. While you have your plex server running though, you should not download from your debrid service in any other way than through plex.*
+
 >
 ><details>
 >  <summary><b><u><img src="https://fcdn.real-debrid.com/0818/favicons/favicon.ico" height="16"> Mounting RealDebrid</u></b></summary>
@@ -196,11 +206,11 @@ For linux, mac and windows, the setup process does not require any additional pr
 >  1. Run `pip install -r requirements.txt`
 >  2. Run the script!
 >  3. The script will guide you through the initial setup and the next steps. When setting up plex_debrid, you will be prompted to choose the 5 main services that this script connects:
->  4. Pick and setup at least one **content service** which plex_debrid should monitor for new content
->  5. Pick and setup a **library collection service**, which plex_debrid will use to determine your current media collection. If you intend to run a plex server, choose plex.
->  6. Pick and setup a **library update service**, which plex_debrid will update/refresh after a successful download. If you intent to run a plex server, choose plex.
->  7. Pick and setup a **library ignore service**, which plex_debrid will use to ignore content. If you intent to run a plex server, choose plex.
->  8. Pick and setup at least one **debrid service**, which plex_debrid will use to download content.
+>  4. Pick and setup at least one [**content service**](https://github.com/itsToggle/plex_debrid#tv-content-services) which plex_debrid should monitor for new content
+>  5. Pick and setup a [**library collection service**](https://github.com/itsToggle/plex_debrid#open_file_folder-library-collection-service), which plex_debrid will use to determine your current media collection. If you intend to run a plex server, choose plex.
+>  6. Pick and setup a [**library update service**](https://github.com/itsToggle/plex_debrid#-library-update-services), which plex_debrid will update/refresh after a successful download. If you intent to run a plex server, choose plex.
+>  7. Pick and setup a [**library ignore service**](https://github.com/itsToggle/plex_debrid#eyes-library-ignore-services), which plex_debrid will use to ignore content. If you intent to run a plex server, choose plex.
+>  8. Pick and setup at least one [**debrid service**](https://github.com/itsToggle/plex_debrid#arrow_down_small-debrid-services), which plex_debrid will use to download content.
 >  9. You're done!
 >  10. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
 >  11. If you dont want the main menu to show when starting the script (for an auto-run setup), navigate to "/Settings/UI Settings/show menu on startup" and set the value to "false".
@@ -214,11 +224,11 @@ For linux, mac and windows, the setup process does not require any additional pr
 >  1. Run `docker pull itstoggle/plex_debrid`or visit https://hub.docker.com/repository/docker/itstoggle/plex_debrid.
 >  2. Run `docker run -v /path/to/config:/config --net host -ti itstoggle/plex_debrid` . Where `/path/to/config` is the directory path where you want to save your plex_debrid config data.
 >  3. The script will guide you through the initial setup and the next steps. When setting up plex_debrid, you will be prompted to choose the 5 main services that this script connects:
->  4. Pick and setup at least one **content service** which plex_debrid should monitor for new content
->  5. Pick and setup a **library collection service**, which plex_debrid will use to determine your current media collection. If you intent to run a plex server, choose plex.
->  6. Pick and setup a **library update service**, which plex_debrid will update/refresh after a successful download. If you intent to run a plex server, choose plex.
->  7. Pick and setup a **library ignore service**, which plex_debrid will use to ignore content. If you intent to run a plex server, choose plex.
->  8. Pick and setup at least one **debrid service**, which plex_debrid will use to download content.
+>  4. Pick and setup at least one [**content service**](https://github.com/itsToggle/plex_debrid#tv-content-services) which plex_debrid should monitor for new content
+>  5. Pick and setup a [**library collection service**](https://github.com/itsToggle/plex_debrid#open_file_folder-library-collection-service), which plex_debrid will use to determine your current media collection. If you intend to run a plex server, choose plex.
+>  6. Pick and setup a [**library update service**](https://github.com/itsToggle/plex_debrid#-library-update-services), which plex_debrid will update/refresh after a successful download. If you intent to run a plex server, choose plex.
+>  7. Pick and setup a [**library ignore service**](https://github.com/itsToggle/plex_debrid#eyes-library-ignore-services), which plex_debrid will use to ignore content. If you intent to run a plex server, choose plex.
+>  8. Pick and setup at least one [**debrid service**](https://github.com/itsToggle/plex_debrid#arrow_down_small-debrid-services), which plex_debrid will use to download content.
 >  9. You're done!
 >  10. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
 >  11. If you dont want the main menu to show when starting the script (for an auto-run setup), navigate to "/Settings/UI Settings/show menu on startup" and set the value to "false".
