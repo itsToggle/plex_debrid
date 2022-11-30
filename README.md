@@ -50,10 +50,14 @@ Feel free to ask any questions on github [discussions](https://github.com/itsTog
 If github is not your cup of tee, join the plex_debrid [discord server](https://discord.gg/UKkPeRdukx) or find me on [reddit](https://www.reddit.com/user/itsToggle)
  
 ## Setup:
-For linux, mac and windows, the setup process does not require any additional preparation. For different operating systems, check out the information the fine people linked here have gathered or check our discord server:
+
+Aside from this general setup guide, here some step-by-step guides with specific examples for a few different operating systems:
+
 <details>
-  <summary><b><u>Help for your OS</u></b></summary>
+  <summary><b><u>Step by Step for your OS:</u></b></summary>
   
+  - **[Linux Server (Wiki)](https://github.com/itsToggle/plex_debrid/wiki/Setup-Guides#linux-server-setup)**
+  - **[Linux ARM Server (Wiki)](https://github.com/itsToggle/plex_debrid/wiki/Setup-Guides#linux-arm64-server-setup)**
   - **[FreeBSD (u/TheNicestRichtofen)](https://www.reddit.com/r/Piracy/comments/v5zpj7/comment/ibnikqh/?utm_source=share&utm_medium=web2x&context=3)**
   - **[Android](https://github.com/itsToggle/plex_debrid/tree/android)**
   - **Rooted Nvidia Shield guide from user "b u n n y" up on discord**
