@@ -7,6 +7,7 @@ base_url = "http://127.0.0.1:9117"
 api_key = ""
 name = "jackett"
 resolver_timeout = '1'
+filter = "!status:failing,test:passed"
 session = requests.Session()
 
 def setup(cls, new=False):
@@ -55,7 +56,6 @@ def scrape(query, altquery):
     from scraper.services import active
     scraped_releases = []
     if 'jackett' in active:
-        filter = "all"
         url = base_url + '/api/v2.0/indexers/' + filter + '/results?apikey=' + api_key + '&Query=' + query
         try:
             response = session.get(url, timeout=60)
@@ -95,7 +95,7 @@ def scrape(query, altquery):
             results = [None] * len(response.Results[:200])
             threads = []
             # start thread for each remaining release
-            for index, result in enumerate(response.Results):
+            for index, result in enumerate(response.Results[:200]):
                 t = Thread(target=multi_init, args=(resolve, result, results, index))
                 threads.append(t)
                 try:
