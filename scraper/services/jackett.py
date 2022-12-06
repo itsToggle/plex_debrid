@@ -55,7 +55,7 @@ def scrape(query, altquery):
     from scraper.services import active
     scraped_releases = []
     if 'jackett' in active:
-        filter = "all"
+        filter = "!status:failing,test:passed"
         url = base_url + '/api/v2.0/indexers/' + filter + '/results?apikey=' + api_key + '&Query=' + query
         try:
             response = session.get(url, timeout=60)

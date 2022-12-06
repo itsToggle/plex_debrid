@@ -18,17 +18,16 @@ def setup(cls, new=False):
 # Error Log
 def logerror(response):
     if not response.status_code == 200:
-        ui_print("[debridlink] error: " + str(response.content), debug=ui_settings.debug)
-    if 'error' in str(response.content):
+        ui_print("[debridlink] error "+str(response.status_code)+": " + str(response.content), debug=ui_settings.debug)
+    if 'error' in str(response.content): 
         try:
             response2 = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
             if not response2.error == 'authorization_pending':
-                ui_print("[debridlink] error: " + response2.error)
+                ui_print("[debridlink] error "+str(response.status_code)+": " + response2.error)
         except:
-            ui_print("[debridlink] error: unknown error")
+            ui_print("[debridlink] error "+str(response.status_code)+": unknown error")
     if response.status_code == 401:
-        ui_print(
-            "[debridlink] error: (401 unauthorized): debridlink api key does not seem to work. check your debridlink settings.")
+        ui_print("[debridlink] error 401: debridlink api key does not seem to work. check your debridlink settings.")
 
 # Get Function
 def get(url):
@@ -63,14 +62,12 @@ def post(url, data):
 # Oauth Method
 def oauth(code=""):
     if code == "":
-        response = post('https://debrid-link.fr/api/oauth/device/code',
-                                            'client_id=' + client_id)
+        response = post('https://debrid-link.fr/api/oauth/device/code','client_id=' + client_id)
         return response.device_code, response.user_code
     else:
         response = None
         while response == None:
-            response = post('https://debrid-link.fr/api/oauth/token',
-                                                'client_id=' + client_id + '&code=' + code + '&grant_type=http%3A%2F%2Foauth.net%2Fgrant_type%2Fdevice%2F1.0')
+            response = post('https://debrid-link.fr/api/oauth/token','client_id=' + client_id + '&code=' + code + '&grant_type=http%3A%2F%2Foauth.net%2Fgrant_type%2Fdevice%2F1.0')
             if hasattr(response, 'error'):
                 response = None
             time.sleep(1)
@@ -83,8 +80,7 @@ def download(element, stream=True, query='', force=False):
         query = element.deviation()
     for release in cached[:]:
         # if release matches query
-        if regex.match(r'(' + query.replace('.', '\.').replace("\.*", ".*") + ')', release.title,
-                        regex.I) or force:
+        if regex.match(r'(' + query.replace('.', '\.').replace("\.*", ".*") + ')', release.title,regex.I) or force:
             if stream:
                 # Cached Download Method for debridlink
                 hashstring = regex.findall(r'(?<=btih:).*?(?=&)', str(release.download[0]), regex.I)[0]

@@ -81,14 +81,19 @@ def setup(self, new=False):
                         if choice == '0':
                             back = True
                         elif choice == '1':
-                            print("To add a public list, please enter the lists url in the format shown by this example: (Example URL: '/users/giladg/lists/latest-releases') ")
-                            print()
-                            url = input("Please enter the public list url: ")
-                            current_user = users[0]
-                            if current_user[1] == "":
+                            try:
+                                current_user = users[0]
+                                if current_user[1] == "":
+                                    print("Please add at least one trakt user before adding a trakt list!")
+                                    time.sleep(5)
+                                    return False
+                            except:
                                 print("Please add at least one trakt user before adding a trakt list!")
                                 time.sleep(5)
                                 return False
+                            print("To add a public list, please enter the lists url in the format shown by this example: (Example URL: '/users/giladg/lists/latest-releases') ")
+                            print()
+                            url = input("Please enter the public list url: ")
                             response, header = get('https://api.trakt.tv' + url + '/items')
                             while response == None:
                                 print()
