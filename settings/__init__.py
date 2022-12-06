@@ -369,6 +369,7 @@ settings_list = [
         setting('Jackett Base URL', 'Please specify your Jackett base URL: ', scraper.services.jackett, 'base_url',hidden=True),
         setting('Jackett API Key', 'Please specify your Jackett API Key: ', scraper.services.jackett, 'api_key',hidden=True),
         setting('Jackett resolver timeout', 'Please enter the resolver timeout in seconds: ', scraper.services.jackett, 'resolver_timeout',hidden=True),
+        setting('Jackett indexer filter', 'Please enter the jackett indexer filters that should be used, seperated by a "," character. Enter "all" to not filter your indexers: ', scraper.services.jackett, 'filter', hidden=True),
         setting('Prowlarr Base URL', 'Please specify your Prowlarr base URL: ', scraper.services.prowlarr, 'base_url',hidden=True),
         setting('Prowlarr API Key', 'Please specify your Prowlarr API Key: ', scraper.services.prowlarr, 'api_key',hidden=True),
         setting('Orionoid API Key','Please open your favorite browser, log into your orionoid account and open "https://auth.orionoid.com". Enter this code: ',scraper.services.orionoid, 'token', hidden=True, oauth=True),
