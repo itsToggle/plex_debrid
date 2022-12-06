@@ -56,6 +56,7 @@ Aside from this general setup guide, here some step-by-step guides with specific
 <details>
   <summary><b><u>Step by Step for your OS:</u></b></summary>
   
+  - **[Windows (Wiki)](https://github.com/itsToggle/plex_debrid/wiki/Setup-Guides#windows-setup)**
   - **[Linux Server (Wiki)](https://github.com/itsToggle/plex_debrid/wiki/Setup-Guides#linux-server-setup)**
   - **[Linux ARM Server (Wiki)](https://github.com/itsToggle/plex_debrid/wiki/Setup-Guides#linux-arm64-server-setup)**
   - **[FreeBSD (u/TheNicestRichtofen)](https://www.reddit.com/r/Piracy/comments/v5zpj7/comment/ibnikqh/?utm_source=share&utm_medium=web2x&context=3)**
