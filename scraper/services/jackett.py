@@ -54,62 +54,70 @@ def setup(cls, new=False):
 
 def scrape(query, altquery):
     from scraper.services import active
+    global base_url
     scraped_releases = []
     if 'jackett' in active:
+        if base_url.endswith('/'):
+            base_url = base_url[:-1]
         url = base_url + '/api/v2.0/indexers/' + filter + '/results?apikey=' + api_key + '&Query=' + query
         try:
             response = session.get(url, timeout=60)
         except:
             ui_print('[jackett] error: jackett request timed out.')
             return []
-        if response.status_code == 200:
-            try:
-                response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
-            except:
-                ui_print('[jackett] error: jackett didnt return any data.')
-                return []
-            for result in response.Results[:]:
-                result.Title = result.Title.replace(' ', '.')
-                result.Title = result.Title.replace(':', '').replace("'", '')
-                result.Title = regex.sub(r'\.+', ".", result.Title)
-                if not altquery == '(.*)':
-                    variations = result.Title.split('/')
-                    variations += result.Title.split(']')
-                    for variation in variations:
-                        if regex.match(r'(' + altquery.replace('.', '\.').replace("\.*", ".*") + ')', variation,regex.I):
-                            result.Title = variation
-                if regex.match(r'(' + altquery.replace('.', '\.').replace("\.*", ".*") + ')', result.Title,regex.I):
-                    if not result.MagnetUri == None:
-                        if not result.Tracker == None and not result.Size == None:
-                            scraped_releases += [
-                                releases.release('[jackett: ' + str(result.Tracker) + ']', 'torrent', result.Title, [],float(result.Size) / 1000000000, [result.MagnetUri],seeders=result.Seeders)]
-                        elif not result.Tracker == None:
-                            scraped_releases += [
-                                releases.release('[jackett: ' + str(result.Tracker) + ']', 'torrent', result.Title, [],1, [result.MagnetUri], seeders=result.Seeders)]
-                        elif not result.Size == None:
-                            scraped_releases += [releases.release('[jackett: unnamed]', 'torrent', result.Title, [],float(result.Size) / 1000000000, [result.MagnetUri],seeders=result.Seeders)]
-                        response.Results.remove(result)
-                else:
+        if not response.status_code == 200:
+            if response.status_code in [401,403]:
+                ui_print('[jackett] error '+str(response.status_code)+': it seems your api key is not working.')
+            else:
+                ui_print('[jackett] error '+str(response.status_code)+': it seems jackett is reachable, but there was an internal error.')
+            return []
+        try:
+            response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
+        except:
+            ui_print('[jackett] error: jackett didnt return any data.')
+            return []
+        for result in response.Results[:]:
+            result.Title = result.Title.replace(' ', '.')
+            result.Title = result.Title.replace(':', '').replace("'", '')
+            result.Title = regex.sub(r'\.+', ".", result.Title)
+            if not altquery == '(.*)':
+                variations = result.Title.split('/')
+                variations += result.Title.split(']')
+                for variation in variations:
+                    if regex.match(r'(' + altquery.replace('.', '\.').replace("\.*", ".*") + ')', variation,regex.I):
+                        result.Title = variation
+            if regex.match(r'(' + altquery.replace('.', '\.').replace("\.*", ".*") + ')', result.Title,regex.I):
+                if not result.MagnetUri == None:
+                    if not result.Tracker == None and not result.Size == None:
+                        scraped_releases += [
+                            releases.release('[jackett: ' + str(result.Tracker) + ']', 'torrent', result.Title, [],float(result.Size) / 1000000000, [result.MagnetUri],seeders=result.Seeders)]
+                    elif not result.Tracker == None:
+                        scraped_releases += [
+                            releases.release('[jackett: ' + str(result.Tracker) + ']', 'torrent', result.Title, [],1, [result.MagnetUri], seeders=result.Seeders)]
+                    elif not result.Size == None:
+                        scraped_releases += [releases.release('[jackett: unnamed]', 'torrent', result.Title, [],float(result.Size) / 1000000000, [result.MagnetUri],seeders=result.Seeders)]
                     response.Results.remove(result)
-            # Multiprocess resolving of result.Link for remaining releases
-            results = [None] * len(response.Results[:200])
-            threads = []
-            # start thread for each remaining release
-            for index, result in enumerate(response.Results[:200]):
-                t = Thread(target=multi_init, args=(resolve, result, results, index))
-                threads.append(t)
-                try:
-                    t.start()
-                except:
-                    ui_print("[jackett] error: couldnt start resolver thread - retrying.")
-                    time.sleep(1)
-                    t.start()
-            # wait for the threads to complete
-            for t in threads:
-                t.join()
-            for result in results:
-                if not result == [] and not result == None:
-                    scraped_releases += result
+            else:
+                response.Results.remove(result)
+        # Multiprocess resolving of result.Link for remaining releases
+        results = [None] * len(response.Results[:200])
+        threads = []
+        # start thread for each remaining release
+        for index, result in enumerate(response.Results[:200]):
+            t = Thread(target=multi_init, args=(resolve, result, results, index))
+            threads.append(t)
+            try:
+                t.start()
+            except:
+                ui_print("[jackett] error: couldnt start resolver thread - retrying.")
+                time.sleep(1)
+                t.start()
+        # wait for the threads to complete
+        for t in threads:
+            t.join()
+        for result in results:
+            if not result == [] and not result == None:
+                scraped_releases += result
     return scraped_releases
 
 def resolve(result):
