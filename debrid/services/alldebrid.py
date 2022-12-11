@@ -18,20 +18,19 @@ def setup(cls, new=False):
 # Error Log
 def logerror(response):
     if not response.status_code == 200:
-        ui_print("[alldebrid] error: " + str(response.content), debug=ui_settings.debug)
+        ui_print("[alldebrid] error "+str(response.status_code)+": " + str(response.content), debug=ui_settings.debug)
     if 'error' in str(response.content):
         try:
             response2 = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
-            ui_print("[alldebrid] error: " + response2.data[0].error.message)
+            ui_print("[alldebrid] error "+str(response.status_code)+": " + response2.data[0].error.message)
         except:
             try:
                 response2 = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
-                ui_print("[alldebrid] error: " + response2.error.message)
+                ui_print("[alldebrid] error "+str(response.status_code)+": " + response2.error.message)
             except:
-                ui_print("[alldebrid] error: unknown error")
+                ui_print("[alldebrid] error "+str(response.status_code)+": unknown error")
     if response.status_code == 401:
-        ui_print(
-            "[alldebrid] error: (401 unauthorized): alldebrid api key does not seem to work. check your alldebrid settings.")
+        ui_print("[alldebrid] error: 401: alldebrid api key does not seem to work. check your alldebrid settings.")
 
 # Get Function
 def get(url):
