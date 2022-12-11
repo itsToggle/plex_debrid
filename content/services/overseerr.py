@@ -9,7 +9,7 @@ from ui.ui_print import *
 name = 'Overseerr'
 base_url = "http://localhost:5055"
 users = ['all']
-allowed_movie_status = [['2'], ]
+allowed_movie_status = [['2'], ['3']]
 allowed_show_status = [['2'], ['3'], ['4'], ['5']]
 api_key = ""
 session = requests.Session()
@@ -296,7 +296,7 @@ class requests(classes.watchlist):
             try:
                 response = get(base_url + '/api/v1/request?take=10000')
                 for element_ in response.results:
-                    if not element_.id in (x.id for x in last_requests) and (element_.requestedBy.displayName in users or users == ['all']) and ([str(element.media.status)] in allowed_movie_status if element.type == 'movie' else [str(element.media.status)] in allowed_show_status):
+                    if not element_.id in (x.id for x in last_requests) and (element_.requestedBy.displayName in users or users == ['all']) and ([str(element_.media.status)] in allowed_movie_status if element_.type == 'movie' else [str(element_.media.status)] in allowed_show_status):
                         ui_print('[overseerr] found new overseerr request by user "' + element_.requestedBy.displayName + '".')
                         refresh = True
                         last_requests.append(element_)
