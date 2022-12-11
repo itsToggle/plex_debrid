@@ -295,7 +295,7 @@ class requests(classes.watchlist):
             try:
                 response = get(base_url + '/api/v1/request?take=1000')
                 for element_ in response.results:
-                    if not element_ in last_requests and (element_.requestedBy.displayName in users or users == ['all']) and [str(element_.status)] in allowed_status:
+                    if not element_.id in (x.id for x in last_requests) and (element_.requestedBy.displayName in users or users == ['all']) and [str(element_.status)] in allowed_status:
                         ui_print('[overseerr] found new overseerr request by user "' + element_.requestedBy.displayName + '".')
                         refresh = True
                         last_requests.append(element_)
@@ -321,7 +321,7 @@ class requests(classes.watchlist):
                             self.data.append(element)
                         ui_print('done')
                 for element in last_requests[:]:
-                    if not element in response.results:
+                    if not element.id in (x.id for x in response.results):
                         last_requests.remove(element)
                 if refresh:
                     return True
