@@ -358,36 +358,33 @@ def threaded(stop):
         plex_watchlist = content.services.plex.watchlist()
         # get entire trakt_watchlist
         trakt_watchlist = content.services.trakt.watchlist()
-        # get all overseerr request, match content to available media type and add to monitored list
+        # get all overseerr request
         overseerr_requests = content.services.overseerr.requests()
-        if len(content.services.plex.users) > 0:
-            overseerr_requests.sync(plex_watchlist)
-        elif len(content.services.trakt.users) > 0:
-            overseerr_requests.sync(trakt_watchlist)
-        else:
-            ui_print("couldnt match overseerr content to either plex or trakt.",ui_settings.debug)
+        # combine all content, sort by newest
+        watchlists = plex_watchlist + trakt_watchlist + overseerr_requests
+        try:
+            watchlists.data.sort(key=lambda s: s.watchlistedAt,reverse=True)
+        except:
+            ui_print("couldnt sort monitored media by newest, using default order.", ui_settings.debug)
         ui_print('checking new content ...')
-        for iterator in itertools.zip_longest(plex_watchlist, trakt_watchlist):
-            for element in iterator:
-                if hasattr(element, 'download'):
-                    element.download(library=library)
+        for element in watchlists:
+            if hasattr(element, 'download'):
+                element.download(library=library)
         ui_print('done')
         while not stop():
             if plex_watchlist.update() or overseerr_requests.update() or trakt_watchlist.update():
                 library = content.classes.library()[0]()
-                if len(content.services.plex.users) > 0:
-                    overseerr_requests.sync(plex_watchlist)
-                elif len(content.services.trakt.users) > 0:
-                    overseerr_requests.sync(trakt_watchlist)
-                else:
-                    ui_print("couldnt match overseerr content to either plex or trakt.",ui_settings.debug)
                 if len(library) == 0:
                     continue
+                watchlists = plex_watchlist + trakt_watchlist + overseerr_requests
+                try:
+                    watchlists.data.sort(key=lambda s: s.watchlistedAt,reverse=True)
+                except:
+                    ui_print("couldnt sort monitored media by newest, using default order.", ui_settings.debug)
                 ui_print('checking new content ...')
-                for iterator in itertools.zip_longest(plex_watchlist, trakt_watchlist):
-                    for element in iterator:
-                        if hasattr(element, 'download'):
-                            element.download(library=library)
+                for element in watchlists:
+                    if hasattr(element, 'download'):
+                        element.download(library=library)
                 ui_print('done')
             elif timeout_counter >= regular_check:
                 # get entire plex_watchlist
@@ -396,21 +393,20 @@ def threaded(stop):
                 trakt_watchlist = content.services.trakt.watchlist()
                 # get all overseerr request, match content to plex media type and add to monitored list
                 overseerr_requests = content.services.overseerr.requests()
-                if len(content.services.plex.users) > 0:
-                    overseerr_requests.sync(plex_watchlist)
-                elif len(content.services.trakt.users) > 0:
-                    overseerr_requests.sync(trakt_watchlist)
-                else:
-                    ui_print("couldnt match overseerr content to either plex or trakt.",ui_settings.debug)
+                # combine all content, sort by newest
+                watchlists = plex_watchlist + trakt_watchlist + overseerr_requests
+                try:
+                    watchlists.data.sort(key=lambda s: s.watchlistedAt,reverse=True)
+                except:
+                    ui_print("couldnt sort monitored media by newest, using default order.", ui_settings.debug)
                 library = content.classes.library()[0]()
                 timeout_counter = 0
                 if len(library) == 0:
                     continue
                 ui_print('checking new content ...')
-                for iterator in itertools.zip_longest(plex_watchlist, trakt_watchlist):
-                    for element in iterator:
-                        if hasattr(element, 'download'):
-                            element.download(library=library)
+                for element in watchlists:
+                    if hasattr(element, 'download'):
+                        element.download(library=library)
                 ui_print('done')
             else:
                 timeout_counter += timeout

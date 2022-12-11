@@ -18,6 +18,9 @@ class watchlist(Sequence):
     def __eq__(self, other):
         return len(self) == len(other)
 
+    def __add__(self,other):
+        return watchlist(self.data + other.data)
+
     def remove(self, item):
         self.data.remove(item)
 

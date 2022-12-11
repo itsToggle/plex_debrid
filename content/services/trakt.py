@@ -228,12 +228,20 @@ class watchlist(classes.watchlist):
                             element.show.type = 'show'
                             element.show.user = user
                             element.show.guid = element.show.ids.trakt
+                            try:
+                                element.show.watchlistedAt = datetime.datetime.timestamp(datetime.datetime.strptime(element.listed_at,'%Y-%m-%dT%H:%M:%S.000Z'))
+                            except:
+                                element.show.watchlistedAt = 0
                             if not element.show in self.data:
                                 self.data.append(show(element.show))
                         elif hasattr(element, 'movie'):
                             element.movie.type = 'movie'
                             element.movie.user = user
                             element.movie.guid = element.movie.ids.trakt
+                            try:
+                                element.movie.watchlistedAt = datetime.datetime.timestamp(datetime.datetime.strptime(element.listed_at,'%Y-%m-%dT%H:%M:%S.000Z'))
+                            except:
+                                element.movie.watchlistedAt = 0
                             if not element.movie in self.data:
                                 self.data.append(movie(element.movie))
                 except Exception as e:
@@ -247,6 +255,7 @@ class watchlist(classes.watchlist):
                             element.show.type = 'show'
                             element.show.user = user
                             element.show.guid = element.show.ids.trakt
+                            element.show.watchlistedAt = 0
                             if not element.show in self.data:
                                 self.data.append(show(element.show))
                 except Exception as e:
@@ -267,12 +276,20 @@ class watchlist(classes.watchlist):
                                 element.show.type = 'show'
                                 element.show.user = user
                                 element.show.guid = element.show.ids.trakt
+                                try:
+                                    element.show.watchlistedAt = datetime.datetime.timestamp(datetime.datetime.strptime(element.listed_at,'%Y-%m-%dT%H:%M:%S.000Z'))
+                                except:
+                                    element.show.watchlistedAt = 0
                                 if not element.show in self.data:
                                     self.data.append(show(element.show))
                             elif hasattr(element, 'movie'):
                                 element.movie.type = 'movie'
                                 element.movie.user = user
                                 element.movie.guid = element.movie.ids.trakt
+                                try:
+                                    element.movie.watchlistedAt = datetime.datetime.timestamp(datetime.datetime.strptime(element.listed_at,'%Y-%m-%dT%H:%M:%S.000Z'))
+                                except:
+                                    element.movie.watchlistedAt = 0
                                 if not element.movie in self.data:
                                     self.data.append(movie(element.movie))
                 except Exception as e:
@@ -286,12 +303,20 @@ class watchlist(classes.watchlist):
                             element.show.type = 'show'
                             element.show.user = user
                             element.show.guid = element.show.ids.trakt
+                            try:
+                                element.show.watchlistedAt = datetime.datetime.timestamp(datetime.datetime.strptime(element.listed_at,'%Y-%m-%dT%H:%M:%S.000Z'))
+                            except:
+                                element.show.watchlistedAt = 0
                             if not element.show in self.data:
                                 self.data.append(show(element.show))
                         elif hasattr(element, 'movie'):
                             element.movie.type = 'movie'
                             element.movie.user = user
                             element.movie.guid = element.movie.ids.trakt
+                            try:
+                                element.movie.watchlistedAt = datetime.datetime.timestamp(datetime.datetime.strptime(element.listed_at,'%Y-%m-%dT%H:%M:%S.000Z'))
+                            except:
+                                element.movie.watchlistedAt = 0
                             if not element.movie in self.data:
                                 self.data.append(movie(element.movie))
                 except Exception as e:
@@ -322,6 +347,10 @@ class watchlist(classes.watchlist):
                             element.show.type = 'show'
                             element.show.user = user
                             element.show.guid = element.show.ids.trakt
+                            try:
+                                element.show.watchlistedAt = datetime.datetime.timestamp(datetime.datetime.strptime(element.listed_at,'%Y-%m-%dT%H:%M:%S.000Z'))
+                            except:
+                                element.show.watchlistedAt = 0
                             if not element.show in self.data:
                                 refresh = True
                                 ui_print('[trakt] item: "' + element.show.title + '" found in ' + current_user[0] + "'s trakt watchlist.")
@@ -331,6 +360,10 @@ class watchlist(classes.watchlist):
                             element.movie.type = 'movie'
                             element.movie.user = user
                             element.movie.guid = element.movie.ids.trakt
+                            try:
+                                element.movie.watchlistedAt = datetime.datetime.timestamp(datetime.datetime.strptime(element.listed_at,'%Y-%m-%dT%H:%M:%S.000Z'))
+                            except:
+                                element.movie.watchlistedAt = 0
                             if not element.movie in self.data:
                                 refresh = True
                                 ui_print('[trakt] item: "' + element.movie.title + '" found in ' + current_user[0] + "'s trakt watchlist.")
@@ -354,6 +387,10 @@ class watchlist(classes.watchlist):
                                 element.show.type = 'show'
                                 element.show.user = user
                                 element.show.guid = element.show.ids.trakt
+                                try:
+                                    element.show.watchlistedAt = datetime.datetime.timestamp(datetime.datetime.strptime(element.listed_at,'%Y-%m-%dT%H:%M:%S.000Z'))
+                                except:
+                                    element.show.watchlistedAt = 0
                                 if not element.show in self.data:
                                     refresh = True
                                     ui_print('[trakt] item: "' + element.show.title + '" found in ' + current_user[0] + "'s private list: "+p_list.name+".")
@@ -363,6 +400,10 @@ class watchlist(classes.watchlist):
                                 element.movie.type = 'movie'
                                 element.movie.user = user
                                 element.movie.guid = element.movie.ids.trakt
+                                try:
+                                    element.movie.watchlistedAt = datetime.datetime.timestamp(datetime.datetime.strptime(element.listed_at,'%Y-%m-%dT%H:%M:%S.000Z'))
+                                except:
+                                    element.movie.watchlistedAt = 0
                                 if not element.movie in self.data:
                                     refresh = True
                                     ui_print('[trakt] item: "' + element.movie.title + '" found in ' + current_user[0] + "'s private list: "+p_list.name+".")
@@ -503,8 +544,7 @@ class show(classes.media):
         self.guid = self.ids.trakt
         self.EID = setEID(self)
         try:
-            self.originallyAvailableAt = datetime.datetime.strptime(self.first_aired,
-                                                                    '%Y-%m-%dT%H:%M:%S.000Z').strftime('%Y-%m-%d')
+            self.originallyAvailableAt = datetime.datetime.strptime(self.first_aired,'%Y-%m-%dT%H:%M:%S.000Z').strftime('%Y-%m-%d')
         except:
             self.originallyAvailableAt = datetime.datetime.utcnow().strftime('%Y-%m-%d')
         response, header = get(

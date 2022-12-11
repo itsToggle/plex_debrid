@@ -12,6 +12,7 @@ users = ['all']
 allowed_status = [['2'], ]
 api_key = ""
 session = requests.Session()
+last_requests = []
 
 def setup(self):
     global base_url
@@ -223,12 +224,14 @@ class movie(classes.media):
     def __init__(self, other):
         self.__dict__.update(other.__dict__)
         self.EID = setEID(self)
+        self.watchlistedAt = datetime.datetime.timestamp(datetime.datetime.strptime(self.updatedAt,'%Y-%m-%dT%H:%M:%S.000Z'))
 
 class show(classes.media):
     def __init__(self, other):
         self.__dict__.update(other.__dict__)
         self.type = 'show'
         self.EID = setEID(self)
+        self.watchlistedAt = datetime.datetime.timestamp(datetime.datetime.strptime(self.updatedAt,'%Y-%m-%dT%H:%M:%S.000Z'))
         self.Seasons = []
         if hasattr(self,'seasons'):
             for season in self.seasons:
@@ -241,6 +244,8 @@ class show(classes.media):
 class requests(classes.watchlist):
 
     def __init__(self):
+        global last_requests
+        last_requests = []
         self.data = []
         if len(users) > 0 and len(api_key) > 0:
             ui_print('[overseerr] getting all overseerr requests ...')
@@ -248,41 +253,76 @@ class requests(classes.watchlist):
                 response = get(base_url + '/api/v1/request?take=1000')
                 for element in response.results:
                     if not element in self.data and (element.requestedBy.displayName in users or users == ['all']) and [str(element.status)] in allowed_status:
-                        self.data.append(element)
-            except:
-                ui_print(
-                    '[overseerr] error: looks like overseerr couldnt be reached. Turn on debug printing for more info.')
-                self.data = []
+                        last_requests.append(element)
+            except Exception as e:
+                ui_print('[overseerr] error: ' + str(e), ui_settings.debug)
+                ui_print('[overseerr] error: overseerr couldnt be reached. turn on debug printing for more info.')
+                last_requests = []
+            ui_print('done')
+            if last_requests == []:
+                return
+            matching_service = ''
+            if len(sys.modules['content.services.plex'].users) > 0:
+                matching_service = 'content.services.plex'
+            elif len(sys.modules['content.services.trakt'].users) > 0:
+                matching_service = 'content.services.trakt'
+            else:
+                ui_print("[overseerr] error: couldnt match overseerr content to either plex or trakt - add at least one plex or trakt user. No requests will be downloaded.")
+                return
+            ui_print('[overseerr] matching overseerr requests to service ' + matching_service + ' ...')
+            add = []
+            for element_ in last_requests:
+                element = copy.deepcopy(element_)
+                if element.type == "movie":
+                    element = movie(element)
+                elif element.type == "tv":
+                    element = show(element)
+                try:
+                    element.match(matching_service)
+                    element.watchlist = sys.modules[matching_service].watchlist
+                    add += [element]
+                except:
+                    ui_print('[overseerr] error: couldnt match item to service ' + matching_service, ui_settings.debug)
+            for element in add:
+                if not element in self.data:
+                    self.data.append(element)
             ui_print('done')
 
-    def sync(self, other):
-        add = []
-        for element_ in self.data:
-            element = copy.deepcopy(element_)
-            if element.type == "movie":
-                element = movie(element)
-            elif element.type == "tv":
-                element = show(element)
-            element.match(other.__module__)
-            element.watchlist = sys.modules[other.__module__].watchlist
-            add += [element]
-        for element in add:
-            if not element in other:
-                other.data.append(element)
-
     def update(self):
+        global last_requests
         if len(users) > 0 and len(api_key) > 0:
             refresh = False
             try:
                 response = get(base_url + '/api/v1/request?take=1000')
-                for element in response.results:
-                    if not element in self.data and (element.requestedBy.displayName in users or users == ['all']) and [str(element.status)] in allowed_status:
-                        ui_print('[overseerr] found new overseerr request by user "' + element.requestedBy.displayName + '".')
+                for element_ in response.results:
+                    if not element_ in last_requests and (element_.requestedBy.displayName in users or users == ['all']) and [str(element_.status)] in allowed_status:
+                        ui_print('[overseerr] found new overseerr request by user "' + element_.requestedBy.displayName + '".')
                         refresh = True
-                        self.data.append(element)
-                for element in self.data[:]:
+                        last_requests.append(element_)
+                        if len(sys.modules['content.services.plex'].users) > 0:
+                            matching_service = 'content.services.plex'
+                        elif len(sys.modules['content.services.trakt'].users) > 0:
+                            matching_service = 'content.services.trakt'
+                        else:
+                            ui_print("[overseerr] error: couldnt match overseerr content to either plex or trakt - add at least one plex or trakt user. No requests will be downloaded.")
+                            return False
+                        ui_print('[overseerr] matching overseerr requests to service ' + matching_service + ' ...')
+                        element = copy.deepcopy(element_)
+                        if element.type == "movie":
+                            element = movie(element)
+                        elif element.type == "tv":
+                            element = show(element)
+                        try:
+                            element.match(matching_service)
+                            element.watchlist = sys.modules[matching_service].watchlist
+                        except:
+                            ui_print('[overseerr] error: couldnt match item to service ' + matching_service, ui_settings.debug)
+                        if not element in self.data:
+                            self.data.append(element)
+                        ui_print('done')
+                for element in last_requests[:]:
                     if not element in response.results:
-                        self.data.remove(element)
+                        last_requests.remove(element)
                 if refresh:
                     return True
             except:
