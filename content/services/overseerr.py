@@ -9,7 +9,8 @@ from ui.ui_print import *
 name = 'Overseerr'
 base_url = "http://localhost:5055"
 users = ['all']
-allowed_status = [['2'], ]
+allowed_movie_status = [['2'], ]
+allowed_show_status = [['2'], ['3'], ['4'], ['5']]
 api_key = ""
 session = requests.Session()
 last_requests = []
@@ -250,9 +251,9 @@ class requests(classes.watchlist):
         if len(users) > 0 and len(api_key) > 0:
             ui_print('[overseerr] getting all overseerr requests ...')
             try:
-                response = get(base_url + '/api/v1/request?take=1000')
+                response = get(base_url + '/api/v1/request?take=10000')
                 for element in response.results:
-                    if not element in self.data and (element.requestedBy.displayName in users or users == ['all']) and [str(element.status)] in allowed_status:
+                    if not element in self.data and (element.requestedBy.displayName in users or users == ['all']) and ([str(element.media.status)] in allowed_movie_status if element.type == 'movie' else [str(element.media.status)] in allowed_show_status):
                         last_requests.append(element)
             except Exception as e:
                 ui_print('[overseerr] error: ' + str(e), ui_settings.debug)
@@ -293,9 +294,9 @@ class requests(classes.watchlist):
         if len(users) > 0 and len(api_key) > 0:
             refresh = False
             try:
-                response = get(base_url + '/api/v1/request?take=1000')
+                response = get(base_url + '/api/v1/request?take=10000')
                 for element_ in response.results:
-                    if not element_.id in (x.id for x in last_requests) and (element_.requestedBy.displayName in users or users == ['all']) and [str(element_.status)] in allowed_status:
+                    if not element_.id in (x.id for x in last_requests) and (element_.requestedBy.displayName in users or users == ['all']) and ([str(element.media.status)] in allowed_movie_status if element.type == 'movie' else [str(element.media.status)] in allowed_show_status):
                         ui_print('[overseerr] found new overseerr request by user "' + element_.requestedBy.displayName + '".')
                         refresh = True
                         last_requests.append(element_)
