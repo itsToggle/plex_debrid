@@ -942,13 +942,23 @@ class sort:
                     return True
                 except:
                     print()
-                    print(
-                        "This value is not in the correct format. Please make sure this value is a valid regex expression and no characters are escaped accidentally.")
+                    print("This value is not in the correct format. Please make sure this value is a valid regex expression and no characters are escaped accidentally.")
                     print()
                     return False
             def apply(self,element):
                 try:
-                    if hasattr(element,"user"):
+                    if hasattr(element,"requestedBy"):
+                        if self.operator == "==":
+                            if element.requestedBy.displayName == self.value:
+                                return True
+                        elif self.operator == "include":
+                            if regex.search(self.value,element.requestedBy.displayName,regex.I):
+                                return True
+                        elif self.operator == "exclude":
+                            if regex.search(self.value,element.requestedBy.displayName,regex.I):
+                                return False
+                            return True
+                    elif hasattr(element,"user"):
                         if len(element.user) > 0:
                             if type(element.user[0]) == list:
                                 for user in element.user:
