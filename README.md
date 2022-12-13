@@ -438,7 +438,7 @@ If you want to run plex_debrid on a VPS or Seedbox, please keep in mind that som
 >        8) seeders       preference  :  highest
 >        9) size          requirement :       >=  0.1
 >      
->  - "Triggers" define when plex_debrid should look for a version. You can add triggers that limit a version to a specific media type, or to specific movies/shows. You can define how many times plex_debrid should attempt to download a version and how many attempts should be made with other versions, before a version is attempted to be downloaded. Here are some of the possible triggers, given in an example of a 720p version that should only be looked for, if the media items in question are "shows" that have been released "before 2010", are not "Family Guy" or "Last week tonight", and no other version has been found for "5 attempts":
+>  - "Triggers" define when plex_debrid should look for a version. You can add triggers that limit a version to a specific media type, or to specific movies/shows. You can define how many times plex_debrid should attempt to download a version and how many attempts should be made with other versions, before a version is attempted to be downloaded. Other triggers can limit a version to a specific genre or can limit a version to a specific user that requested the movie/show. Here are some of the possible triggers, given in an example of a 720p version that should only be looked for, if the media items in question are "shows" that have been released "before 2010", are not "Family Guy" or "Last week tonight", and no other version has been found for "5 attempts":
 >      
 >        A) media type    requirement :   shows
 >        B) retries       requirement :       >=  5
@@ -446,7 +446,7 @@ If you want to run plex_debrid on a VPS or Seedbox, please keep in mind that som
 >        D) title         requirement :  exclude  (family.guy|last.week.tonight)
 >        E) year          requirement :       <=  2010
 >      
->
+>  - Text based rule values are interpreted as regex definitions, are case-insensitive and use official regex syntax. check out regexr.com to try out your regex definitions, or visit our discord server to see how other people use versions.
 ></details>
  
 ## Limitations:
