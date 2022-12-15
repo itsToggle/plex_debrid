@@ -313,7 +313,7 @@ settings_list = [
                 help='Please choose at least one content service that plex_debrid should monitor for new content.'),
         setting('Plex users', ['Please provide a name for this Plex user: ',
                                 'Please provide the Plex token for this Plex user: '], content.services.plex, 'users', entry="user",
-                help="Please create a plex user by providing a name and a token. To find the plex token for this user, open your favorite browser, log in to this plex account and visit 'https://plex.tv/devices.xml'. Pick a 'token' from one of the listed devices.",
+                help="Please create a plex user by providing a name and a token. To find the plex token for this user, open your favorite browser, log in to this plex account on 'https://plex.tv' and then visit 'https://plex.tv/devices.xml'. Pick a 'token' from one of the listed devices.",
                 hidden=True),
         setting('Plex auto remove',
                 'Please choose which media type/s should be removed from your watchlist after successful download ("movie","show","both" or "none"): ',
