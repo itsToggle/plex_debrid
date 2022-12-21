@@ -254,6 +254,9 @@ class media:
             delattr(match,'watchlist')
             if self.type in ["movie","episode"]:
                 delattr(match,"guid")
+                if hasattr(match,"year"):
+                    if match.year == None:
+                        delattr(match,"year")
                 self.__dict__.update(match.__dict__)
                 self.services += [service]
                 return True

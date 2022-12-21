@@ -422,6 +422,8 @@ class watchlist(classes.watchlist):
     def remove(self, original_element):
         global current_user
         element = copy.deepcopy(original_element)
+        if not hasattr(element,"user"):
+            return
         user = copy.deepcopy(element.user)
         if hasattr(element,"watchlist"):
             delattr(element,"watchlist")
