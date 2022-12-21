@@ -1074,7 +1074,11 @@ class sort:
                     if subrule.name == rule[0]:
                         rule = subrule(rule[0], rule[1], rule[2], rule[3])
                         break
-                scraped_releases = rule.apply(scraped_releases)
+                try:
+                    scraped_releases = rule.apply(scraped_releases)
+                except:
+                    ui_print('error: there seems to be an undefined rule in your version settings. skipping this rule.')
+                    continue
             ui_print('sorting releases for version [' + version.name + '] ... done - found ' + str(
                 len(scraped_releases)) + ' releases')
         return scraped_releases
