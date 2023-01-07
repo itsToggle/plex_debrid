@@ -275,6 +275,7 @@ class library(classes.library):
 
         name = 'Plex Libraries'
         sections = []
+        partial = "true"
 
         def setup(cls, new=False):
             ui_cls("Options/Settings/Library Services/Library update services")
@@ -399,7 +400,6 @@ class library(classes.library):
 
         def call(path):
             try:
-                time.sleep(2)
                 section = path[0]
                 folders = path[1]
                 for folder in folders:
@@ -431,17 +431,16 @@ class library(classes.library):
                         names += [section_.title]
                         folders = []
                         for location in section_.Location:
-                            if hasattr(element,"downloaded_releases"):
+                            if hasattr(element,"downloaded_releases") and library.refresh.partial == "true":
                                 for release in element.downloaded_releases:
                                     folders += [requests.utils.quote(location.path + "/" + release)]
                             else:
                                 folders += [requests.utils.quote(location.path)]
                         paths += [[section_.key,folders]]
+                time.sleep(2)
                 ui_print('[plex] refreshing '+element_type+' library section/s: "' + '","'.join(names) + '"')
                 for path in paths:
-                    t = Thread(target=multi_init, args=(library.refresh.call, path, [None], 0))
-                    t.start()
-                    time.sleep(0.1)
+                    library.refresh.call(path)
             except:
                 ui_print("[plex] error: couldnt refresh libraries. Make sure you have setup a plex user!")
 
