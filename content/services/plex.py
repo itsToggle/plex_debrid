@@ -412,7 +412,7 @@ class library(classes.library):
                             if section_.refreshing:
                                 refreshing = True
                         if refreshing:
-                            time.sleep(1)
+                            time.sleep(0.25)
                     url = library.url + '/library/sections/' + section + '/refresh?path='+folder+'&X-Plex-Token=' + users[0][1]
                     ui_print("refreshing plex via url: " + url, debug=ui_settings.debug)
                     response = session.get(url)
