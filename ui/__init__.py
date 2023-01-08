@@ -229,7 +229,12 @@ def setup():
             load()
             return True
     ui_cls('Initial Setup')
-    input('Press Enter to continue: ')
+    try:
+        input('Press Enter to continue: ')
+    except:
+        print("Error: It seems this terminal is not interactive! Please make sure to allow user input in this terminal. For docker, add the 'interactive' flag ('-ti').")
+        time.sleep(10)
+        exit()
     for category, settings in settings_list:
         for setting in settings:
             if setting.required:

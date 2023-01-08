@@ -710,7 +710,7 @@ class media:
         i = 0
         self.Releases = []
         if self.type == 'movie':
-            if len(self.uncollected(library)) > 0 or self.version_missing():
+            if (len(self.uncollected(library)) > 0 or self.version_missing()) and len(self.versions()) > 0:
                 if self.released() and not self.watched() and not self.downloading():
                     if not hasattr(self,"year") or self.year == None:
                         ui_print("error: media item has no release year.")
@@ -761,7 +761,7 @@ class media:
                     if retry:
                         self.watch()
         elif self.type == 'show':
-            if self.released() and (not self.collected(library) or self.version_missing()) and not self.watched():
+            if self.released() and (not self.collected(library) or self.version_missing()) and not self.watched() and len(self.versions()) > 0:
                 self.isanime()
                 self.Seasons = self.uncollected(library)
                 # if there are uncollected episodes
