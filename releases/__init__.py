@@ -1026,15 +1026,8 @@ class sort:
             operators = ["add text before title", "add text after title"]
 
             def check(self):
-                try:
-                    regex.search(self, self, regex.I)
-                    return True
-                except:
-                    print()
-                    print(
-                        "This value is not in the correct format. Please make sure this value is a valid regex expression and no characters are escaped accidentally.")
-                    print()
-                    return False
+                return True
+                
             def apply(self,element):
                 try:
                     if self.operator == "add text before title":
