@@ -9,7 +9,14 @@ Using content services like plex discover, trakt and overseerr, your personal me
  
 ### Description:
 
-plex_debrid provides an easy way to add media content to your debrid service/s, which becomes instantly watchable when mounting your debrid service with a personal media server like plex/emby/jellyfin/infuse. The plex watchlists, trakt watchlists and overseer-requests of specified users are constantly checked for newly added movies/shows and newly released episodes of watchlisted shows. Once new content is found, torrent indexers are scraped for the best, cached release on selected debrid services. The torrent is then added to a suitable debrid service and a library refresh is performed to make the newly added content available. 
+A plex_debrid setup consists of three parts.
+- The first part is rclone (or rclone_rd), a program that tricks your OS into thinking you have your debrid service files locally. In reality they are streamed when you open them, which is why content is available almost instantly and why you have unlimited storage (depending on your debrid service).
+- The second part is a personal media server like Plex, which allows you to watch these files from anywhere on any device.
+- The third part is the plex_debrid script, which ties both things together and provides an easy way to add media content to your debrid service/s.
+
+The plex_debrid script monitors the plex watchlists, trakt watchlists and overseer-requests of specified users for newly added movies/shows and newly released episodes of watchlisted shows. 
+Once new content is found, torrent indexers are scraped for the best, cached release on selected debrid services. 
+The torrent is then added to a suitable debrid service and a library refresh is performed to make the newly added content available. 
 
 **For any debrid-cached content (movies, one-season tv shows or even multi-season tv shows) the entire process from watchlisting content to watching it takes about 10-20 seconds.**
 
