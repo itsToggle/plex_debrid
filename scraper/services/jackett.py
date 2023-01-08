@@ -62,14 +62,17 @@ def scrape(query, altquery):
         url = base_url + '/api/v2.0/indexers/' + filter + '/results?apikey=' + api_key + '&Query=' + query
         try:
             response = session.get(url, timeout=60)
-        except:
-            ui_print('[jackett] error: jackett request timed out.')
+        except requests.exceptions.Timeout:
+            ui_print('[jackett] error: jackett request timed out. Reduce the number of jackett indexers, make sure your indexers are healthy and enable the jackett setting "CORS".')
+            return []
+        except :
+            ui_print('[jackett] error: jackett couldnt be reached. Make sure your jackett base url is correctly formatted (default: http://localhost:9117).')
             return []
         if not response.status_code == 200:
             if response.status_code in [401,403]:
                 ui_print('[jackett] error '+str(response.status_code)+': it seems your api key is not working.')
             else:
-                ui_print('[jackett] error '+str(response.status_code)+': it seems jackett is reachable, but there was an internal error.')
+                ui_print('[jackett] error '+str(response.status_code)+': it seems jackett is reachable, but jackett returned an internal error.')
             return []
         try:
             response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
