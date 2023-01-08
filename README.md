@@ -10,7 +10,7 @@ Using content services like plex discover, trakt and overseerr, your personal me
 ### Description:
 
 A plex_debrid setup consists of three parts.
-- The first part is rclone (or rclone_rd), a program that tricks your OS into thinking you have your debrid service files locally. In reality they are streamed when you open them, which is why content is available almost instantly and why you have unlimited storage (depending on your debrid service).
+- The first part is rclone (or rclone_rd), a program that tricks your OS into thinking you have your debrid service files locally. In reality they are streamed when you open them, which is why content is available almost instantly and why you have unlimited storage (depending on your debrid service). Nothing is ever actually downloaded to your servers harddrive.
 - The second part is a personal media server like Plex, which allows you to watch these files from anywhere on any device.
 - The third part is the plex_debrid script, which ties both things together and provides an easy way to add media content to your debrid service/s.
 
