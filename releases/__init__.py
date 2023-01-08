@@ -1021,6 +1021,30 @@ class sort:
                 except:
                     return False
 
+        class scraping(trigger):
+            name = "scraping adjustment"
+            operators = ["add text before title", "add text after title"]
+
+            def check(self):
+                try:
+                    regex.search(self, self, regex.I)
+                    return True
+                except:
+                    print()
+                    print(
+                        "This value is not in the correct format. Please make sure this value is a valid regex expression and no characters are escaped accidentally.")
+                    print()
+                    return False
+            def apply(self,element):
+                try:
+                    if self.operator == "add text before title":
+                        element.title = self.value + "." + element.title
+                    elif self.operator == "add text after title":
+                        element.title = element.title + "." + self.value 
+                    return True
+                except:
+                    return True
+
         def __init__(self, name, triggers, lang, rules) -> None:
             self.name = name
             self.triggers = triggers
