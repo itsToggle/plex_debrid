@@ -276,6 +276,7 @@ class library(classes.library):
         name = 'Plex Libraries'
         sections = []
         partial = "true"
+        delay = "2"
 
         def setup(cls, new=False):
             ui_cls("Options/Settings/Library Services/Library update services")
@@ -312,55 +313,73 @@ class library(classes.library):
             if not new:
                 back = False
                 while not back:
-                    print("Current plex library sections that are refreshed after a successful download: ")
-                    print()
                     print("0) Back")
-                    indices = []
-                    for index,section in enumerate(library.refresh.sections):
-                        for section_ in response.MediaContainer.Directory:
-                            if section_.key == section:
-                                print(str(index+1) + ") Plex library section '" + section_.title + "' of type '" + section_.type + "'")
-                                indices += [str(index+1)]
-                                break
+                    print("1) Plex Libraries to refresh")
+                    print("2) Plex library refresh delay")
+                    print("3) Plex library partial scan")
                     print()
-                    print("Type 'add' to add another plex library section that should be refreshed.")
-                    print()
-                    choice = input("Please choose a plex library section: ")
-                    if choice in indices:
+                    choice0 = input("Choose an action: ")
+                    ui_cls("Options/Settings/Library Services/Library update services")
+                    if choice0 == "2":
+                        for setting in settings:
+                            if setting.name == "Plex library refresh delay":
+                                setting.input()
+                        back = True
+                    if choice0 == "3":
+                        for setting in settings:
+                            if setting.name == "Plex library partial scan":
+                                setting.input()
+                        back = True
+                    if choice0 == "1":
+                        print("Current plex library sections that are refreshed after a successful download: ")
                         print()
                         print("0) Back")
-                        print("1) Remove plex library section")
-                        print()
-                        choice2 = input("Choose an action: ")
-                        if choice2 == "1":
-                            library.refresh.sections.remove(library.refresh.sections[int(choice)-1])
-                    if choice == '0':
-                        back=True
-                    if choice == 'add':
-                        sections = []
-                        for index,section in enumerate(response.MediaContainer.Directory):
-                            if not section.key in library.refresh.sections:
-                                sections += [section]
-                        if len(sections) == 0:
-                            print()
-                            print("It seems youve added all plex library sections of this server!")
-                            time.sleep(3)
-                            return
                         indices = []
-                        print("Please choose a plex library section that should be refreshed after a successful download: ")
+                        for index,section in enumerate(library.refresh.sections):
+                            for section_ in response.MediaContainer.Directory:
+                                if section_.key == section:
+                                    print(str(index+1) + ") Plex library section '" + section_.title + "' of type '" + section_.type + "'")
+                                    indices += [str(index+1)]
+                                    break
                         print()
-                        print("0) Back")
-                        for index,section in enumerate(sections):
-                            print(str(index+1) + ") Plex library section '" + section.title + "' of type '" + section.type + "'")
-                            indices += [str(index+1)]
+                        print("Type 'add' to add another plex library section that should be refreshed.")
                         print()
                         choice = input("Please choose a plex library section: ")
                         if choice in indices:
-                            library.refresh.sections += [sections[int(choice)-1].key]
                             print()
-                            print("Successfully added plex library section '" + sections[int(choice)-1].title + "'")
+                            print("0) Back")
+                            print("1) Remove plex library section")
                             print()
-                            time.sleep(3)
+                            choice2 = input("Choose an action: ")
+                            if choice2 == "1":
+                                library.refresh.sections.remove(library.refresh.sections[int(choice)-1])
+                        if choice == '0':
+                            back=True
+                        if choice == 'add':
+                            sections = []
+                            for index,section in enumerate(response.MediaContainer.Directory):
+                                if not section.key in library.refresh.sections:
+                                    sections += [section]
+                            if len(sections) == 0:
+                                print()
+                                print("It seems youve added all plex library sections of this server!")
+                                time.sleep(3)
+                                return
+                            indices = []
+                            print("Please choose a plex library section that should be refreshed after a successful download: ")
+                            print()
+                            print("0) Back")
+                            for index,section in enumerate(sections):
+                                print(str(index+1) + ") Plex library section '" + section.title + "' of type '" + section.type + "'")
+                                indices += [str(index+1)]
+                            print()
+                            choice = input("Please choose a plex library section: ")
+                            if choice in indices:
+                                library.refresh.sections += [sections[int(choice)-1].key]
+                                print()
+                                print("Successfully added plex library section '" + sections[int(choice)-1].title + "'")
+                                print()
+                                time.sleep(3)
             else:
                 back = False
                 initial = False
@@ -437,7 +456,12 @@ class library(classes.library):
                             else:
                                 folders += [requests.utils.quote(location.path)]
                         paths += [[section_.key,folders]]
-                time.sleep(2)
+                delay = 2
+                try:
+                    delay = float(library.refresh.delay)
+                except:
+                    ui_print("[plex] error: provided refresh delay is not a number! using default 2 second delay.")
+                time.sleep(delay)
                 ui_print('[plex] refreshing '+element_type+' library section/s: "' + '","'.join(names) + '"')
                 for path in paths:
                     library.refresh.call(path)
