@@ -276,6 +276,7 @@ class library(classes.library):
         name = 'Plex Libraries'
         sections = []
         partial = "true"
+        delay = "2"
 
         def setup(cls, new=False):
             ui_cls("Options/Settings/Library Services/Library update services")
@@ -437,7 +438,12 @@ class library(classes.library):
                             else:
                                 folders += [requests.utils.quote(location.path)]
                         paths += [[section_.key,folders]]
-                time.sleep(2)
+                delay = 2
+                try:
+                    delay = float(library.refresh.delay)
+                except:
+                    ui_print("[plex] error: provided refresh delay is not a number! using default 2 second delay.")
+                time.sleep(delay)
                 ui_print('[plex] refreshing '+element_type+' library section/s: "' + '","'.join(names) + '"')
                 for path in paths:
                     library.refresh.call(path)
