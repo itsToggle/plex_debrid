@@ -389,7 +389,8 @@ def threaded(stop):
                 ui_print('checking new content ...')
                 for element in watchlists:
                     if hasattr(element, 'download'):
-                        element.download(library=library)
+                        if not element in content.classes.media.ignore_queue:
+                            element.download(library=library)
                 ui_print('done')
             elif timeout_counter >= regular_check:
                 # get entire plex_watchlist
