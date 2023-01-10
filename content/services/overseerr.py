@@ -30,8 +30,7 @@ def setup(self):
         time.sleep(3)
         return
     try:
-        response = session.get(base_url + '/api/v1/request',
-                                            headers={"X-Api-Key": api_key}, timeout=0.5)
+        response = session.get(base_url + '/api/v1/request', headers={"X-Api-Key": api_key}, timeout=0.5)
         if response.status_code == 200:
             working_key = True
             working_url = True
@@ -42,11 +41,9 @@ def setup(self):
         working_url = False
     while not working_url:
         if base_url == "http://localhost:5055":
-            print(
-                "Looks like overseerr couldn't be reached under the default base url ('" + base_url + "').")
+            print("Looks like overseerr couldn't be reached under the default base url ('" + base_url + "').")
         else:
-            print(
-                "Looks like overseerr couldn't be reached under the current base url ('" + base_url + "').")
+            print("Looks like overseerr couldn't be reached under the current base url ('" + base_url + "').")
         print("Please make sure overseerr is running and try again, or provide your overseerr base URL below.")
         print("Please provide your overseerr base URL in the following format 'http://localhost:5055' or press enter to return to the main menu.")
         print()
@@ -56,8 +53,7 @@ def setup(self):
         working_key = False
         working_url = False
         try:
-            response = session.get(base_url + '/api/v1/request',
-                                                headers={"X-Api-Key": api_key}, timeout=0.5)
+            response = session.get(base_url + '/api/v1/request', headers={"X-Api-Key": api_key}, timeout=0.5)
             if response.status_code == 200:
                 working_key = True
                 working_url = True
@@ -68,8 +64,7 @@ def setup(self):
             working_url = False
     while not working_key:
         if api_key == "":
-            print(
-                "To setup overseerr, please provide your overseerr API Key. Press enter to return to the main menu.")
+            print("To setup overseerr, please provide your overseerr API Key. Press enter to return to the main menu.")
         else:
             print("Looks like your current API Key ('" + api_key + "') doesnt work.")
         print()
@@ -79,8 +74,7 @@ def setup(self):
         working_key = False
         working_url = False
         try:
-            response = session.get(base_url + '/api/v1/request',
-                                                headers={"X-Api-Key": api_key}, timeout=0.5)
+            response = session.get(base_url + '/api/v1/request', headers={"X-Api-Key": api_key}, timeout=0.5)
             if response.status_code == 200:
                 working_key = True
                 working_url = True
@@ -94,7 +88,7 @@ def setup(self):
         for setting in allsettings:
             if setting.cls == self or setting.name.startswith(self.name):
                 settings += [setting]
-    response = get(base_url + '/api/v1/user')
+    response = get(base_url + '/api/v1/user?take=10000')
     users_ = response.results
     new_users = []
     for user in users_:
