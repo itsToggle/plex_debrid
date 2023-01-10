@@ -253,6 +253,29 @@ If you want to run plex_debrid on a VPS or Seedbox, please keep in mind that som
 
 *plex_debrid can be setup in a bunch of different ways, which this readme wont be able to cover. Feel free to ask any questions in the "discussions" section of this respository or join our discord server.*
  
+### :cloud: Rclone Usage
+
+*Some advanced options for using rclone*
+
+><details>
+>  <summary><b><u>4K & HD libraries:</u></b></summary>
+>  
+>  - Using rclone filtering, you can split your library into 4k and non-4k content.
+>  - start one instance of rclone by adding the flag `--exclude **2160**` to your mount command, mount to a folder named "HD"
+>  - start another instance of rclone by adding the flag `--include **2160**` to your mount command, mount to a folder named "4K"
+>
+></details>
+>
+><details>
+>  <summary><b><u>Movie/Show sorting for WebDAV remotes:</u></b></summary>
+>  
+>  - Using rclone filtering, you can split your WebDAV remote into movie and show content.
+>  - start one instance of rclone by adding the flag `--exclude "**{{(s|S)([0-9]+)( |.|e|E)}}**"` to your mount command, mount to a folder named "movies"
+>  - start another instance of rclone by adding the flag `--include "**{{(s|S)([0-9]+)( |.|e|E)}}**"` to your mount command, mount to a folder named "shows"
+>
+></details>
+
+ 
 ### :tv: Content Services:
 
 *The services that plex_debrid can monitor for new content. You can pick any combination of services.*
