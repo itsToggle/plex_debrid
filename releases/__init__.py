@@ -1012,12 +1012,15 @@ class sort:
                     if self.operator == "==":
                         if regex.search(self.value,str(element.genre()),regex.I):
                             return True
+                        return False
                     elif self.operator == "include":
                         if regex.search(self.value,str(element.genre()),regex.I):
                             return True
+                        return False
                     elif self.operator == "exclude":
                         if regex.search(self.value,str(element.genre()),regex.I):
                             return False
+                        return True
                 except:
                     return False
 
