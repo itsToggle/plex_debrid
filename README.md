@@ -397,6 +397,9 @@ If you want to run plex_debrid on a VPS or Seedbox, please keep in mind that som
 >  <summary><u><b>:clipboard: Local Ignore List:</u></b></summary>
 >  
 >  - To use a local text file of queries to ignore content, navigate to '/Settings/Library Service/Library ignore services/Edit/'
+>  - You will be prompted to provide a path to a directory (not a file), in which plex_debrid will save a file named `ignored.txt` after content is ignored.
+>  - If you want to create that file yourself and dont want to wait for plex_debrid to create it, make sure to save it in your specified path and under the correct name `ignored.txt`
+>  - If you want to use the ignore file with the plex_debrid docker version, make sure to pick the path `./config/`, so that the file is saved outside of your container.
 >
 ></details>
  
