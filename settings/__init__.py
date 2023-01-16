@@ -385,7 +385,7 @@ settings_list = [
             'Tracker specific Debrid Services',
             [
                 'Please specify what tracker to look for by providing a regex match group: ',
-                'Please specify what debrid service should be used for a matching tracker (enter "RD","PM","AD" or "DL"): ',
+                'Please specify what debrid service should be used for a matching tracker (enter "RD","PM","AD","PUT", or "DL"): ',
             ],
             debrid, 'tracker',
             entry="rule",
