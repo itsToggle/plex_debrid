@@ -687,7 +687,7 @@ class library(classes.library):
                             episode.grandparentEID = item.EID
             except:
                 ui_print('done')
-                ui_print("[plex error]: couldnt get extended metadata for library item: " + item.query())  
+                ui_print("[plex error]: found incorrectly matched library item : " + item.title + " - this item needs a metadata refresh (open plex webui, find item, open item menu, refresh metadata).")  
         ui_print('done')
         current_library = copy.deepcopy(list_)
         return list_
