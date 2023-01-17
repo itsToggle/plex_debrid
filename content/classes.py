@@ -427,7 +427,7 @@ class media:
                     title = releases.rename(self.parentTitle)
                 elif self.type == 'episode':
                     title = releases.rename(self.grandparentTitle)
-            escape_chars = ['^','$','*','+','-','?','(',')','[',']','{','}','\\','|']
+            escape_chars = ['[',']']
             for char in escape_chars:
                 title = title.replace(char,'\\'+char)
             if self.type == 'movie':
@@ -454,7 +454,7 @@ class media:
                     title = releases.rename(self.parentTitle)
                 elif self.type == 'episode':
                     title = releases.rename(self.grandparentTitle)
-            escape_chars = ['^','$','*','+','-','?','(',')','[',']','{','}','\\','|']
+            escape_chars = ['[',']']
             for char in escape_chars:
                 title = title.replace(char,'\\'+char)
             if self.type == 'movie':
