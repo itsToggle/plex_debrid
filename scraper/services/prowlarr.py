@@ -69,7 +69,7 @@ def scrape(query, altquery):
             for t in threads:
                 t.join()
             for result in results:
-                if not result == []:
+                if not result == [] and not result == None:
                     scraped_releases += result
     return scraped_releases
 

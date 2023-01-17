@@ -20,7 +20,7 @@ def logerror(response):
     if response.status_code == 401:
         ui_print("plex error: (401 unauthorized): user token does not seem to work. check your plex user settings.")
 
-def get(url, timeout=30):
+def get(url, timeout=60):
     try:
         response = session.get(url, headers=headers, timeout=timeout)
         logerror(response)
@@ -421,18 +421,23 @@ class library(classes.library):
             try:
                 section = path[0]
                 folders = path[1]
-                for folder in folders:
-                    refreshing = True
-                    while refreshing:
-                        refreshing = False
-                        url = library.url + '/library/sections/?X-Plex-Token=' + users[0][1]
-                        response = get(url)
-                        for section_ in response.MediaContainer.Directory:
-                            if section_.refreshing:
-                                refreshing = True
-                        if refreshing:
-                            time.sleep(0.25)
-                    url = library.url + '/library/sections/' + section + '/refresh?path='+folder+'&X-Plex-Token=' + users[0][1]
+                if library.refresh.partial == "true":
+                    for folder in folders:
+                        refreshing = True
+                        while refreshing:
+                            refreshing = False
+                            url = library.url + '/library/sections/?X-Plex-Token=' + users[0][1]
+                            response = get(url)
+                            for section_ in response.MediaContainer.Directory:
+                                if section_.refreshing:
+                                    refreshing = True
+                            if refreshing:
+                                time.sleep(0.25)
+                        url = library.url + '/library/sections/' + section + '/refresh?path='+folder+'&X-Plex-Token=' + users[0][1]
+                        ui_print("refreshing plex via url: " + url, debug=ui_settings.debug)
+                        response = session.get(url)
+                else:
+                    url = library.url + '/library/sections/' + section + '/refresh?&X-Plex-Token=' + users[0][1]
                     ui_print("refreshing plex via url: " + url, debug=ui_settings.debug)
                     response = session.get(url)
             except Exception as e:
@@ -687,7 +692,7 @@ class library(classes.library):
                             episode.grandparentEID = item.EID
             except:
                 ui_print('done')
-                ui_print("[plex error]: couldnt get extended metadata for library item: " + item.query())  
+                ui_print("[plex error]: found incorrectly matched library item : " + item.title + " - this item needs a metadata refresh (open plex webui, find item, open item menu, refresh metadata).")  
         ui_print('done')
         current_library = copy.deepcopy(list_)
         return list_

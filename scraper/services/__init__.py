@@ -11,6 +11,7 @@ def __subclasses__():
     return [rarbg,x1337,jackett,prowlarr,orionoid]
 
 active = ['rarbg', '1337x', ]
+overwrite = []
 
 def setup(cls, new=False):
     from settings import settings_list
@@ -54,10 +55,13 @@ def setup(cls, new=False):
                 active += [cls.name]
 
 def get():
+    global overwrite
     cls = sys.modules[__name__]
+    allowedservices = overwrite if len(overwrite) > 0 else active
     activeservices = []
-    for servicename in active:
+    for servicename in allowedservices:
         for service in cls.__subclasses__():
             if service.name == servicename:
                 activeservices += [service]
+    overwrite = []
     return activeservices

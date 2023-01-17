@@ -877,7 +877,7 @@ class sort:
                     if hasattr(element,'parentYear'):
                         year = element.parentYear
                     if hasattr(element,'grandparentYear'):
-                        year = element.parentYear
+                        year = element.grandparentYear
                     if self.operator == "==":
                         if float(self.value) == year:
                             return True
@@ -1023,6 +1023,52 @@ class sort:
                         return True
                 except:
                     return False
+
+        class scraper_sources(trigger):
+            name = "scraper sources"
+            operators = ["==", "include", "exclude"]
+
+            def check(self):
+                try:
+                    regex.search(self, self, regex.I)
+                    import scraper.services as ss
+                    if self in ss.active:
+                        return True
+                    print("This value is not in the correct format. Please enter a valid scraper source from this list:")
+                    print(str(ss.active) + ' :')
+                    print()
+                    return False
+                except:
+                    print()
+                    print("This value is not in the correct format. Please enter a valid scraper source from this list:")
+                    print(str(ss.active) + ' :')
+                    print()
+                    return False
+
+            def apply(self,element):
+                import scraper.services as ss
+                if self.operator in ["include", "=="]:
+                    if self.value in ss.active:
+                        if not self.value in ss.overwrite:
+                            ss.overwrite += [self.value]
+                        return True
+                    return False
+                else:
+                    if self.value in ss.active:
+                        for s in ss.active:
+                            if not s == self.value and not s in ss.overwrite:
+                                ss.overwrite += [s]
+                    return True
+
+        class scraper_adjustment(trigger):
+            name = "scraping adjustment"
+            operators = ["add text before title", "add text after title"]
+
+            def check(self):
+                return True
+
+            def apply(self,element):
+                element.scraping_adjustment += [[self.operator,self.value],]
 
         def __init__(self, name, triggers, lang, rules) -> None:
             self.name = name
