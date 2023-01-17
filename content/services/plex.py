@@ -437,7 +437,7 @@ class library(classes.library):
                         ui_print("refreshing plex via url: " + url, debug=ui_settings.debug)
                         response = session.get(url)
                 else:
-                    url = library.url + '/library/sections/' + section + '/refresh?&X-Plex-Token=' + users[0][1]
+                    url = library.url + '/library/sections/' + section + '/refresh?X-Plex-Token=' + users[0][1]
                     ui_print("refreshing plex via url: " + url, debug=ui_settings.debug)
                     response = session.get(url)
             except Exception as e:
