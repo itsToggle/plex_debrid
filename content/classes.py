@@ -318,12 +318,6 @@ class media:
                 title = releases.rename(self.parentTitle)
             elif self.type == 'episode':
                 title = releases.rename(self.grandparentTitle)
-        if hasattr(self,"scraping_adjustment"):
-            for operator, value in self.scraping_adjustment:
-                if operator == "add text before title":
-                    title = value + title
-                elif operator == "add text after title":
-                    title = title + value
         if self.type == 'movie':
             title = title.replace('.' + str(self.year), '')
             return title + '.' + str(self.year)
@@ -347,12 +341,6 @@ class media:
                 title = releases.rename(self.parentTitle)
             elif self.type == 'episode':
                 title = releases.rename(self.grandparentTitle)
-        if hasattr(self,"scraping_adjustment"):
-            for operator, value in self.scraping_adjustment:
-                if operator == "add text before title":
-                    title = value + title
-                elif operator == "add text after title":
-                    title = title + value
         if self.type == 'movie':
             title = title.replace('.' + str(self.year), '')
             return title.replace('.',' ') + ' ' + str(self.year)
@@ -385,8 +373,17 @@ class media:
                 if title == None or title == []:
                     continue
                 title = releases.rename(title)
-                if not title in self.alternate_titles:
-                    self.alternate_titles += [title]
+                if hasattr(self,"scraping_adjustment"):
+                    for operator, value in self.scraping_adjustment:
+                        if operator == "add text before title":
+                            title_ = value + title
+                        elif operator == "add text after title":
+                            title_ = title + value
+                        if not title_ in self.alternate_titles:
+                            self.alternate_titles += [title_]
+                else:
+                    if not title in self.alternate_titles:
+                        self.alternate_titles += [title]
             if self.type == "show":
                 if hasattr(self,'Seasons'):
                     for season in self.Seasons:
@@ -395,7 +392,19 @@ class media:
                             for episode in season.Episodes:
                                 episode.alternate_titles = self.alternate_titles
         else:
-            self.alternate_titles = [releases.rename(self.title)]
+            title = releases.rename(self.title)
+            if not hasattr(self,"alternate_titles"):
+                self.alternate_titles = []
+            if hasattr(self,"scraping_adjustment"):
+                for operator, value in self.scraping_adjustment:
+                    if operator == "add text before title":
+                        title_ = value + title
+                    elif operator == "add text after title":
+                        title_ = title + value
+                    if not title_ in self.alternate_titles:
+                        self.alternate_titles += [title_]
+            else:
+                self.alternate_titles = [title]
             if self.type == "show":
                 if hasattr(self,'Seasons'):
                     for season in self.Seasons:
@@ -418,15 +427,9 @@ class media:
                     title = releases.rename(self.parentTitle)
                 elif self.type == 'episode':
                     title = releases.rename(self.grandparentTitle)
-            if hasattr(self,"scraping_adjustment"):
-                for operator, value in self.scraping_adjustment:
-                    escape_chars = ['.','^','$','*','+','-','?','(',')','[',']','{','}','\\','|']
-                    for char in escape_chars:
-                        value = value.replace(char,'\\'+char)
-                    if operator == "add text before title":
-                        title = value + title
-                    elif operator == "add text after title":
-                        title = title + value
+            escape_chars = ['^','$','*','+','-','?','(',')','[',']','{','}','\\','|']
+            for char in escape_chars:
+                title = title.replace(char,'\\'+char)
             if self.type == 'movie':
                 title = title.replace('.' + str(self.year), '')
                 return '[^A-Za-z0-9]*(' + title + ':?.)\(?\[?(' + str(self.year) + '|' + str(self.year - 1) + '|' + str(self.year + 1) + ')'
@@ -451,15 +454,9 @@ class media:
                     title = releases.rename(self.parentTitle)
                 elif self.type == 'episode':
                     title = releases.rename(self.grandparentTitle)
-            if hasattr(self,"scraping_adjustment"):
-                for operator, value in self.scraping_adjustment:
-                    escape_chars = ['.','^','$','*','+','-','?','(',')','[',']','{','}','\\','|']
-                    for char in escape_chars:
-                        value = value.replace(char,'\\'+char)
-                    if operator == "add text before title":
-                        title = value + title
-                    elif operator == "add text after title":
-                        title = title + value
+            escape_chars = ['^','$','*','+','-','?','(',')','[',']','{','}','\\','|']
+            for char in escape_chars:
+                title = title.replace(char,'\\'+char)
             if self.type == 'movie':
                 title = title.replace('.' + str(self.year), '')
                 return '(.*?)(' + title + '.)(.*?)(' + str(self.year) + '|' + str(self.year - 1) + '|' + str(self.year + 1) + ')'
