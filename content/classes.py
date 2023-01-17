@@ -318,6 +318,12 @@ class media:
                 title = releases.rename(self.parentTitle)
             elif self.type == 'episode':
                 title = releases.rename(self.grandparentTitle)
+        if hasattr(self,"scraping_adjustment"):
+            for operator, value in self.scraping_adjustment:
+                if operator == "add text before title":
+                    title = value + title
+                elif operator == "add text after title":
+                    title = title + value
         if self.type == 'movie':
             title = title.replace('.' + str(self.year), '')
             return title + '.' + str(self.year)
@@ -341,6 +347,12 @@ class media:
                 title = releases.rename(self.parentTitle)
             elif self.type == 'episode':
                 title = releases.rename(self.grandparentTitle)
+        if hasattr(self,"scraping_adjustment"):
+            for operator, value in self.scraping_adjustment:
+                if operator == "add text before title":
+                    title = value + title
+                elif operator == "add text after title":
+                    title = title + value
         if self.type == 'movie':
             title = title.replace('.' + str(self.year), '')
             return title.replace('.',' ') + ' ' + str(self.year)
@@ -393,6 +405,7 @@ class media:
                                 episode.alternate_titles = self.alternate_titles
     
     def deviation(self):
+        self.versions()
         if not self.isanime():
             if hasattr(self,'alternate_titles'):
                 title = '(' + '|'.join(self.alternate_titles) + ')'
@@ -405,6 +418,15 @@ class media:
                     title = releases.rename(self.parentTitle)
                 elif self.type == 'episode':
                     title = releases.rename(self.grandparentTitle)
+            if hasattr(self,"scraping_adjustment"):
+                for operator, value in self.scraping_adjustment:
+                    escape_chars = ['.','^','$','*','+','-','?','(',')','[',']','{','}','\\','|']
+                    for char in escape_chars:
+                        value = value.replace(char,'\\'+char)
+                    if operator == "add text before title":
+                        title = value + title
+                    elif operator == "add text after title":
+                        title = title + value
             if self.type == 'movie':
                 title = title.replace('.' + str(self.year), '')
                 return '[^A-Za-z0-9]*(' + title + ':?.)\(?\[?(' + str(self.year) + '|' + str(self.year - 1) + '|' + str(self.year + 1) + ')'
@@ -429,6 +451,15 @@ class media:
                     title = releases.rename(self.parentTitle)
                 elif self.type == 'episode':
                     title = releases.rename(self.grandparentTitle)
+            if hasattr(self,"scraping_adjustment"):
+                for operator, value in self.scraping_adjustment:
+                    escape_chars = ['.','^','$','*','+','-','?','(',')','[',']','{','}','\\','|']
+                    for char in escape_chars:
+                        value = value.replace(char,'\\'+char)
+                    if operator == "add text before title":
+                        title = value + title
+                    elif operator == "add text after title":
+                        title = title + value
             if self.type == 'movie':
                 title = title.replace('.' + str(self.year), '')
                 return '(.*?)(' + title + '.)(.*?)(' + str(self.year) + '|' + str(self.year - 1) + '|' + str(self.year + 1) + ')'
@@ -883,6 +914,8 @@ class media:
                         t.join()
                     retry = False
                     for index, result in enumerate(results):
+                        if result == None:
+                            continue
                         if result[0]:
                             refresh_ = True
                         if result[1]:

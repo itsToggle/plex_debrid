@@ -18,7 +18,12 @@ def scrape(query, altquery="(.*)"):
     for index, scraper_ in enumerate(scrapers):
         t = Thread(target=multi_scrape, args=(scraper_, query, altquery, results, index))
         threads.append(t)
-        t.start()
+        try:
+            t.start()
+        except:
+            ui_print("error starting new thread (perhaps maximum number of threads reached), will retry in 5 seconds and exit if it fails again.")
+            time.sleep(5)
+            t.start()
     # wait for the threads to complete
     for t in threads:
         t.join()

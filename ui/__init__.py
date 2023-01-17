@@ -85,7 +85,24 @@ def scrape():
     if query == '':
         return
     print()
-    scraped_releases = scraper.scrape(query.replace(' ', '.'))
+    if hasattr(obj,"version"):
+        if not obj.version == None:
+            for trigger, operator, value in obj.version.triggers:
+                if trigger == "scraper sources":
+                    if operator in ["==","include"]:
+                        if value in scraper.services.active:
+                            scraper.services.overwrite += [value]
+                    elif operator == "exclude":
+                        if value in scraper.services.active:
+                            for s in scraper.services.active:
+                                if not s == value:
+                                    scraper.services.overwrite += [s]
+                if trigger == "scraping adjustment":
+                    if operator == "add text before title":
+                        query = value + query
+                    elif operator == "add text after title":
+                        query = query + value
+    scraped_releases = scraper.scrape(query)
     if len(scraped_releases) > 0:
         obj.Releases = scraped_releases
         debrid.check(obj, force=True)
