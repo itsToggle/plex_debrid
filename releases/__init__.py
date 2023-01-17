@@ -1068,7 +1068,10 @@ class sort:
                 return True
 
             def apply(self,element):
+                if not hasattr(element,"scraping_adjustment"):
+                    element.scraping_adjustment = []
                 element.scraping_adjustment += [[self.operator,self.value],]
+                return True
 
         def __init__(self, name, triggers, lang, rules) -> None:
             self.name = name
