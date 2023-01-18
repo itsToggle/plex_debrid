@@ -1145,7 +1145,13 @@ def translations(self,lan):
                 if not response == None:
                     if len(response) > 0:
                         for alias in response:
-                            translations += [alias.title]
+                            special_chars = False
+                            for i in alias.title:
+                                if ord(i) > 128:
+                                    special_chars = True
+                                    break
+                            if not special_chars:
+                                translations += [alias.title]
     except:
         translations = []
     return translations
