@@ -463,7 +463,7 @@ class sort:
             weights = ["requirement", "preference"]
 
             def __init__(self, attribute, required, operator, value=None) -> None:
-                self.attribute = attribute if not attribute == "files" else "file names"
+                self.attribute = attribute
                 self.required = (required == "requirement")
                 self.operator = operator
                 self.value = value
@@ -821,12 +821,14 @@ class sort:
 
         class file_sizes(rule):
             name = "file sizes"
-            operators = [">=", "<="]
+            operators = ["all files >=", "all files <=", "video files >=", "video files <="]
+            unit = "GB"
 
             def apply(self, scraped_releases: list):
+                video_formats = '(\.)(YUV|WMV|WEBM|VOB|VIV|SVI|ROQ|RMVB|RM|OGV|OGG|NSV|MXF|MTS|M2TS|TS|MPG|MPEG|M2V|MP2|MPE|MPV|MP4|M4P|M4V|MOV|QT|MNG|MKV|FLV|DRC|AVI|ASF|AMV)'
                 try:
                     if self.required:
-                        if self.operator == ">=":
+                        if ">=" in self.operator:
                             for release in scraped_releases[:]:
                                 remove = False
                                 if not hasattr(release,"files"):
@@ -835,11 +837,15 @@ class sort:
                                     continue
                                 for version in release.files[:]:
                                     if hasattr(version,"size"):
+                                        if self.operator.startswith("video") and not regex.search(video_formats,version.name,regex.I):
+                                            continue
                                         if version.size <= float(self.value):
                                             remove = True
                                     elif hasattr(version,"files"):
                                         remove_version = False
                                         for file in version.files:
+                                            if self.operator.startswith("video") and not regex.search(video_formats,file.name,regex.I):
+                                                continue
                                             if file.size <= float(self.value):
                                                 remove = False
                                                 remove_version = True
@@ -848,7 +854,7 @@ class sort:
                                 if remove or len(release.files) == 0:
                                     scraped_releases.remove(release)
                             return scraped_releases
-                        elif self.operator == "<=":
+                        elif "<=" in self.operator:
                             for release in scraped_releases[:]:
                                 remove = False
                                 if not hasattr(release,"files"):
@@ -857,11 +863,15 @@ class sort:
                                     continue
                                 for version in release.files[:]:
                                     if hasattr(version,"size"):
+                                        if self.operator.startswith("video") and not regex.search(video_formats,version.name,regex.I):
+                                            continue
                                         if version.size >= float(self.value):
                                             remove = True
                                     elif hasattr(version,"files"):
                                         remove_version = False
                                         for file in version.files:
+                                            if self.operator.startswith("video") and not regex.search(video_formats,file.name,regex.I):
+                                                continue
                                             if file.size >= float(self.value):
                                                 remove = False
                                                 remove_version = True
@@ -871,7 +881,7 @@ class sort:
                                     scraped_releases.remove(release)
                             return scraped_releases
                     else:
-                        if self.operator == ">=":
+                        if ">=" in self.operator:
                             for release in scraped_releases:
                                 release.file_size_sorting = 0
                                 if not hasattr(release,"files"):
@@ -879,31 +889,39 @@ class sort:
                                 for version in release.files:
                                     version.file_size_sorting = 0
                                     if hasattr(version,"size"):
+                                        if self.operator.startswith("video") and not regex.search(video_formats,version.name,regex.I):
+                                            continue
                                         if version.size >= float(self.value):
                                             release.file_size_sorting = 1
                                     elif hasattr(version,"files"):
                                         for file in version.files:
+                                            if self.operator.startswith("video") and not regex.search(video_formats,file.name,regex.I):
+                                                continue
                                             if file.size >= float(self.value):
                                                 release.file_size_sorting = 1
                                                 version.file_size_sorting = 1
                                 release.files.sort(key=lambda s: s.file_size_sorting, reverse=True)
                             scraped_releases.sort(key=lambda s: s.file_size_sorting, reverse=True)
                             return scraped_releases
-                        elif self.operator == "<=":
+                        elif "<=" in self.operator:
                             for release in scraped_releases:
-                                release.file_size_sorting = 1
+                                release.file_size_sorting = 0
                                 if not hasattr(release,"files"):
                                     continue
                                 for version in release.files:
-                                    version.file_size_sorting = 1
+                                    version.file_size_sorting = 0
                                     if hasattr(version,"size"):
-                                        if version.size >= float(self.value):
-                                            release.file_size_sorting = 0
+                                        if self.operator.startswith("video") and not regex.search(video_formats,version.name,regex.I):
+                                            continue
+                                        if version.size <= float(self.value):
+                                            release.file_size_sorting = 1
                                     elif hasattr(version,"files"):
                                         for file in version.files:
-                                            if file.size >= float(self.value):
-                                                release.file_size_sorting = 0
-                                                version.file_size_sorting = 0
+                                            if self.operator.startswith("video") and not regex.search(video_formats,file.name,regex.I):
+                                                continue
+                                            if file.size <= float(self.value):
+                                                release.file_size_sorting = 1
+                                                version.file_size_sorting = 1
                                 release.files.sort(key=lambda s: s.file_size_sorting, reverse=True)
                             scraped_releases.sort(key=lambda s: s.file_size_sorting, reverse=True)
                             return scraped_releases
