@@ -913,12 +913,11 @@ class sort:
 
             def check(self):
                 try:
-                    regex.search(self, self, regex.I)
+                    float(self)
                     return True
                 except:
                     print()
-                    print(
-                        "This value is not in the correct format. Please make sure this value is a valid regex expression and no characters are escaped accidentally.")
+                    print("This value is not in the correct format. Please enter a number (e.g. '420' or '69.69')")
                     print()
                     return False
 
