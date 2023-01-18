@@ -463,7 +463,7 @@ class sort:
             weights = ["requirement", "preference"]
 
             def __init__(self, attribute, required, operator, value=None) -> None:
-                self.attribute = attribute
+                self.attribute = attribute if not attribute == "files" else "file names"
                 self.required = (required == "requirement")
                 self.operator = operator
                 self.value = value
@@ -716,8 +716,8 @@ class sort:
                     ui_print("version rule exception - ignoring this rule")
                     return scraped_releases
 
-        class files(rule):
-            name = "files"
+        class file_names(rule):
+            name = "file names"
             operators = ["include", "exclude"]
 
             def apply(self, scraped_releases: list):
@@ -768,9 +768,6 @@ class sort:
                                     scraped_releases.remove(release)
                             return scraped_releases
                     else:
-                        if self.operator == "cached":
-                            scraped_releases.sort(key=lambda s: len(getattr(s, self.attribute)), reverse=True)
-                            return scraped_releases
                         if self.operator == "include":
                             for release in scraped_releases:
                                 release.file_name_sorting = 0
@@ -806,6 +803,109 @@ class sort:
                                                 version.file_name_sorting = 0
                                 release.files.sort(key=lambda s: s.file_name_sorting, reverse=True)
                             scraped_releases.sort(key=lambda s: s.file_name_sorting, reverse=True)
+                            return scraped_releases
+                except:
+                    ui_print("version rule exception - ignoring this rule")
+                    return scraped_releases
+
+            def check(self):
+                try:
+                    regex.search(self, self, regex.I)
+                    return True
+                except:
+                    print()
+                    print(
+                        "This value is not in the correct format. Please make sure this value is a valid regex expression and no characters are escaped accidentally.")
+                    print()
+                    return False
+
+        class file_sizes(rule):
+            name = "file sizes"
+            operators = [">=", "<="]
+
+            def apply(self, scraped_releases: list):
+                try:
+                    if self.required:
+                        if self.operator == ">=":
+                            for release in scraped_releases[:]:
+                                remove = False
+                                if not hasattr(release,"files"):
+                                    continue
+                                if len(getattr(release, "files")) == 0:
+                                    continue
+                                for version in release.files[:]:
+                                    if hasattr(version,"size"):
+                                        if version.size <= float(self.value):
+                                            remove = True
+                                    elif hasattr(version,"files"):
+                                        remove_version = False
+                                        for file in version.files:
+                                            if file.size <= float(self.value):
+                                                remove = False
+                                                remove_version = True
+                                        if remove_version:
+                                            release.files.remove(version)
+                                if remove or len(release.files) == 0:
+                                    scraped_releases.remove(release)
+                            return scraped_releases
+                        elif self.operator == "<=":
+                            for release in scraped_releases[:]:
+                                remove = False
+                                if not hasattr(release,"files"):
+                                    continue
+                                if len(getattr(release, "files")) == 0:
+                                    continue
+                                for version in release.files[:]:
+                                    if hasattr(version,"size"):
+                                        if version.size >= float(self.value):
+                                            remove = True
+                                    elif hasattr(version,"files"):
+                                        remove_version = False
+                                        for file in version.files:
+                                            if file.size >= float(self.value):
+                                                remove = False
+                                                remove_version = True
+                                        if remove_version:
+                                            release.files.remove(version)
+                                if remove or len(release.files) == 0:
+                                    scraped_releases.remove(release)
+                            return scraped_releases
+                    else:
+                        if self.operator == ">=":
+                            for release in scraped_releases:
+                                release.file_size_sorting = 0
+                                if not hasattr(release,"files"):
+                                    continue
+                                for version in release.files:
+                                    version.file_size_sorting = 0
+                                    if hasattr(version,"size"):
+                                        if version.size >= float(self.value):
+                                            release.file_size_sorting = 1
+                                    elif hasattr(version,"files"):
+                                        for file in version.files:
+                                            if file.size >= float(self.value):
+                                                release.file_size_sorting = 1
+                                                version.file_size_sorting = 1
+                                release.files.sort(key=lambda s: s.file_size_sorting, reverse=True)
+                            scraped_releases.sort(key=lambda s: s.file_size_sorting, reverse=True)
+                            return scraped_releases
+                        elif self.operator == "<=":
+                            for release in scraped_releases:
+                                release.file_size_sorting = 1
+                                if not hasattr(release,"files"):
+                                    continue
+                                for version in release.files:
+                                    version.file_size_sorting = 1
+                                    if hasattr(version,"size"):
+                                        if version.size >= float(self.value):
+                                            release.file_size_sorting = 0
+                                    elif hasattr(version,"files"):
+                                        for file in version.files:
+                                            if file.size >= float(self.value):
+                                                release.file_size_sorting = 0
+                                                version.file_size_sorting = 0
+                                release.files.sort(key=lambda s: s.file_size_sorting, reverse=True)
+                            scraped_releases.sort(key=lambda s: s.file_size_sorting, reverse=True)
                             return scraped_releases
                 except:
                     ui_print("version rule exception - ignoring this rule")
