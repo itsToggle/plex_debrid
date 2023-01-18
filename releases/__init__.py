@@ -428,8 +428,10 @@ class sort:
                             if subclass.name == default[int(choice) - 1][0]:
                                 break
                         while not working:
-                            print(
-                                "Please choose a value for this rule. Make sure that the value you enter matches your chosen operator.")
+                            if hasattr(subclass,"unit"):
+                                print("Please choose a value for this rule. The value you enter is in the unit '"+subclass.unit+"'. Make sure that the value you enter matches your chosen operator.")
+                            else:
+                                print("Please choose a value for this rule. Make sure that the value you enter matches your chosen operator.")
                             print()
                             choice3 = input("Please enter a value: ")
                             if subclass.check(choice3):
@@ -563,6 +565,7 @@ class sort:
         class size(rule):
             name = "size"
             operators = ["==", ">=", "<=", "highest", "lowest"]
+            unit = "GB"
 
             def apply(self, scraped_releases: list):
                 try:
