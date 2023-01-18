@@ -56,7 +56,7 @@ def ui_print(string: str, debug="true"):
                         f.write('[' + str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S")) + '] ' + string + '\n')
                         sameline_log = False
             except:
-                print('[' + str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S")) + '] logging error: couldnt write into log file at: ' + config_dir + 'plex_debrid.log')
+                print('[' + str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S")) + '] logging error: couldnt write into log file at: ' + config_dir + '/plex_debrid.log')
         #ui
         if debug == "true":
             if string == 'done' and sameline:
