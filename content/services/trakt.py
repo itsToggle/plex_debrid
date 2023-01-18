@@ -1122,7 +1122,13 @@ def aliases(self,lan):
                 if len(response) > 0:
                     for alias in response:
                         if alias.country in ctrs:
-                            aliases += [alias.title]
+                            special_chars = False
+                            for i in alias.title:
+                                if ord(i) > 128:
+                                    special_chars = True
+                                    break
+                            if not special_chars:
+                                aliases += [alias.title]
     except:
         aliases = []
     return aliases
