@@ -80,7 +80,7 @@ class file:
     def __init__(self, id, name, size, wanted_list, unwanted_list):
         self.id = id
         self.name = name
-        self.size = size
+        self.size = size / 1000000000
         self.match = ''
         wanted = False
         for key in wanted_list:

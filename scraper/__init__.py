@@ -10,7 +10,7 @@ def scrape(query, altquery="(.*)"):
         ui_print('scraping sources for IMDB ID "' + query + '" ...')
     else:
         ui_print('scraping sources for query "' + query + '" ...')
-    ui_print('accepting title that regex match "' + altquery + '" ...', debug=ui_settings.debug)
+    ui_print('accepting titles that regex match "' + altquery + '" ...', debug=ui_settings.debug)
     scrapers = services.get()
     scraped_releases = []
     results = [None] * len(scrapers)

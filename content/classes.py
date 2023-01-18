@@ -804,10 +804,16 @@ class media:
                     imdb_scraped = False
                     # if there is more than one uncollected season
                     if len(self.Seasons) > 1:
-                        for title in self.alternate_titles:
-                            self.Releases += scraper.scrape(self.query(title), self.deviation())
-                            if len(self.Releases) > 0:
-                                break
+                        if self.isanime():
+                            for title in self.alternate_titles:
+                                self.Releases += scraper.scrape(self.anime_query(title), self.deviation())
+                                if len(self.Releases) > 0:
+                                    break
+                        else:
+                            for title in self.alternate_titles:
+                                self.Releases += scraper.scrape(self.query(title), self.deviation())
+                                if len(self.Releases) > 0:
+                                    break
                         if len(self.Releases) <= 10:
                             imdb_scraped = True
                             if hasattr(self,"EID"):
@@ -933,17 +939,17 @@ class media:
                     return True, retry
                 else:
                     self.Releases = []
+                if self.isanime():
+                    for title in self.alternate_titles:
+                        self.Releases += scraper.scrape(self.anime_query(title), self.deviation())
+                        if len(self.Releases) > 0:
+                            break
                 while len(self.Releases) == 0 and i <= retries:
                     for title in self.alternate_titles:
                         self.Releases += scraper.scrape(self.query(title), self.deviation())
                         if len(self.Releases) > 0:
                             break
                     i += 1
-                if self.isanime():
-                    for title in self.alternate_titles:
-                        self.Releases += scraper.scrape(self.anime_query(title), self.deviation())
-                        if len(self.Releases) > 0:
-                            break
                 if len(self.Releases) <= 5:
                     imdb_scraped = True
                     if hasattr(self,"parentEID"):
@@ -992,15 +998,15 @@ class media:
             if not debrid_downloaded or retry:
                 if debrid_downloaded:
                     refresh_ = True
-                for title in self.alternate_titles:
-                    self.Releases = scraper.scrape(self.query(title), self.deviation())
-                    if len(self.Releases) > 0:
-                        break
                 if self.isanime():
                     for title in self.alternate_titles:
                         self.Releases += scraper.scrape(self.anime_query(title), self.deviation())
                         if len(self.Releases) > 0:
                             break
+                for title in self.alternate_titles:
+                    self.Releases = scraper.scrape(self.query(title), self.deviation())
+                    if len(self.Releases) > 0:
+                        break
                 debrid_downloaded, retry = self.debrid_download()
                 if debrid_downloaded:
                     refresh_ = True
