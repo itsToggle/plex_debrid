@@ -338,6 +338,7 @@ def run(cdir = "", smode = False):
     global service_mode
     config_dir = cdir
     service_mode = smode
+    set_log_dir(config_dir)
     if setup():
         options()
     else:
