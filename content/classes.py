@@ -924,7 +924,10 @@ class media:
                     toc = time.perf_counter()
                     ui_print('took ' + str(round(toc - tic, 2)) + 's')
         elif self.type == 'season':
-            imdb_scraped = False
+            try:
+                imdb_scraped == True
+            except:
+                imdb_scraped = False
             altquery = self.deviation()
             for release in parentReleases:
                 if regex.match(r'(' + altquery + ')', release.title, regex.I):
@@ -963,13 +966,23 @@ class media:
                             service,query = EID.split('://')
                             self.Releases += scraper.scrape(query,self.deviation())
                             debrid_downloaded, retry = self.debrid_download()
+                            imdb_scraped = True
             if not debrid_downloaded or retry:
                 if debrid_downloaded:
                     refresh_ = True
-                for title in self.alternate_titles:
-                    self.Releases += scraper.scrape(self.query()[:-1])
-                    if len(self.Releases) > 0:
-                        break
+                if self.isanime():
+                    for title in self.alternate_titles:
+                        self.Releases += scraper.scrape(self.anime_query(title))
+                        if len(self.Releases) > 0:
+                            break
+                if len(self.Releases) == 0 or not self.isanime():
+                    for title in self.alternate_titles:
+                        if self.isanime():
+                            self.Releases += scraper.scrape(self.query(title).replace('.',' '))
+                        else:
+                            self.Releases += scraper.scrape(self.query()[:-1])
+                        if len(self.Releases) > 0:
+                            break
                 if len(self.Releases) <= 5 and not imdb_scraped:
                     if hasattr(self,"parentEID"):
                         for EID in self.parentEID:
@@ -999,10 +1012,14 @@ class media:
                         self.Releases += scraper.scrape(self.anime_query(title), self.deviation())
                         if len(self.Releases) > 0:
                             break
-                for title in self.alternate_titles:
-                    self.Releases += scraper.scrape(self.query(title), self.deviation())
-                    if len(self.Releases) > 0:
-                        break
+                if len(self.Releases) == 0 or not self.isanime():
+                    for title in self.alternate_titles:
+                        if self.isanime():
+                            self.Releases += scraper.scrape(self.query(title).replace('.',' '), self.deviation())
+                        else:
+                            self.Releases += scraper.scrape(self.query(title), self.deviation())
+                        if len(self.Releases) > 0:
+                            break
                 debrid_downloaded, retry = self.debrid_download()
                 if debrid_downloaded:
                     refresh_ = True
