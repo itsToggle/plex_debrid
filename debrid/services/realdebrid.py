@@ -13,7 +13,7 @@ session = requests.Session()
 errors = [
     [202," action already done"],
     [400," bad Request (see error message)"],
-    [403," permission denied (account locked, not premium)"],
+    [403," permission denied (infringing torrent or account locked or not premium)"],
     [503," service unavailable (see error message)"],
     [404," wrong parameter (invalid file id(s)) / unknown ressource (invalid id)"],
     ]
@@ -32,7 +32,7 @@ def logerror(response):
     if response.status_code == 401:
         ui_print("[realdebrid] error: (401 unauthorized): realdebrid api key does not seem to work. check your realdebrid settings.")
     if response.status_code == 403:
-        ui_print("[realdebrid] error: (403 unauthorized): your realdebrid account is either locked or you dont have premium.")
+        ui_print("[realdebrid] error: (403 unauthorized): You may have attempted to add an infringing torrent or your realdebrid account is locked or you dont have premium.")
 
 # Get Function
 def get(url):
