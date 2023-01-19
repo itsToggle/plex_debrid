@@ -417,29 +417,30 @@ class library(classes.library):
                     if choice == '0' and not classes.refresh.active == []:
                         back=True
 
-        def call(path):
+        def call(paths):
             try:
-                section = path[0]
-                folders = path[1]
-                if library.refresh.partial == "true":
-                    for folder in folders:
-                        refreshing = True
-                        while refreshing:
-                            refreshing = False
-                            url = library.url + '/library/sections/?X-Plex-Token=' + users[0][1]
-                            response = get(url)
-                            for section_ in response.MediaContainer.Directory:
-                                if section_.refreshing:
-                                    refreshing = True
-                            if refreshing:
-                                time.sleep(0.25)
-                        url = library.url + '/library/sections/' + section + '/refresh?path='+folder+'&X-Plex-Token=' + users[0][1]
+                for path in paths:
+                    section = path[0]
+                    folders = path[1]
+                    if library.refresh.partial == "true":
+                        for folder in folders:
+                            refreshing = True
+                            while refreshing:
+                                refreshing = False
+                                url = library.url + '/library/sections/?X-Plex-Token=' + users[0][1]
+                                response = get(url)
+                                for section_ in response.MediaContainer.Directory:
+                                    if section_.refreshing:
+                                        refreshing = True
+                                if refreshing:
+                                    time.sleep(0.25)
+                            url = library.url + '/library/sections/' + section + '/refresh?path='+folder+'&X-Plex-Token=' + users[0][1]
+                            ui_print("refreshing plex via url: " + url, debug=ui_settings.debug)
+                            response = session.get(url)
+                    else:
+                        url = library.url + '/library/sections/' + section + '/refresh?&X-Plex-Token=' + users[0][1]
                         ui_print("refreshing plex via url: " + url, debug=ui_settings.debug)
                         response = session.get(url)
-                else:
-                    url = library.url + '/library/sections/' + section + '/refresh?X-Plex-Token=' + users[0][1]
-                    ui_print("refreshing plex via url: " + url, debug=ui_settings.debug)
-                    response = session.get(url)
             except Exception as e:
                 ui_print(str(e), debug=ui_settings.debug)
 
@@ -468,8 +469,9 @@ class library(classes.library):
                     ui_print("[plex] error: provided refresh delay is not a number! using default 2 second delay.")
                 time.sleep(delay)
                 ui_print('[plex] refreshing '+element_type+' library section/s: "' + '","'.join(names) + '"')
-                for path in paths:
-                    library.refresh.call(path)
+                results = [None]
+                t = Thread(target=multi_init, args=(library.refresh.call, paths, results, 0))
+                t.start()
             except:
                 ui_print("[plex] error: couldnt refresh libraries. Make sure you have setup a plex user!")
 
