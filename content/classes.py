@@ -427,9 +427,7 @@ class media:
                     title = releases.rename(self.parentTitle)
                 elif self.type == 'episode':
                     title = releases.rename(self.grandparentTitle)
-            escape_chars = ['[',']']
-            for char in escape_chars:
-                title = title.replace(char,'\\'+char)
+            title = title.replace('[','\[').replace(']','\]')
             if self.type == 'movie':
                 title = title.replace('.' + str(self.year), '')
                 return '[^A-Za-z0-9]*(' + title + ':?.)\(?\[?(' + str(self.year) + '|' + str(self.year - 1) + '|' + str(self.year + 1) + ')'
@@ -454,9 +452,7 @@ class media:
                     title = releases.rename(self.parentTitle)
                 elif self.type == 'episode':
                     title = releases.rename(self.grandparentTitle)
-            escape_chars = ['[',']']
-            for char in escape_chars:
-                title = title.replace(char,'\\'+char)
+            title = title.replace('[','\[').replace(']','\]')
             if self.type == 'movie':
                 title = title.replace('.' + str(self.year), '')
                 return '(.*?)(' + title + '.)(.*?)(' + str(self.year) + '|' + str(self.year - 1) + '|' + str(self.year + 1) + ')'
@@ -468,7 +464,7 @@ class media:
                 return '(.*?)(' + title + '.)(.*?)(season.' + str(self.index) + '|season.' + str("{:02d}".format(self.index)) + '|S?' + str("{:02d}".format(self.index)) + '|'+str(self.index)+'|'+self.anime_count+')'
             elif self.type == 'episode':
                 title = title.replace('.' + str(self.grandparentYear), '')
-                return '(.*?)(' + title + '.)(.*?)(S' + str("{:02d}".format(self.parentIndex)) + '.?E' + str("{:02d}".format(self.index)) + '|'+self.anime_count+')'
+                return '(.*?)(' + title + '.)([^1-9]*?)(S' + str("{:02d}".format(self.parentIndex)) + '.?E' + str("{:02d}".format(self.index)) + '|'+self.anime_count+'(?!E?[0-9]))'
 
     def isanime(self):
         if 'anime' in self.genre():
@@ -1004,7 +1000,7 @@ class media:
                         if len(self.Releases) > 0:
                             break
                 for title in self.alternate_titles:
-                    self.Releases = scraper.scrape(self.query(title), self.deviation())
+                    self.Releases += scraper.scrape(self.query(title), self.deviation())
                     if len(self.Releases) > 0:
                         break
                 debrid_downloaded, retry = self.debrid_download()
@@ -1088,6 +1084,8 @@ class media:
                 files += episode.files()
         elif self.type == 'episode':
             files += ['S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index)) + '']
+        if self.isanime():
+            files = ['(.*)']
         return files
 
 def download(cls, library, parentReleases, result, index):
