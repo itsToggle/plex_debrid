@@ -20,7 +20,7 @@ def scrape(query, altquery):
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
         response = None
         retries = 0
-        while not hasattr(response, "torrent_results") and retries < 500:
+        while not hasattr(response, "torrent_results") and retries < 5:
             if regex.search(r'(tt[0-9]+)', query, regex.I):
                 url = 'https://torrentapi.org/pubapi_v2.php?mode=search&search_imdb=' + str(
                     query) + '&ranked=0&category=52;51;50;49;48;46;45;44;41;17;14&token=' + token + '&limit=100&format=json_extended&app_id=fuckshit'
@@ -44,9 +44,9 @@ def scrape(query, altquery):
                             else:
                                 ui_print('rarbg error: could not fetch new token', debug=ui_settings.debug)
                         elif hasattr(response, "rate_limit"):
-                            retries += 1
+                            retries += 0.0125
                 else:
-                    retries += 1
+                    retries += 0.0125
             except:
                 response = None
                 ui_print('rarbg error: (parse exception)', debug=ui_settings.debug)
