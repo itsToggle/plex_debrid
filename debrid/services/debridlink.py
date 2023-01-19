@@ -25,7 +25,8 @@ def logerror(response):
             if not response2.error == 'authorization_pending':
                 ui_print("[debridlink] error "+str(response.status_code)+": " + response2.error)
         except:
-            ui_print("[debridlink] error "+str(response.status_code)+": unknown error")
+            if not response.status_code == 200:
+                ui_print("[debridlink] error "+str(response.status_code)+": unknown error")
     if response.status_code == 401:
         ui_print("[debridlink] error 401: debridlink api key does not seem to work. check your debridlink settings.")
 
