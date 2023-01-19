@@ -1049,23 +1049,29 @@ class media:
         if len(scraped_releases) > 0:
             for version in self.versions():
                 debrid_uncached = True
-                for rule in version.rules:
+                for i,rule in enumerate(version.rules):
                     if rule[0] == "cache status" and rule[1] == 'requirement' and rule[2] == "cached":
                         debrid_uncached = False
                 self.version = version
                 self.Releases = copy.deepcopy(scraped_releases)
                 releases.sort(self.Releases, self.version)
-                if debrid.download(self, stream=True):
-                    self.downloaded()
-                    downloaded += [True]
-                elif not self.type == 'show' and debrid_uncached:  # change to version definition of cache status
-                    if debrid.download(self, stream=False):
-                        self.downloaded()
-                        debrid.downloading += [self.query() + ' [' + self.version.name + ']']
-                        downloaded += [True]
-                    else:
-                        downloaded += [False]
-                else:
+                ver_dld = False
+                for release in copy.deepcopy(self.Releases):
+                    self.Releases = [release,]
+                    if hasattr(release,"cached") and len(release.cached) > 0:
+                        if debrid.download(self, stream=True):
+                            self.downloaded()
+                            downloaded += [True]
+                            ver_dld = True
+                            break
+                    elif not self.type == 'show' and debrid_uncached:
+                        if debrid.download(self, stream=False):
+                            self.downloaded()
+                            debrid.downloading += [self.query() + ' [' + self.version.name + ']']
+                            downloaded += [True]
+                            ver_dld = True
+                            break
+                if not ver_dld:
                     downloaded += [False]
         return True in downloaded, (False in downloaded or len(downloaded) == 0)
 
