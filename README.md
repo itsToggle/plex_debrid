@@ -9,7 +9,14 @@ Using content services like plex discover, trakt and overseerr, your personal me
  
 ### Description:
 
-plex_debrid provides an easy way to add media content to your debrid service/s, which becomes instantly watchable when mounting your debrid service with a personal media server like plex/emby/jellyfin/infuse. The plex watchlists, trakt watchlists and overseer-requests of specified users are constantly checked for newly added movies/shows and newly released episodes of watchlisted shows. Once new content is found, torrent indexers are scraped for the best, cached release on selected debrid services. The torrent is then added to a suitable debrid service and a library refresh is performed to make the newly added content available. 
+A plex_debrid setup consists of three parts.
+- The first part is rclone (or rclone_rd), a program that tricks your OS into thinking you have your debrid service files locally. In reality they are streamed when you open them, which is why content is available almost instantly and why you have unlimited storage (depending on your debrid service). Nothing is ever actually downloaded to your servers harddrive.
+- The second part is a personal media server like Plex, which allows you to watch these files from anywhere on any device.
+- The third part is the plex_debrid script, which ties both things together and provides an easy way to add media content to your debrid service/s.
+
+The plex_debrid script monitors the plex watchlists, trakt watchlists and overseer-requests of specified users for newly added movies/shows and newly released episodes of watchlisted shows. 
+Once new content is found, torrent indexers are scraped for the best, cached release on selected debrid services. 
+The torrent is then added to a suitable debrid service and a library refresh is performed to make the newly added content available. 
 
 **For any debrid-cached content (movies, one-season tv shows or even multi-season tv shows) the entire process from watchlisting content to watching it takes about 10-20 seconds.**
 
@@ -56,6 +63,7 @@ Aside from this general setup guide, here some step-by-step guides with specific
 <details>
   <summary><b><u>Step by Step for your OS:</u></b></summary>
   
+  - **[Docker (Wiki)](https://github.com/itsToggle/plex_debrid/wiki/Setup-Guides#docker-setup)**
   - **[Windows (Wiki)](https://github.com/itsToggle/plex_debrid/wiki/Setup-Guides#windows-setup)**
   - **[Linux Server (Wiki)](https://github.com/itsToggle/plex_debrid/wiki/Setup-Guides#linux-server-setup)**
   - **[Linux ARM Server (Wiki)](https://github.com/itsToggle/plex_debrid/wiki/Setup-Guides#linux-arm64-server-setup)**
@@ -245,6 +253,29 @@ If you want to run plex_debrid on a VPS or Seedbox, please keep in mind that som
 
 *plex_debrid can be setup in a bunch of different ways, which this readme wont be able to cover. Feel free to ask any questions in the "discussions" section of this respository or join our discord server.*
  
+### :cloud: Rclone Usage
+
+*Some advanced options for using rclone*
+
+><details>
+>  <summary><b><u>4K & HD libraries:</u></b></summary>
+>  
+>  - Using rclone filtering, you can split your library into 4k and non-4k content.
+>  - start one instance of rclone by adding the flag `--exclude **2160**` to your mount command, mount to a folder named "HD"
+>  - start another instance of rclone by adding the flag `--include **2160**` to your mount command, mount to a folder named "4K"
+>
+></details>
+>
+><details>
+>  <summary><b><u>Movie/Show sorting for WebDAV remotes:</u></b></summary>
+>  
+>  - Using rclone filtering, you can split your WebDAV remote into movie and show content.
+>  - start one instance of rclone by adding the flag `--exclude "**{{(s|S)([0-9]+)( |.|e|E)}}**"` to your mount command, mount to a folder named "movies"
+>  - start another instance of rclone by adding the flag `--include "**{{(s|S)([0-9]+)( |.|e|E)}}**"` to your mount command, mount to a folder named "shows"
+>
+></details>
+
+ 
 ### :tv: Content Services:
 
 *The services that plex_debrid can monitor for new content. You can pick any combination of services.*
@@ -366,6 +397,9 @@ If you want to run plex_debrid on a VPS or Seedbox, please keep in mind that som
 >  <summary><u><b>:clipboard: Local Ignore List:</u></b></summary>
 >  
 >  - To use a local text file of queries to ignore content, navigate to '/Settings/Library Service/Library ignore services/Edit/'
+>  - You will be prompted to provide a path to a directory (not a file), in which plex_debrid will save a file named `ignored.txt` after content is ignored.
+>  - If you want to create that file yourself and dont want to wait for plex_debrid to create it, make sure to save it in your specified path and under the correct name `ignored.txt`
+>  - If you want to use the ignore file with the plex_debrid docker version, make sure to pick the path `./config/`, so that the file is saved outside of your container.
 >
 ></details>
  
@@ -384,7 +418,7 @@ If you want to run plex_debrid on a VPS or Seedbox, please keep in mind that som
 ><details>
 >  <summary><b><u><img src="https://user-images.githubusercontent.com/27040483/28728094-99f3e3f6-73c7-11e7-8f8d-28912dc6ac0d.png" height="16"> jackett (highly recommended):</u></b></summary>
 >  
->  - Its recommended to install "jackett", a program that wraps a huge amount of torrent indexers (https://github.com/Jackett/Jackett). Once installed and setup, you can enable jackett by navigating to '/Settings/Scraper/Sources/Edit/Add source/jackett'.
+>  - Its recommended to install "jackett", a program that wraps a huge amount of torrent indexers (https://github.com/Jackett/Jackett). Once installed, go to http://localhost:9117 and add a few of your favorite indexers. Enable the jackett server setting "CORS". Once the jackett setup is complete, you can enable jackett inside plex_debrid by navigating to '/Settings/Scraper/Sources/Edit/Add source/jackett'.
 >  - You can now choose to use a specific debrid service for a specific torrent tracker by navigating to "/Settings/Debrid Services/Tracker specific Debrid Services". This comes in handy if you are using a private tracker that forces you to use a debrid service that will seed your torrents (e.g. debridlink,put.io).
 >
 ></details>
@@ -437,7 +471,7 @@ If you want to run plex_debrid on a VPS or Seedbox, please keep in mind that som
 >        8) seeders       preference  :  highest
 >        9) size          requirement :       >=  0.1
 >      
->  - "Triggers" define when plex_debrid should look for a version. You can add triggers that limit a version to a specific media type, or to specific movies/shows. You can define how many times plex_debrid should attempt to download a version and how many attempts should be made with other versions, before a version is attempted to be downloaded. Here are some of the possible triggers, given in an example of a 720p version that should only be looked for, if the media items in question are "shows" that have been released "before 2010", are not "Family Guy" or "Last week tonight", and no other version has been found for "5 attempts":
+>  - "Triggers" define when plex_debrid should look for a version. You can add triggers that limit a version to a specific media type, or to specific movies/shows. You can define how many times plex_debrid should attempt to download a version and how many attempts should be made with other versions, before a version is attempted to be downloaded. Other triggers can limit a version to a specific genre or can limit a version to a specific user that requested the movie/show. Here are some of the possible triggers, given in an example of a 720p version that should only be looked for, if the media items in question are "shows" that have been released "before 2010", are not "Family Guy" or "Last week tonight", and no other version has been found for "5 attempts":
 >      
 >        A) media type    requirement :   shows
 >        B) retries       requirement :       >=  5
@@ -445,7 +479,7 @@ If you want to run plex_debrid on a VPS or Seedbox, please keep in mind that som
 >        D) title         requirement :  exclude  (family.guy|last.week.tonight)
 >        E) year          requirement :       <=  2010
 >      
->
+>  - Text based rule values are interpreted as regex definitions, are case-insensitive and use official regex syntax. check out regexr.com to try out your regex definitions, or visit our discord server to see how other people use versions.
 ></details>
  
 ## Limitations:
