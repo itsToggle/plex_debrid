@@ -1011,12 +1011,12 @@ class media:
                 if debrid_downloaded:
                     refresh_ = True
                 if self.isanime():
-                    for title in self.alternate_titles:
+                    for title in self.alternate_titles[:3]:
                         self.Releases += scraper.scrape(self.anime_query(title), self.deviation())
                         if len(self.Releases) > 0:
                             break
                 if len(self.Releases) == 0 or not self.isanime():
-                    for title in self.alternate_titles:
+                    for title in self.alternate_titles[:3]:
                         if self.isanime():
                             self.Releases += scraper.scrape(self.query(title).replace('.',' '), self.deviation())
                         else:
