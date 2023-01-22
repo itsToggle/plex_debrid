@@ -753,7 +753,7 @@ class media:
                         while len(self.Releases) == 0 and i <= retries:
                             for k,title in enumerate(self.alternate_titles):
                                 self.Releases += scraper.scrape(self.query(title).replace(str(self.year), str(year)),self.deviation())
-                                if k == 0 and not imdb_scraped:
+                                if len(self.Releases) < 20 and k == 0 and not imdb_scraped:
                                     if hasattr(self,"EID"):
                                         for EID in self.EID:
                                             if EID.startswith("imdb"):
@@ -794,7 +794,7 @@ class media:
                         if self.isanime():
                             for k,title in enumerate(self.alternate_titles[:3]):
                                 self.Releases += scraper.scrape(self.anime_query(title), self.deviation())
-                                if len(self.Releases) < 10 and k == 0 and not imdb_scraped:
+                                if len(self.Releases) < 20 and k == 0 and not imdb_scraped:
                                     if hasattr(self,"EID"):
                                         for EID in self.EID:
                                             if EID.startswith("imdb"):
@@ -806,7 +806,7 @@ class media:
                         else:
                             for k,title in enumerate(self.alternate_titles[:3]):
                                 self.Releases += scraper.scrape(self.query(title), self.deviation())
-                                if len(self.Releases) < 10 and k == 0 and not imdb_scraped:
+                                if len(self.Releases) < 20 and k == 0 and not imdb_scraped:
                                     if hasattr(self,"EID"):
                                         for EID in self.EID:
                                             if EID.startswith("imdb"):
@@ -874,15 +874,6 @@ class media:
                                 if download_multi_season_release:
                                     self.Releases = multi_season_releases
                                     debrid_downloaded, retry = self.debrid_download()
-                                    if not imdb_scraped and (not debrid_downloaded or retry):
-                                        if debrid_downloaded:
-                                            refresh_ = True
-                                        if hasattr(self,"EID"):
-                                            for EID in self.EID:
-                                                if EID.startswith("imdb"):
-                                                    service,query = EID.split('://')
-                                                    self.Releases += scraper.scrape(query,self.deviation())
-                                                    debrid_downloaded, retry = self.debrid_download()
                                     if debrid_downloaded:
                                         refresh_ = True
                                         if not retry:
@@ -939,7 +930,7 @@ class media:
                 if self.isanime():
                     for k,title in enumerate(self.alternate_titles[:3]):
                         self.Releases += scraper.scrape(self.anime_query(title), self.deviation())
-                        if len(self.Releases) < 5 and k == 0 and not imdb_scraped:
+                        if len(self.Releases) < 20 and k == 0 and not imdb_scraped:
                             EIDS = []
                             if hasattr(self,"EID"):
                                 EIDS = self.EID
@@ -955,7 +946,7 @@ class media:
                 while len(self.Releases) == 0 and i <= retries:
                     for k,title in enumerate(self.alternate_titles[:3]):
                         self.Releases += scraper.scrape(self.query(title), self.deviation())
-                        if len(self.Releases) < 5 and k == 0 and not imdb_scraped:
+                        if len(self.Releases) < 20 and k == 0 and not imdb_scraped:
                             EIDS = []
                             if hasattr(self,"EID"):
                                 EIDS = self.EID
@@ -986,7 +977,7 @@ class media:
                             self.Releases += scraper.scrape(self.query()[:-1])
                         if len(self.Releases) > 0:
                             break
-                if len(self.Releases) <= 5 and not imdb_scraped:
+                if len(self.Releases) <= 20 and not imdb_scraped:
                     if hasattr(self,"parentEID"):
                         for EID in self.parentEID:
                             if EID.startswith("imdb"):
