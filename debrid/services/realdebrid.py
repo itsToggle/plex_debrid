@@ -146,9 +146,22 @@ def download(element, stream=True, query='', force=False):
                                     element.downloaded_releases += [response.filename]
                                 release.download = response.links
                             else:
-                                ui_print('[realdebrid] error: selecting this cached file combination returned a .rar archive - trying a different file combination.', ui_settings.debug)
-                                delete('https://api.real-debrid.com/rest/1.0/torrents/delete/' + torrent_id)
-                                continue
+                                if response.status in ["queued","magnet_convesion","downloading","uploading"]:
+                                    if hasattr(element,"version"):
+                                        debrid_uncached = True
+                                        for i,rule in enumerate(element.version.rules):
+                                            if (rule[0] == "cache status") and (rule[1] == 'requirement' or rule[1] == 'preference') and (rule[2] == "cached"):
+                                                debrid_uncached = False
+                                        if debrid_uncached:
+                                            import debrid as db
+                                            release.files = version.files
+                                            db.downloading += [element.query() + ' [' + element.version.name + ']']
+                                            ui_print('[realdebrid] adding uncached release: ' + release.title)
+                                            return True
+                                else:
+                                    ui_print('[realdebrid] error: selecting this cached file combination returned a .rar archive - trying a different file combination.', ui_settings.debug)
+                                    delete('https://api.real-debrid.com/rest/1.0/torrents/delete/' + torrent_id)
+                                    continue
                             if len(release.download) > 0:
                                 for link in release.download:
                                     try:
