@@ -78,7 +78,7 @@ def scrape(query, altquery):
     from scraper.services import active
     if altquery == "(.*)":
         altquery = query
-    type = ("show" if regex.search(r'(S[0-9]|complete)',altquery,regex.I) else "movie")
+    type = ("show" if regex.search(r'(S[0-9]|complete|S\?[0-9])',altquery,regex.I) else "movie")
     opts = []
     for opt in default_opts:
         opts += ['='.join(opt)]
