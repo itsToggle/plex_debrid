@@ -733,6 +733,9 @@ class media:
         refresh_ = False
         i = 0
         self.Releases = []
+        if self.type in ["movie","show"] and (not hasattr(self,"title") or self.title == ""):
+            ui_print("error: media item has no title. This movie/show might not be released yet. If you have not connected a trakt account to plex_debrid, it will help plex_debrid find more accurate metadata.")
+            return
         if self.type == 'movie':
             if (len(self.uncollected(library)) > 0 or self.version_missing()) and len(self.versions()) > 0:
                 if self.released() and not self.watched() and not self.downloading():
@@ -1054,6 +1057,8 @@ class media:
         scraped_releases = copy.deepcopy(self.Releases)
         downloaded = []
         if len(scraped_releases) > 0:
+            if len(self.versions()) == 0:
+                ui_print("error: it seems that no version applies to this media item! nothing will be downloaded. adjust your version settings.")
             for version in self.versions():
                 debrid_uncached = True
                 for i,rule in enumerate(version.rules):
