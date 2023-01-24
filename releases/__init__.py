@@ -945,11 +945,16 @@ class sort:
 
             def check(self):
                 try:
-                    float(self)
-                    return True
+                    if float(self) > 0:
+                        return True
+                    else:
+                        print()
+                        print("This value is not in the correct format. Please enter a number larger than 0 (e.g. '420' or '69.69')")
+                        print()
+                        return False
                 except:
                     print()
-                    print("This value is not in the correct format. Please enter a number (e.g. '420' or '69.69')")
+                    print("This value is not in the correct format. Please enter a number larger than 0 (e.g. '420' or '69.69')")
                     print()
                     return False
 
