@@ -741,6 +741,7 @@ class media:
             ui_print("error: media item has no title. This unknown movie/show might not be released yet.") 
             ui_print("If you have not connected a trakt account to plex_debrid, its recommended to do so as it will help plex_debrid find more accurate metadata.")
             return
+        scraper.services.overwrite = []
         if self.type == 'movie':
             if (len(self.uncollected(library)) > 0 or self.version_missing()) and len(self.versions()) > 0:
                 if self.released() and not self.watched() and not self.downloading():
