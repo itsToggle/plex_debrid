@@ -284,9 +284,13 @@ class media:
                     for season in match.Seasons:
                         if not hasattr(season,'services'):
                             season.services = [self.__module__]
+                        if not hasattr(season,'requestedBy') and hasattr(self,"requestedBy"):
+                            season.requestedBy = self.requestedBy
                         for episode in season.Episodes:
                             if not hasattr(episode,'services'):
                                 episode.services = [self.__module__]
+                            if not hasattr(episode,'requestedBy') and hasattr(self,"requestedBy"):
+                                episode.requestedBy = self.requestedBy
                 self.__dict__.update(match.__dict__)
                 self.services += [service]
                 for season in self.Seasons:
