@@ -6,16 +6,17 @@ from scraper import services
 
 def scrape(query, altquery="(.*)"):
     ui_print('done')
-    if regex.search(r'(tt[0-9]+)', query, regex.I):
-        ui_print('scraping sources for IMDB ID "' + query + '" ...')
-    else:
-        ui_print('scraping sources for query "' + query + '" ...')
-    ui_print('accepting titles that regex match "' + altquery + '" ...', debug=ui_settings.debug)
     scrapers = services.sequential()
     if len(scrapers) == 0:
         scrapers = [services.get()]
     scraped_releases = []
     for sequence in scrapers:
+        servicenames = "[" + ",".join(x.name for x in sequence) + "]"
+        if regex.search(r'(tt[0-9]+)', query, regex.I):
+            ui_print('scraping sources '+servicenames+' for IMDB ID "' + query + '" ...')
+        else:
+            ui_print('scraping sources '+servicenames+' for query "' + query + '" ...')
+        ui_print('accepting titles that regex match "' + altquery + '" ...', debug=ui_settings.debug)
         results = [None] * len(sequence)
         threads = []
         for index, scraper_ in enumerate(sequence):
