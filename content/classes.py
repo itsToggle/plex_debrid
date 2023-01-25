@@ -734,7 +734,8 @@ class media:
         i = 0
         self.Releases = []
         if self.type in ["movie","show"] and (not hasattr(self,"title") or self.title == ""):
-            ui_print("error: media item has no title. This movie/show might not be released yet. If you have not connected a trakt account to plex_debrid, it will help plex_debrid find more accurate metadata.")
+            ui_print("error: media item has no title. This unknown movie/show might not be released yet.") 
+            ui_print("If you have not connected a trakt account to plex_debrid, its recommended to do so as it will help plex_debrid find more accurate metadata.")
             return
         if self.type == 'movie':
             if (len(self.uncollected(library)) > 0 or self.version_missing()) and len(self.versions()) > 0:
