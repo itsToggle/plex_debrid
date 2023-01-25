@@ -1156,7 +1156,7 @@ class sort:
             def check(self):
                 try:
                     import scraper.services as ss
-                    if regex.search(self.value,str(ss.active),regex.I):
+                    if regex.search(self,str(ss.active),regex.I):
                         return True
                     print("This regex definition did not match any of your active scraper sources. Please make sure you enter a regex def. that matches one of these scraper names:")
                     print(str(ss.active))
