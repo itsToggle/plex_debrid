@@ -74,5 +74,4 @@ def sequential():
                 if service.name == servicename:
                     activesequence += [service]
         activeservices += [activesequence]
-    overwrite = []
     return activeservices
