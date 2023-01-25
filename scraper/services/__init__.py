@@ -55,13 +55,24 @@ def setup(cls, new=False):
                 active += [cls.name]
 
 def get():
-    global overwrite
     cls = sys.modules[__name__]
-    allowedservices = overwrite if len(overwrite) > 0 else active
     activeservices = []
-    for servicename in allowedservices:
+    for servicename in active:
         for service in cls.__subclasses__():
             if service.name == servicename:
                 activeservices += [service]
+    return activeservices
+
+def sequential():
+    global overwrite
+    cls = sys.modules[__name__]
+    activeservices = []
+    for sequence in overwrite:
+        activesequence = []
+        for servicename in sequence:
+            for service in cls.__subclasses__():
+                if service.name == servicename:
+                    activesequence += [service]
+        activeservices += [activesequence]
     overwrite = []
     return activeservices
