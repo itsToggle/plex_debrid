@@ -1190,7 +1190,7 @@ class sort:
 
         class scraper_adjustment(trigger):
             name = "scraping adjustment"
-            operators = ["add text before title", "add text after title"]
+            operators = ["scrape w/ airdate format","add text before title", "add text after title"]
 
             def check(self):
                 return True
