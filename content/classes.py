@@ -803,7 +803,7 @@ class media:
                                         for EID in self.EID:
                                             if EID.startswith("imdb"):
                                                 service,query = EID.split('://')
-                                                self.Releases += scraper.scrape(query,"(.*)")
+                                                self.Releases += scraper.scrape(query,self.deviation())
                                                 imdb_scraped = True
                                 if len(self.Releases) > 0:
                                     break
