@@ -432,7 +432,7 @@ class media:
                             for episode in season.Episodes:
                                 episode.alternate_titles = self.alternate_titles
     
-    def deviation(self):
+    def deviation(self,year=""):
         self.versions()
         if not self.isanime():
             if hasattr(self,'alternate_titles'):
@@ -449,6 +449,8 @@ class media:
             title = title.replace('[','\[').replace(']','\]')
             if self.type == 'movie':
                 title = title.replace('.' + str(self.year), '')
+                if year != "":
+                    return '[^A-Za-z0-9]*(' + title + ':?.)\(?\[?(' + str(year) + ')'
                 return '[^A-Za-z0-9]*(' + title + ':?.)\(?\[?(' + str(self.year) + '|' + str(self.year - 1) + '|' + str(self.year + 1) + ')'
             elif self.type == 'show':
                 title = title.replace('.' + str(self.year), '')
@@ -797,13 +799,13 @@ class media:
                         i = 0
                         while len(self.Releases) == 0 and i <= retries:
                             for k,title in enumerate(self.alternate_titles):
-                                self.Releases += scraper.scrape(self.query(title).replace(str(self.year), str(year)),self.deviation())
+                                self.Releases += scraper.scrape(self.query(title).replace(str(self.year), str(year)),self.deviation(year=str(year)))
                                 if len(self.Releases) < 20 and k == 0 and not imdb_scraped:
                                     if hasattr(self,"EID"):
                                         for EID in self.EID:
                                             if EID.startswith("imdb"):
                                                 service,query = EID.split('://')
-                                                self.Releases += scraper.scrape(query,self.deviation())
+                                                self.Releases += scraper.scrape(query,"(.*)")
                                                 imdb_scraped = True
                                 if len(self.Releases) > 0:
                                     break
@@ -811,7 +813,7 @@ class media:
                         if not len(self.Releases) == 0:
                             self.year = year
                             break                        
-                    debrid_downloaded, retry = self.debrid_download(force=False)
+                    debrid_downloaded, retry = self.debrid_download(force=True)
                     if debrid_downloaded:
                         refresh_ = True
                         if not retry and (self.watchlist.autoremove == "both" or self.watchlist.autoremove == "movie"):
