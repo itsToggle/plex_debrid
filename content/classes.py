@@ -395,7 +395,8 @@ class media:
                             title_ = title + value
                         if not title_ == None and not title_ in self.alternate_titles:
                             self.alternate_titles += [title_]
-                    self.alternate_titles += [title]
+                    if not title in self.alternate_titles:
+                        self.alternate_titles += [title]
                 else:
                     if not title in self.alternate_titles:
                         self.alternate_titles += [title]
@@ -419,7 +420,8 @@ class media:
                         title_ = title + value
                     if not title_ == None and not title_ in self.alternate_titles:
                         self.alternate_titles += [title_]
-                self.alternate_titles += [title]
+                if not title in self.alternate_titles:
+                    self.alternate_titles += [title]
             else:
                 self.alternate_titles = [title]
             if self.type == "show":
