@@ -333,6 +333,15 @@ class media:
             return title + '.S' + str("{:02d}".format(self.index)) + '.'
         elif self.type == 'episode':
             title = title.replace('.' + str(self.grandparentYear), '')
+            if hasattr(self,"scraping_adjustment"):
+                for operator, value in self.scraping_adjustment:
+                    if operator == "scrape w/ airdate format":
+                        try:
+                            if regex.search(value,title,regex.I):
+                                airdate = datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
+                                return title + '.' + airdate.strftime('%Y.%m.%d')
+                        except:
+                            continue
             return title + '.S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index)) + '.'
     
     def anime_query(self,title=""):
@@ -379,12 +388,15 @@ class media:
                 title = releases.rename(title)
                 if hasattr(self,"scraping_adjustment"):
                     for operator, value in self.scraping_adjustment:
+                        title_ = None
                         if operator == "add text before title":
                             title_ = value + title
                         elif operator == "add text after title":
                             title_ = title + value
-                        if not title_ in self.alternate_titles:
+                        if not title_ == None and not title_ in self.alternate_titles:
                             self.alternate_titles += [title_]
+                    if not title in self.alternate_titles:
+                        self.alternate_titles += [title]
                 else:
                     if not title in self.alternate_titles:
                         self.alternate_titles += [title]
@@ -401,12 +413,15 @@ class media:
                 self.alternate_titles = []
             if hasattr(self,"scraping_adjustment"):
                 for operator, value in self.scraping_adjustment:
+                    title_ = None
                     if operator == "add text before title":
                         title_ = value + title
                     elif operator == "add text after title":
                         title_ = title + value
-                    if not title_ in self.alternate_titles:
+                    if not title_ == None and not title_ in self.alternate_titles:
                         self.alternate_titles += [title_]
+                if not title in self.alternate_titles:
+                    self.alternate_titles += [title]
             else:
                 self.alternate_titles = [title]
             if self.type == "show":
@@ -417,7 +432,7 @@ class media:
                             for episode in season.Episodes:
                                 episode.alternate_titles = self.alternate_titles
     
-    def deviation(self):
+    def deviation(self,year=""):
         self.versions()
         if not self.isanime():
             if hasattr(self,'alternate_titles'):
@@ -434,6 +449,8 @@ class media:
             title = title.replace('[','\[').replace(']','\]')
             if self.type == 'movie':
                 title = title.replace('.' + str(self.year), '')
+                if year != "":
+                    return '[^A-Za-z0-9]*(' + title + ':?.)\(?\[?(' + str(year) + ')'
                 return '[^A-Za-z0-9]*(' + title + ':?.)\(?\[?(' + str(self.year) + '|' + str(self.year - 1) + '|' + str(self.year + 1) + ')'
             elif self.type == 'show':
                 title = title.replace('.' + str(self.year), '')
@@ -443,7 +460,16 @@ class media:
                 return '[^A-Za-z0-9]*(' + title + ':?.)(series.)?(\(?' + str(self.parentYear) + '\)?.)?(season.' + str(self.index) + '.|season.' + str("{:02d}".format(self.index)) + '.|S' + str("{:02d}".format(self.index)) + '.)'
             elif self.type == 'episode':
                 title = title.replace('.' + str(self.grandparentYear), '')
-                return '[^A-Za-z0-9]*(' + title + ':?.)(series.)?(\(?' + str(self.grandparentYear) + '\)?.)?(S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index)) + '.)'
+                try:
+                    airdate_formats = []
+                    airdate = datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
+                    airdate_formats += [airdate.strftime('(%y|%Y).*(%m|%b).*%d').replace("0","0?")]
+                    airdate_formats += [airdate.strftime('%d.*(%m|%b).*(%Y|%y)').replace("0","0?")]
+                    airdate_formats += [airdate.strftime('(%m|%b).*%d.*(%Y|%y)').replace("0","0?")]
+                    airdate_formats = "(" + ")|(".join(airdate_formats) + ")"
+                    return '[^A-Za-z0-9]*(' + title + ':?.)(series.)?(\(?' + str(self.grandparentYear) + '\)?.)?(S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index)) + '.|'+airdate_formats+')'
+                except:
+                    return '[^A-Za-z0-9]*(' + title + ':?.)(series.)?(\(?' + str(self.grandparentYear) + '\)?.)?(S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index)) + '.)'
         else:
             if hasattr(self,'alternate_titles'):
                 title = '(' + '|'.join(self.alternate_titles) + ')'
@@ -491,6 +517,10 @@ class media:
     
     def genre(self):
         genres = []
+        if hasattr(self,"parentGenre"):
+            return self.parentGenre
+        if hasattr(self,"grandparentGenre"):
+            return self.grandparentGenre
         if hasattr(self,'genres'):
             if not self.genres == None:
                 for gen in self.genres:
@@ -499,6 +529,14 @@ class media:
             if not self.Genre == None:
                 for gen in self.Genre:
                     genres += [gen.slug]
+        if self.type == "show":
+            for season in self.Seasons:
+                season.parentGenre = genres
+                for episode in season.Episodes:
+                    episode.grandparentGenre = genres
+        if self.type == "season":
+            for episode in self.Episodes:
+                episode.grandparentGenre = genres
         return genres
         
     def versions(self):
@@ -761,7 +799,7 @@ class media:
                         i = 0
                         while len(self.Releases) == 0 and i <= retries:
                             for k,title in enumerate(self.alternate_titles):
-                                self.Releases += scraper.scrape(self.query(title).replace(str(self.year), str(year)),self.deviation())
+                                self.Releases += scraper.scrape(self.query(title).replace(str(self.year), str(year)),self.deviation(year=str(year)))
                                 if len(self.Releases) < 20 and k == 0 and not imdb_scraped:
                                     if hasattr(self,"EID"):
                                         for EID in self.EID:
@@ -808,7 +846,7 @@ class media:
                                         for EID in self.EID:
                                             if EID.startswith("imdb"):
                                                 service,query = EID.split('://')
-                                                self.Releases += scraper.scrape(query,"(.*)")
+                                                self.Releases += scraper.scrape(query,"(.*|S00)")
                                                 imdb_scraped = True
                                 if len(self.Releases) > 0:
                                     break
@@ -820,7 +858,7 @@ class media:
                                         for EID in self.EID:
                                             if EID.startswith("imdb"):
                                                 service,query = EID.split('://')
-                                                self.Releases += scraper.scrape(query,"(.*)")
+                                                self.Releases += scraper.scrape(query,"(.*|S00)")
                                                 imdb_scraped = True
                                 if len(self.Releases) > 0:
                                     break
@@ -948,7 +986,7 @@ class media:
                             for EID in EIDS:
                                 if EID.startswith("imdb"):
                                     service,query = EID.split('://')
-                                    self.Releases += scraper.scrape(query,"(.*)")
+                                    self.Releases += scraper.scrape(query,"(.*|S00)")
                                     imdb_scraped = True
                         if len(self.Releases) > 0:
                             break
@@ -964,7 +1002,7 @@ class media:
                             for EID in EIDS:
                                 if EID.startswith("imdb"):
                                     service,query = EID.split('://')
-                                    self.Releases += scraper.scrape(query,"(.*)")
+                                    self.Releases += scraper.scrape(query,"(.*|S00)")
                                     imdb_scraped = True
                         if len(self.Releases) > 0:
                             break
@@ -975,15 +1013,15 @@ class media:
                     refresh_ = True
                 if self.isanime():
                     for title in self.alternate_titles[:3]:
-                        self.Releases += scraper.scrape(self.anime_query(title))
+                        self.Releases += scraper.scrape(self.anime_query(title),"(.*|S00)")
                         if len(self.Releases) > 0:
                             break
                 if len(self.Releases) == 0 or not self.isanime():
                     for title in self.alternate_titles[:3]:
                         if self.isanime():
-                            self.Releases += scraper.scrape(self.query(title).replace('.',' '))
+                            self.Releases += scraper.scrape(self.query(title).replace('.',' '),"(.*|S00)")
                         else:
-                            self.Releases += scraper.scrape(self.query()[:-1])
+                            self.Releases += scraper.scrape(self.query()[:-1],"(.*|S00)")
                         if len(self.Releases) > 0:
                             break
                 if len(self.Releases) <= 20 and not imdb_scraped:
@@ -991,7 +1029,7 @@ class media:
                         for EID in self.parentEID:
                             if EID.startswith("imdb"):
                                 service,query = EID.split('://')
-                                self.Releases += scraper.scrape(query)
+                                self.Releases += scraper.scrape(query,"(.*|S00)")
                 for episode in self.Episodes:
                     downloaded, retry = episode.download(library=library, parentReleases=self.Releases)
                     if downloaded:
