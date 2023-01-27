@@ -491,6 +491,10 @@ class media:
     
     def genre(self):
         genres = []
+        if hasattr(self,"parentGenre"):
+            return self.parentGenre
+        if hasattr(self,"grandparentGenre"):
+            return self.grandparentGenre
         if hasattr(self,'genres'):
             if not self.genres == None:
                 for gen in self.genres:
@@ -499,6 +503,14 @@ class media:
             if not self.Genre == None:
                 for gen in self.Genre:
                     genres += [gen.slug]
+        if self.type == "show":
+            for season in self.Seasons:
+                season.parentGenre = genres
+                for episode in season.Episodes:
+                    episode.grandparentGenre = genres
+        if self.type == "season":
+            for episode in self.Episodes:
+                episode.grandparentGenre = genres
         return genres
         
     def versions(self):
