@@ -1009,15 +1009,15 @@ class media:
                     refresh_ = True
                 if self.isanime():
                     for title in self.alternate_titles[:3]:
-                        self.Releases += scraper.scrape(self.anime_query(title))
+                        self.Releases += scraper.scrape(self.anime_query(title),"(.*|S00)")
                         if len(self.Releases) > 0:
                             break
                 if len(self.Releases) == 0 or not self.isanime():
                     for title in self.alternate_titles[:3]:
                         if self.isanime():
-                            self.Releases += scraper.scrape(self.query(title).replace('.',' '))
+                            self.Releases += scraper.scrape(self.query(title).replace('.',' '),"(.*|S00)")
                         else:
-                            self.Releases += scraper.scrape(self.query()[:-1])
+                            self.Releases += scraper.scrape(self.query()[:-1],"(.*|S00)")
                         if len(self.Releases) > 0:
                             break
                 if len(self.Releases) <= 20 and not imdb_scraped:
@@ -1025,7 +1025,7 @@ class media:
                         for EID in self.parentEID:
                             if EID.startswith("imdb"):
                                 service,query = EID.split('://')
-                                self.Releases += scraper.scrape(query)
+                                self.Releases += scraper.scrape(query,"(.*|S00)")
                 for episode in self.Episodes:
                     downloaded, retry = episode.download(library=library, parentReleases=self.Releases)
                     if downloaded:
