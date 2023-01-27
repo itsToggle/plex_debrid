@@ -333,6 +333,15 @@ class media:
             return title + '.S' + str("{:02d}".format(self.index)) + '.'
         elif self.type == 'episode':
             title = title.replace('.' + str(self.grandparentYear), '')
+            if hasattr(self,"scraping_adjustment"):
+                for operator, value in self.scraping_adjustment:
+                    if operator == "scrape w/ airdate format":
+                        try:
+                            if regex.search(value,title,regex.I):
+                                airdate = datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
+                                return title + '.' + airdate.strftime('%Y.%m.%d')
+                        except:
+                            continue
             return title + '.S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index)) + '.'
     
     def anime_query(self,title=""):
@@ -379,11 +388,12 @@ class media:
                 title = releases.rename(title)
                 if hasattr(self,"scraping_adjustment"):
                     for operator, value in self.scraping_adjustment:
+                        title_ = None
                         if operator == "add text before title":
                             title_ = value + title
                         elif operator == "add text after title":
                             title_ = title + value
-                        if not title_ in self.alternate_titles:
+                        if not title_ == None and not title_ in self.alternate_titles:
                             self.alternate_titles += [title_]
                 else:
                     if not title in self.alternate_titles:
@@ -401,11 +411,12 @@ class media:
                 self.alternate_titles = []
             if hasattr(self,"scraping_adjustment"):
                 for operator, value in self.scraping_adjustment:
+                    title_ = None
                     if operator == "add text before title":
                         title_ = value + title
                     elif operator == "add text after title":
                         title_ = title + value
-                    if not title_ in self.alternate_titles:
+                    if not title_ == None and not title_ in self.alternate_titles:
                         self.alternate_titles += [title_]
             else:
                 self.alternate_titles = [title]
@@ -443,7 +454,16 @@ class media:
                 return '[^A-Za-z0-9]*(' + title + ':?.)(series.)?(\(?' + str(self.parentYear) + '\)?.)?(season.' + str(self.index) + '.|season.' + str("{:02d}".format(self.index)) + '.|S' + str("{:02d}".format(self.index)) + '.)'
             elif self.type == 'episode':
                 title = title.replace('.' + str(self.grandparentYear), '')
-                return '[^A-Za-z0-9]*(' + title + ':?.)(series.)?(\(?' + str(self.grandparentYear) + '\)?.)?(S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index)) + '.)'
+                try:
+                    airdate_formats = []
+                    airdate = datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
+                    airdate_formats += [airdate.strftime('(%y|%Y).*(%m|%b).*%d').replace("0","0?")]
+                    airdate_formats += [airdate.strftime('%d.*(%m|%b).*(%Y|%y)').replace("0","0?")]
+                    airdate_formats += [airdate.strftime('(%m|%b).*%d.*(%Y|%y)').replace("0","0?")]
+                    airdate_formats = "(" + ")|(".join(airdate_formats) + ")"
+                    return '[^A-Za-z0-9]*(' + title + ':?.)(series.)?(\(?' + str(self.grandparentYear) + '\)?.)?(S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index)) + '.|'+airdate_formats+')'
+                except:
+                    return '[^A-Za-z0-9]*(' + title + ':?.)(series.)?(\(?' + str(self.grandparentYear) + '\)?.)?(S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index)) + '.)'
         else:
             if hasattr(self,'alternate_titles'):
                 title = '(' + '|'.join(self.alternate_titles) + ')'
