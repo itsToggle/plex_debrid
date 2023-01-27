@@ -811,7 +811,7 @@ class media:
                         if not len(self.Releases) == 0:
                             self.year = year
                             break                        
-                    debrid_downloaded, retry = self.debrid_download(force=True)
+                    debrid_downloaded, retry = self.debrid_download(force=False)
                     if debrid_downloaded:
                         refresh_ = True
                         if not retry and (self.watchlist.autoremove == "both" or self.watchlist.autoremove == "movie"):
