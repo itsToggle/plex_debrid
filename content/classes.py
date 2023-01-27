@@ -395,6 +395,7 @@ class media:
                             title_ = title + value
                         if not title_ == None and not title_ in self.alternate_titles:
                             self.alternate_titles += [title_]
+                    self.alternate_titles += [title]
                 else:
                     if not title in self.alternate_titles:
                         self.alternate_titles += [title]
@@ -418,6 +419,7 @@ class media:
                         title_ = title + value
                     if not title_ == None and not title_ in self.alternate_titles:
                         self.alternate_titles += [title_]
+                self.alternate_titles += [title]
             else:
                 self.alternate_titles = [title]
             if self.type == "show":
@@ -840,7 +842,7 @@ class media:
                                         for EID in self.EID:
                                             if EID.startswith("imdb"):
                                                 service,query = EID.split('://')
-                                                self.Releases += scraper.scrape(query,"(.*)")
+                                                self.Releases += scraper.scrape(query,"(.*|S00)")
                                                 imdb_scraped = True
                                 if len(self.Releases) > 0:
                                     break
@@ -852,7 +854,7 @@ class media:
                                         for EID in self.EID:
                                             if EID.startswith("imdb"):
                                                 service,query = EID.split('://')
-                                                self.Releases += scraper.scrape(query,"(.*)")
+                                                self.Releases += scraper.scrape(query,"(.*|S00)")
                                                 imdb_scraped = True
                                 if len(self.Releases) > 0:
                                     break
@@ -980,7 +982,7 @@ class media:
                             for EID in EIDS:
                                 if EID.startswith("imdb"):
                                     service,query = EID.split('://')
-                                    self.Releases += scraper.scrape(query,"(.*)")
+                                    self.Releases += scraper.scrape(query,"(.*|S00)")
                                     imdb_scraped = True
                         if len(self.Releases) > 0:
                             break
@@ -996,7 +998,7 @@ class media:
                             for EID in EIDS:
                                 if EID.startswith("imdb"):
                                     service,query = EID.split('://')
-                                    self.Releases += scraper.scrape(query,"(.*)")
+                                    self.Releases += scraper.scrape(query,"(.*|S00)")
                                     imdb_scraped = True
                         if len(self.Releases) > 0:
                             break
