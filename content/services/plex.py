@@ -165,7 +165,8 @@ class season(classes.media):
                             episode_.grandparentYear = self.parentYear
                             episode_.grandparentEID = self.parentEID
                             episode_.parentEID = self.EID
-                            episode_.user = self.user
+                            if hasattr(self,"user"):
+                                episode_.user = self.user
                             self.Episodes += [episode(episode_)]
                     self.leafCount = response.MediaContainer.totalSize
             else:
@@ -217,7 +218,8 @@ class show(classes.media):
                             for index, Season in enumerate(response.MediaContainer.Metadata):
                                 Season.parentYear = self.year
                                 Season.parentEID = self.EID
-                                Season.user = self.user
+                                if hasattr(self,"user"):
+                                    Season.user = self.user
                                 t = Thread(target=multi_init, args=(season, Season, results, index))
                                 threads.append(t)
                                 t.start()
