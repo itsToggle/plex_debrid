@@ -83,17 +83,21 @@ class watchlist(classes.watchlist):
         if hasattr(item, 'user'):
             if isinstance(item.user[0], list):
                 for user in item.user:
-                    ui_print('[plex] item: "' + item.title + '" removed from ' + user[0] + '`s watchlist')
-                    url = 'https://metadata.provider.plex.tv/actions/removeFromWatchlist?ratingKey=' + item.ratingKey + '&X-Plex-Token=' + \
-                            user[1]
-                    response = session.put(url, data={'ratingKey': item.ratingKey})
+                    url = 'https://metadata.provider.plex.tv/actions/removeFromWatchlist?ratingKey=' + item.ratingKey + '&X-Plex-Token=' + user[1]
+                    try:
+                        response = session.put(url, data={'ratingKey': item.ratingKey})
+                        ui_print('[plex] item: "' + item.title + '" removed from ' + user[0] + '`s watchlist')
+                    except:
+                        ui_print('[plex] error: item "' + item.title + '" couldnt be removed from ' + user[0] + '`s watchlist')
                 if not self == []:
                     self.data.remove(item)
             else:
-                ui_print('[plex] item: "' + item.title + '" removed from ' + item.user[0] + '`s watchlist')
-                url = 'https://metadata.provider.plex.tv/actions/removeFromWatchlist?ratingKey=' + item.ratingKey + '&X-Plex-Token=' + \
-                        item.user[1]
-                response = session.put(url, data={'ratingKey': item.ratingKey})
+                url = 'https://metadata.provider.plex.tv/actions/removeFromWatchlist?ratingKey=' + item.ratingKey + '&X-Plex-Token=' + item.user[1]
+                try:
+                    response = session.put(url, data={'ratingKey': item.ratingKey})
+                    ui_print('[plex] item: "' + item.title + '" removed from ' + item.user[0] + '`s watchlist')
+                except:
+                    ui_print('[plex] error: item "' + item.title + '" couldnt be removed from ' + user[0] + '`s watchlist')
                 if not self == []:
                     self.data.remove(item)
 
