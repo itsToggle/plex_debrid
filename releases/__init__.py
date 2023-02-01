@@ -1001,11 +1001,11 @@ class sort:
             def apply(self,element):
                 try:
                     if hasattr(element,"first_aired"):
-                        released = datetime.datetime.utcnow() - datetime.datetime.strptime(element.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(self.value))
-                        return released.seconds <= 0
+                        released = datetime.datetime.utcnow() - datetime.datetime.strptime(element.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') - datetime.timedelta(hours=float(self.value))
+                        return released.seconds >= 0
                     if hasattr(element,"originallyAvailableAt"):
-                        released = datetime.datetime.utcnow() - datetime.datetime.strptime(element.originallyAvailableAt,'%Y-%m-%d') + datetime.timedelta(hours=float(self.value))
-                        return released.days <= 0
+                        released = datetime.datetime.utcnow() - datetime.datetime.strptime(element.originallyAvailableAt,'%Y-%m-%d') - datetime.timedelta(hours=float(self.value))
+                        return released.days >= 0
                     return False
                 except:
                     return False
