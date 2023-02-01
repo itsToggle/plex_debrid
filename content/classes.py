@@ -617,12 +617,11 @@ class media:
 
     def released(self):
         try:
+            released = datetime.datetime.utcnow() - datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
             for version in self.versions():
                 for i,trigger in enumerate(version.triggers):
                     if trigger[0] == "airtime offset":
-                        self.originallyAvailableAt = datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d') + datetime.timedelta(hours=float(trigger[2]))
-                        self.originallyAvailableAt = self.originallyAvailableAt.strftime('%Y-%m-%d')
-            released = datetime.datetime.today() - datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
+                        released = datetime.datetime.utcnow() - datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d') + datetime.timedelta(hours=float(trigger[2]))
             if self.type == 'movie':
                 if released.days >= -30 and released.days <= 60:
                     return self.available()
@@ -647,7 +646,7 @@ class media:
                 for i,trigger in enumerate(version.triggers):
                     if trigger[0] == "airtime offset":
                         offset = trigger[2]
-            released = datetime.datetime.today() - datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
+            released = datetime.datetime.utcnow() - datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
             trakt_match = self
             if not trakt_match == None:
                 trakt.current_user = trakt.users[0]
@@ -694,7 +693,7 @@ class media:
                     ui_print("media error: (availability exception): " + str(e), debug=ui_settings.debug)
                     return False
         try:
-            released = datetime.datetime.today() - datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
+            released = datetime.datetime.utcnow() - datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
             if released.days < 0:
                 return False
             return True
