@@ -493,9 +493,7 @@ class season(classes.media):
         try:
             if hasattr(self, 'first_aired'):
                 if not self.first_aired == None:
-                    self.originallyAvailableAt = datetime.datetime.strptime(self.first_aired,
-                                                                            '%Y-%m-%dT%H:%M:%S.000Z').strftime(
-                        '%Y-%m-%d')
+                    self.originallyAvailableAt = datetime.datetime.strptime(self.first_aired,'%Y-%m-%dT%H:%M:%S.000Z').strftime('%Y-%m-%d')
                 else:
                     self.originallyAvailableAt = datetime.datetime.utcnow().strftime('%Y-%m-%d')
             else:
@@ -511,6 +509,8 @@ class season(classes.media):
             episode_.grandparentEID = self.parentEID
             episode_.parentIndex = self.index
             episode_.parentEID = self.EID
+            if hasattr(self,"user"):
+                episode_.user = self.user
             self.Episodes += [episode(episode_)]
         self.leafCount = len(self.Episodes)
 
@@ -558,6 +558,8 @@ class show(classes.media):
                 season_.parentTitle = self.title
                 season_.parentGuid = self.guid
                 season_.parentEID = self.EID
+                if hasattr(self,"user"):
+                    season_.user = self.user
                 self.Seasons += [season(season_)]
         for season_ in self.Seasons:
             leafCount += season_.leafCount
