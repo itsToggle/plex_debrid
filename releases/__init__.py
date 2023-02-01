@@ -298,8 +298,10 @@ class sort:
                             if subclass.name == default[int(choice) - 1][0]:
                                 break
                         while not working:
-                            print(
-                                "Please choose a value for this trigger. Make sure that the value you enter matches your chosen operator.")
+                            if hasattr(subclass,"unit"):
+                                print("Please choose a value for this rule. The value you enter is in the unit '"+subclass.unit+"'. Make sure that the value you enter matches your chosen operator.")
+                            else:
+                                print("Please choose a value for this rule. Make sure that the value you enter matches your chosen operator.")
                             print()
                             choice3 = input("Please enter a value: ")
                             if subclass.check(choice3):
@@ -981,6 +983,24 @@ class sort:
                         return True
                 return True
 
+        class airtime_offset(trigger):
+            name = "airtime offset"
+            operators = ["=="]
+            unit = "hours"
+
+            def check(self):
+                try:
+                    float(self)
+                    return True
+                except:
+                    print()
+                    print("This value is not in the correct format. Please enter a number (e.g. '420' or '69.69')")
+                    print()
+                    return False
+
+            def apply(self,element):
+                return True
+        
         class year(trigger):
             name = "year"
             operators = ["==",">=", "<="]
