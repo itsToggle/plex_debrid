@@ -632,7 +632,7 @@ class media:
                     return self.available()
                 return released.days >= 0
         except Exception as e:
-            ui_print("media error: (attr exception): " + str(e), debug=ui_settings.debug)
+            ui_print("media error: (released exception): " + str(e), debug=ui_settings.debug)
             return False
 
     def available(self):
@@ -690,7 +690,8 @@ class media:
                             return True
                     elif trakt_match.type == 'episode':
                         return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')  + datetime.timedelta(hours=float(offset))
-                except:
+                except Exception as e:
+                    ui_print("media error: (availability exception): " + str(e), debug=ui_settings.debug)
                     return False
         try:
             released = datetime.datetime.today() - datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
