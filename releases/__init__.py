@@ -999,7 +999,16 @@ class sort:
                     return False
 
             def apply(self,element):
-                return True
+                try:
+                    if hasattr(element,"first_aired"):
+                        released = datetime.datetime.utcnow() - datetime.datetime.strptime(element.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(self.value))
+                        return released.seconds <= 0
+                    if hasattr(element,"originallyAvailableAt"):
+                        released = datetime.datetime.utcnow() - datetime.datetime.strptime(element.originallyAvailableAt,'%Y-%m-%d') + datetime.timedelta(hours=float(self.value))
+                        return released.days <= 0
+                    return False
+                except:
+                    return False
         
         class year(trigger):
             name = "year"
