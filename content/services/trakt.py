@@ -509,7 +509,8 @@ class season(classes.media):
             episode_.grandparentEID = self.parentEID
             episode_.parentIndex = self.index
             episode_.parentEID = self.EID
-            episode_.user = self.user
+            if hasattr(self,"user"):
+                episode_.user = self.user
             self.Episodes += [episode(episode_)]
         self.leafCount = len(self.Episodes)
 
@@ -557,7 +558,8 @@ class show(classes.media):
                 season_.parentTitle = self.title
                 season_.parentGuid = self.guid
                 season_.parentEID = self.EID
-                season_.user = self.user
+                if hasattr(self,"user"):
+                    season_.user = self.user
                 self.Seasons += [season(season_)]
         for season_ in self.Seasons:
             leafCount += season_.leafCount
