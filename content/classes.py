@@ -780,8 +780,8 @@ class media:
         refresh_ = False
         i = 0
         self.Releases = []
-        if self.type in ["movie","show"] and (not hasattr(self,"title") or self.title == ""):
-            ui_print("error: media item has no title. This unknown movie/show might not be released yet.") 
+        if self.type in ["movie","show"] and ((not hasattr(self,"title") or self.title == "" or self.title == None) or (not hasattr(self,"year") or self.year == None or self.year == "")):
+            ui_print("error: media item has no title or release year. This unknown movie/show might not be released yet.") 
             ui_print("If you have not connected a trakt account to plex_debrid, its recommended to do so as it will help plex_debrid find more accurate metadata.")
             return
         scraper.services.overwrite = []
