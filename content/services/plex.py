@@ -232,9 +232,9 @@ class show(classes.media):
                             self.Seasons = results
                             self.leafCount = 0
                             self.viewedLeafCount = 0
-                            for season in self.Seasons:
-                                self.leafCount += season.leafCount
-                                self.viewedLeafCount += season.viewedLeafCount
+                            for season_ in self.Seasons:
+                                self.leafCount += season_.leafCount
+                                self.viewedLeafCount += season_.viewedLeafCount
                     success = True
                 else:
                     time.sleep(1)
