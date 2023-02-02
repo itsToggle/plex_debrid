@@ -488,7 +488,7 @@ class media:
                 return '(.*?)(' + title + '.)(.*?)(' + str(self.year) + '|' + str(self.year - 1) + '|' + str(self.year + 1) + ')'
             elif self.type == 'show':
                 title = title.replace('.' + str(self.year), '')
-                return '(.*?)(' + title + '.)(.*?)('+self.anime_count+'|(complete)|(seasons?.[0-9]+.[0-9]?[0-9]?.?)|(S[0-9]+.S?[0-9]?[0-9]?.?)|(S[0-9]+E[0-9]+))'
+                return '(.*?)(' + title + '.)(.*?)('+self.anime_count+'|(complete)|(seasons?.[0-9]+.[0-9]+)|(S[0-9]+[^E]S?[0-9]+))'
             elif self.type == 'season':
                 title = title.replace('.' + str(self.parentYear), '')
                 return '(.*?)(' + title + '.)(.*?)(season.0*' + str(self.index) + '|S0*' + str(self.index) + '(?!E?[0-9])|'+self.anime_count+')'
