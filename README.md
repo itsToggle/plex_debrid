@@ -374,6 +374,20 @@ If you want to run plex_debrid on a VPS or Seedbox, please keep in mind that som
 >  - plex_debrid is currently only able to refresh your entire jellyfinlibrary. Partial library scans to come shortly!
 >
 ></details>
+>
+><details>
+>  <summary><b><u><img src="https://hotio.dev/webhook-avatars/overseerr.png" height="16"> Overseerr requests:</u></b></summary>
+> 
+>  - To mark your overserr requests as available after a succesful download, navigate to '/Settings/Library Service/Library update service/Edit/'
+>
+></details>
+>
+><details>
+>  <summary><b><u><img src="https://raw.githubusercontent.com/Fallenbagel/jellyseerr/main/public/android-chrome-512x512.png" height="16"> Jellyseerr requests:</u></b></summary>
+> 
+>  - To mark your jellyseerr requests as available after a succesful download, navigate to '/Settings/Library Service/Library update service/Edit/'
+>
+></details>
  
 ### :eyes: Library Ignore Services
 
