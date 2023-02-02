@@ -275,6 +275,7 @@ class requests(classes.watchlist):
                 try:
                     element.match(matching_service)
                     element.watchlist = sys.modules[matching_service].watchlist
+                    element.request_id = element_.id
                     add += [element]
                 except:
                     ui_print('[overseerr] error: couldnt match item to service ' + matching_service, ui_settings.debug)
@@ -312,6 +313,7 @@ class requests(classes.watchlist):
                             element.watchlist = sys.modules[matching_service].watchlist
                         except:
                             ui_print('[overseerr] error: couldnt match item to service ' + matching_service, ui_settings.debug)
+                        element.request_id = element_.id
                         if not element in self.data:
                             self.data.append(element)
                         ui_print('done')
@@ -323,3 +325,54 @@ class requests(classes.watchlist):
             except:
                 return False
         return False
+
+class library():
+    name = 'Overseerr Requests'
+
+    class refresh(classes.refresh):
+        name = 'Overseerr Requests'
+
+        def setup(cls, new=False):
+            ui_cls("Options/Settings/Library Services/Library update services")
+            from settings import settings_list
+            settings = []
+            for category, allsettings in settings_list:
+                for setting in allsettings:
+                    settings += [setting]
+            if len(api_key) == 0:
+                print("It looks like you havent setup an overseerr api key. Please set up an overseerr api key first.")
+                print()
+                for setting in settings:
+                    if setting.name == "Overseerr API Key":
+                        setting.setup()
+            if not new:
+                if not library.refresh.name in classes.refresh.active:
+                    classes.refresh.active += [library.refresh.name]
+                    print()
+                    print("Successfully added Overserr!")
+                    print()
+                    time.sleep(3)
+                else:
+                    print()
+                    print("Nothing to edit!")
+                    print()
+                    time.sleep(3)
+                return
+            else:
+                if not library.refresh.name in classes.refresh.active:
+                    classes.refresh.active += [library.refresh.name]
+                    print()
+                    print("Successfully added Overserr!")
+                    print()
+                    time.sleep(3)
+                return
+
+        def __new__(cls, element):
+            try:
+                if not hasattr(element,"request_id"):
+                    return
+                ui_print('[overserr] marking request as available')
+                url = "http://localhost:5055/api/v1/media/"+str(element.request_id)+"/available"
+                response = post(url,'{"is4k":false}')
+            except:
+                print("[overserr] error: couldnt mark requests as available")

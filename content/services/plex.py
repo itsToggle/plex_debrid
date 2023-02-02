@@ -154,6 +154,7 @@ class season(classes.media):
             for user in users:
                 if library.ignore.user == user[0]:
                     token = user[1]
+        viewCount = 0
         while len(self.Episodes) < self.leafCount:
             url = 'https://metadata.provider.plex.tv/library/metadata/' + self.ratingKey + '/children?includeUserState=1&X-Plex-Container-Size=200&X-Plex-Container-Start=' + str(
                 len(self.Episodes)) + '&X-Plex-Token=' + token
@@ -165,10 +166,12 @@ class season(classes.media):
                             episode_.grandparentYear = self.parentYear
                             episode_.grandparentEID = self.parentEID
                             episode_.parentEID = self.EID
+                            viewCount += 1 if hasattr(episode_, "viewCount") and episode_.viewCount > 0 else 0
                             if hasattr(self,"user"):
                                 episode_.user = self.user
                             self.Episodes += [episode(episode_)]
                     self.leafCount = response.MediaContainer.totalSize
+                    self.viewedLeafCount = viewCount
             else:
                 time.sleep(1)
 
@@ -227,6 +230,11 @@ class show(classes.media):
                             for t in threads:
                                 t.join()
                             self.Seasons = results
+                            self.leafCount = 0
+                            self.viewedLeafCount = 0
+                            for season_ in self.Seasons:
+                                self.leafCount += season_.leafCount
+                                self.viewedLeafCount += season_.viewedLeafCount
                     success = True
                 else:
                     time.sleep(1)

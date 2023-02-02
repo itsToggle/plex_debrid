@@ -362,7 +362,7 @@ class media:
             return title.replace('.',' ')
         elif self.type == 'season':
             title = title.replace('.' + str(self.parentYear), '')
-            return title.replace('.',' ') + ' ' + str(self.anime_season) + ' '
+            return title.replace('.',' ') + ' '
         elif self.type == 'episode':
             title = title.replace('.' + str(self.grandparentYear), '')
             return title.replace('.',' ') + ' ' + str(self.anime_count)
@@ -488,10 +488,10 @@ class media:
                 return '(.*?)(' + title + '.)(.*?)(' + str(self.year) + '|' + str(self.year - 1) + '|' + str(self.year + 1) + ')'
             elif self.type == 'show':
                 title = title.replace('.' + str(self.year), '')
-                return '(.*?)(' + title + '.)(.*?)('+self.anime_count+'|complete)'
+                return '(.*?)(' + title + '.)(.*?)('+self.anime_count+'|(complete)|(seasons?.[0-9]+.[0-9]+)|(S[0-9]+[^E]S?[0-9]+))'
             elif self.type == 'season':
                 title = title.replace('.' + str(self.parentYear), '')
-                return '(.*?)(' + title + '.)(.*?)(season.' + str(self.index) + '|season.' + str("{:02d}".format(self.index)) + '|S?' + str("{:02d}".format(self.index)) + '|'+str(self.index)+'|'+self.anime_count+')'
+                return '(.*?)(' + title + '.)(.*?)(season.0*' + str(self.index) + '|S0*' + str(self.index) + '(?!E?[0-9])|'+self.anime_count+')'
             elif self.type == 'episode':
                 title = title.replace('.' + str(self.grandparentYear), '')
                 return '(.*?)(' + title + '.)([^1-9]*?)(S' + str("{:02d}".format(self.parentIndex)) + '.?E' + str("{:02d}".format(self.index)) + '|'+self.anime_count+'(?!E?[0-9]))'
@@ -780,8 +780,8 @@ class media:
         refresh_ = False
         i = 0
         self.Releases = []
-        if self.type in ["movie","show"] and (not hasattr(self,"title") or self.title == ""):
-            ui_print("error: media item has no title. This unknown movie/show might not be released yet.") 
+        if self.type in ["movie","show"] and ((not hasattr(self,"title") or self.title == "" or self.title == None) or (not hasattr(self,"year") or self.year == None or self.year == "")):
+            ui_print("error: media item has no title or release year. This unknown movie/show might not be released yet.") 
             ui_print("If you have not connected a trakt account to plex_debrid, its recommended to do so as it will help plex_debrid find more accurate metadata.")
             return
         scraper.services.overwrite = []
