@@ -17,6 +17,8 @@ class library():
         
         def add(self):
             try:
+                if not library.ignore.path.endswith("/"):
+                    library.ignore.path = library.ignore.path + "/"
                 with open(library.ignore.path + "ignored.txt",'r') as f:
                     lines = f.read()
                 with open(library.ignore.path + "ignored.txt",'a') as f:
@@ -30,6 +32,8 @@ class library():
 
         def remove(self):
             try:
+                if not library.ignore.path.endswith("/"):
+                    library.ignore.path = library.ignore.path + "/"
                 with open(library.ignore.path + "ignored.txt", "r") as f:
                     lines = f.readlines()
                 with open(library.ignore.path + "ignored.txt", "w") as f:
@@ -45,6 +49,8 @@ class library():
 
         def check(self):
             try:
+                if not library.ignore.path.endswith("/"):
+                    library.ignore.path = library.ignore.path + "/"
                 if os.path.exists(library.ignore.path + "ignored.txt"):
                     with open(library.ignore.path + "ignored.txt") as f:
                         ignored = f.readlines()
