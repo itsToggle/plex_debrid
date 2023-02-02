@@ -7,7 +7,7 @@ from content.services import trakt
 from ui.ui_print import *
 
 name = 'Overseerr'
-base_url = "http://localhost:5055"
+base_url = ""
 users = ['all']
 allowed_movie_status = [['2'], ['3']]
 allowed_show_status = [['2'], ['3'], ['4'], ['5']]
