@@ -652,7 +652,7 @@ class media:
                 trakt.current_user = trakt.users[0]
                 try:
                     if trakt_match.type == 'show':
-                        return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') - datetime.timedelta(hours=float(offset))
+                        return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(offset))
                     elif trakt_match.type == 'movie':
                         release_date = None
                         releases, header = trakt.get(
@@ -681,14 +681,14 @@ class media:
                                 if regex.search(r'(latest|new).*?(releases)', trakt_list.name, regex.I):
                                     match = True
                         # if release_date and delay have passed or the movie was released early
-                        return datetime.datetime.utcnow() > datetime.datetime.strptime(release_date,'%Y-%m-%d') - datetime.timedelta(hours=float(offset)) or match
+                        return datetime.datetime.utcnow() > datetime.datetime.strptime(release_date,'%Y-%m-%d') + datetime.timedelta(hours=float(offset)) or match
                     elif trakt_match.type == 'season':
                         try:
-                            return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') - datetime.timedelta(hours=float(offset))
+                            return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(offset))
                         except:
                             return True
                     elif trakt_match.type == 'episode':
-                        return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') - datetime.timedelta(hours=float(offset))
+                        return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(offset))
                 except Exception as e:
                     ui_print("media error: (availability exception): " + str(e), debug=ui_settings.debug)
                     return False
