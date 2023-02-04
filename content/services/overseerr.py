@@ -372,7 +372,7 @@ class library():
                 if not hasattr(element,"request_id"):
                     return
                 ui_print('[overserr] marking request as available')
-                url = "http://localhost:5055/api/v1/media/"+str(element.request_id)+"/available"
+                url = base_url + "/api/v1/media/" + str(element.request_id) + "/available"
                 response = post(url,'{"is4k":false}')
             except:
                 print("[overserr] error: couldnt mark requests as available")
