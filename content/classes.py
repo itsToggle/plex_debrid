@@ -652,7 +652,7 @@ class media:
                 trakt.current_user = trakt.users[0]
                 try:
                     if trakt_match.type == 'show':
-                        return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') - datetime.timedelta(hours=float(offset))
+                        return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(offset))
                     elif trakt_match.type == 'movie':
                         release_date = None
                         releases, header = trakt.get(
@@ -681,14 +681,25 @@ class media:
                                 if regex.search(r'(latest|new).*?(releases)', trakt_list.name, regex.I):
                                     match = True
                         # if release_date and delay have passed or the movie was released early
-                        return datetime.datetime.utcnow() > datetime.datetime.strptime(release_date,'%Y-%m-%d') - datetime.timedelta(hours=float(offset)) or match
+                        try:
+                            available = datetime.datetime.strptime(release_date,'%Y-%m-%d') + datetime.timedelta(hours=float(offset)) - datetime.datetime.utcnow()
+                            if match:
+                                ui_print("item: '" + trakt_match.query() + "' seems to be released early according to trakt lists")
+                            elif available.seconds > 0:
+                                ui_print("item: '" + trakt_match.query() + "' is available in: " + "{:02d}d:{:02d}h:{:02d}m:{:02d}s".format(available.days, available.seconds // 3600, (available.seconds % 3600) // 60, available.seconds % 60) + (" (offset by: " + offset + "h)" if offset != "0" else ""))
+                            return datetime.datetime.utcnow() > datetime.datetime.strptime(release_date,'%Y-%m-%d') + datetime.timedelta(hours=float(offset)) or match
+                        except:
+                            return datetime.datetime.utcnow() > datetime.datetime.strptime(release_date,'%Y-%m-%d') + datetime.timedelta(hours=float(offset)) or match
                     elif trakt_match.type == 'season':
                         try:
-                            return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') - datetime.timedelta(hours=float(offset))
+                            return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(offset))
                         except:
                             return True
                     elif trakt_match.type == 'episode':
-                        return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') - datetime.timedelta(hours=float(offset))
+                        available = datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(offset)) - datetime.datetime.utcnow()
+                        if available.seconds > 0:
+                            ui_print("item: '" + trakt_match.query() + "' is available in: " + "{:02d}d:{:02d}h:{:02d}m:{:02d}s".format(available.days, available.seconds // 3600, (available.seconds % 3600) // 60, available.seconds % 60) + (" (offset by: " + offset + "h)" if offset != "0" else ""))
+                        return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(offset))
                 except Exception as e:
                     ui_print("media error: (availability exception): " + str(e), debug=ui_settings.debug)
                     return False
