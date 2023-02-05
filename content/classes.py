@@ -1129,6 +1129,8 @@ class media:
                 self.version = version
                 self.Releases = copy.deepcopy(scraped_releases)
                 releases.sort(self.Releases, self.version)
+                if len(self.Releases) > 0:
+                    releases.print_releases(self.Releases,True)
                 ver_dld = False
                 for release in copy.deepcopy(self.Releases):
                     self.Releases = [release,]
@@ -1184,7 +1186,7 @@ class media:
                     for episode in self.Episodes:
                         duration += 0 if not hasattr(episode,"duration") or episode.duration == None else episode.duration
             for release in self.Releases:
-                release.bitrate = (release.size * 10000) / (duration) if duration > 0 else 0
+                release.bitrate = (release.size * 10000) / (duration / 1000) if duration > 0 else 0
         except:
             ui_print("error: couldnt set release bitrate",ui_settings.debug)
 
