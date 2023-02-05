@@ -563,6 +563,21 @@ class sort:
                     print("This value is not in the correct format. Please enter a number (e.g. '420' or '69.69')")
                     print()
                     return False
+        
+        class bitrate(rule):
+            name = "bitrate"
+            operators = ["==", ">=", "<=", "highest", "lowest"]
+            unit = "Mbit/s"
+            
+            def check(self):
+                try:
+                    float(self)
+                    return True
+                except:
+                    print()
+                    print("This value is not in the correct format. Please enter a number (e.g. '420' or '69.69')")
+                    print()
+                    return False
 
         class size(rule):
             name = "size"
