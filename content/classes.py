@@ -1182,7 +1182,7 @@ class media:
                     for episode in self.Episodes:
                         duration += 0 if not hasattr(episode,"duration") or episode.duration == None else episode.duration
             for release in self.Releases:
-                release.bitrate = (release.size * 1000) / (duration) if duration > 0 else 0
+                release.bitrate = (release.size * 10000) / (duration) if duration > 0 else 0
         except:
             ui_print("error: couldnt set release bitrate",ui_settings.debug)
 
