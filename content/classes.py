@@ -1115,11 +1115,12 @@ class media:
         self.bitrate()
         if len(self.Releases) > 0:
             ui_print("done")
+            releases.print_releases(self.Releases,True)
         scraped_releases = copy.deepcopy(self.Releases)
         downloaded = []
         if len(scraped_releases) > 0:
             if len(self.versions()) == 0:
-                ui_print("error: it seems that no version applies to this media item! nothing will be downloaded. adjust your version settings.")
+                ui_print("error: it seems that no version applies to this media item! nothing will be downloaded. adjust your version settings.",ui_settings.debug)
             for version in self.versions():
                 debrid_uncached = True
                 for i,rule in enumerate(version.rules):
