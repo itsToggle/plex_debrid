@@ -1164,5 +1164,27 @@ class media:
             files = ['(.*)']
         return files
 
+    def bitrate(self):
+        import content.services.plex as plex
+        import content.services.trakt as trakt
+        try:
+            duration = 0
+            if (self.watchlist == trakt.watchlist and len(plex.users) > 0) or self.watchlist == plex.watchlist:
+                if self.watchlist == trakt.watchlist:
+                    self.match('content.services.plex')
+                if self.type in ["episode","movie"]:
+                    duration = 0 if not hasattr(self,"duration") or self.duration == None else self.duration
+                elif self.type == "show":
+                    for season in self.Seasons:
+                        for episode in season.Episodes:
+                            duration += 0 if not hasattr(episode,"duration") or episode.duration == None else episode.duration
+                elif self.type == "season":
+                    for episode in self.Episodes:
+                        duration += 0 if not hasattr(episode,"duration") or episode.duration == None else episode.duration
+            for release in self.Releases:
+                release.bitrate = (release.size * 1000) / (duration) if duration > 0 else 0
+        except:
+            ui_print("error: couldnt set release bitrate",ui_settings.debug)
+
 def download(cls, library, parentReleases, result, index):
     result[index] = cls.download(library=library, parentReleases=parentReleases)
