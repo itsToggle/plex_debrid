@@ -568,7 +568,7 @@ class sort:
             name = "bitrate"
             operators = ["==", ">=", "<=", "highest", "lowest"]
             unit = "Mbit/s"
-            
+
             def check(self):
                 try:
                     float(self)
@@ -1015,6 +1015,8 @@ class sort:
 
             def apply(self,element):
                 try:
+                    if element.type == "movie":
+                        return True
                     if hasattr(element,"first_aired"):
                         released = datetime.datetime.strptime(element.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(self.value)) - datetime.datetime.utcnow()
                         return released.days <= 0
