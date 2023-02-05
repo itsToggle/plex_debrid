@@ -1176,18 +1176,10 @@ class media:
             if (self.watchlist == trakt.watchlist and len(plex.users) > 0) or self.watchlist == plex.watchlist:
                 if self.watchlist == trakt.watchlist:
                     self.match('content.services.plex')
-                if self.type in ["episode","movie"]:
-                    duration = 0 if not hasattr(self,"duration") or self.duration == None else self.duration
-                elif self.type == "show":
-                    for season in self.Seasons:
-                        for episode in season.Episodes:
-                            duration += 0 if not hasattr(episode,"duration") or episode.duration == None else episode.duration
-                elif self.type == "season":
-                    for episode in self.Episodes:
-                        duration += 0 if not hasattr(episode,"duration") or episode.duration == None else episode.duration
+                duration = 0 if not hasattr(self,"duration") or self.duration == None else self.duration
             for release in self.Releases:
                 release.bitrate = (release.size * 10000) / (duration / 1000) if duration > 0 else 0
-            ui_print("set release bitrate using total "+self.type+" duration: " + "{:02d}h:{:02d}m".format((duration / 1000) // 3600, ((duration / 1000) % 3600) // 60), ui_settings.debug)
+            ui_print("set release bitrate using total "+self.type+" duration: " + "{:02d}h:{:02d}m".format(int(duration / 1000) // 3600, (int(duration / 1000) % 3600) // 60), ui_settings.debug)
         except:
             ui_print("error: couldnt set release bitrate",ui_settings.debug)
 
