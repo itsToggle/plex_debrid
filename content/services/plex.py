@@ -161,6 +161,7 @@ class season(classes.media):
             response = get(url)
             if not response == None:
                 if hasattr(response, 'MediaContainer'):
+                    self.duration = 0
                     if hasattr(response.MediaContainer, 'Metadata'):
                         for episode_ in response.MediaContainer.Metadata:
                             episode_.grandparentYear = self.parentYear
@@ -170,6 +171,7 @@ class season(classes.media):
                             if hasattr(self,"user"):
                                 episode_.user = self.user
                             self.Episodes += [episode(episode_)]
+                            self.duration += episode_.duration if hasattr(episode_,"duration") else 0
                     self.leafCount = response.MediaContainer.totalSize
                     self.viewedLeafCount = viewCount
             else:
@@ -232,9 +234,11 @@ class show(classes.media):
                             self.Seasons = results
                             self.leafCount = 0
                             self.viewedLeafCount = 0
+                            self.duration = 0
                             for season_ in self.Seasons:
                                 self.leafCount += season_.leafCount
                                 self.viewedLeafCount += season_.viewedLeafCount
+                                self.duration += season_.duration if hasattr(season_,"duration") else 0
                     success = True
                 else:
                     time.sleep(1)
