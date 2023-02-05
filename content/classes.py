@@ -1112,6 +1112,7 @@ class media:
         if len(self.Releases) > 0:
             ui_print("checking cache status for scraped releases on: [" + "],[".join(debrid.services.active) + "] ...")
         debrid.check(self)
+        self.bitrate()
         if len(self.Releases) > 0:
             ui_print("done")
         scraped_releases = copy.deepcopy(self.Releases)
