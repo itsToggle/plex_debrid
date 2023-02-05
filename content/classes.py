@@ -684,9 +684,9 @@ class media:
                         try:
                             available = datetime.datetime.strptime(release_date,'%Y-%m-%d') + datetime.timedelta(hours=float(offset)) - datetime.datetime.utcnow()
                             if match:
-                                ui_print("item: '" + trakt_match.query() + "' seems to be released early according to trakt lists")
-                            elif available.seconds > 0:
-                                ui_print("item: '" + trakt_match.query() + "' is available in: " + "{:02d}d:{:02d}h:{:02d}m:{:02d}s".format(available.days, available.seconds // 3600, (available.seconds % 3600) // 60, available.seconds % 60) + (" (offset by: " + offset + "h)" if offset != "0" else ""))
+                                ui_print("item: '" + trakt_match.query() + "' seems to be released prior to its official release date and will be downloaded.")
+                            elif available.days >= 0 and available.seconds > 0:
+                                ui_print("item: '" + trakt_match.query() + "' is available in: " + "{:02d}d:{:02d}h:{:02d}m:{:02d}s".format(available.days, available.seconds // 3600, (available.seconds % 3600) // 60, available.seconds % 60) + (" (including offset of: " + offset + "h)" if offset != "0" else ""))
                             return datetime.datetime.utcnow() > datetime.datetime.strptime(release_date,'%Y-%m-%d') + datetime.timedelta(hours=float(offset)) or match
                         except:
                             return datetime.datetime.utcnow() > datetime.datetime.strptime(release_date,'%Y-%m-%d') + datetime.timedelta(hours=float(offset)) or match
@@ -697,8 +697,8 @@ class media:
                             return True
                     elif trakt_match.type == 'episode':
                         available = datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(offset)) - datetime.datetime.utcnow()
-                        if available.seconds > 0:
-                            ui_print("item: '" + trakt_match.query() + "' is available in: " + "{:02d}d:{:02d}h:{:02d}m:{:02d}s".format(available.days, available.seconds // 3600, (available.seconds % 3600) // 60, available.seconds % 60) + (" (offset by: " + offset + "h)" if offset != "0" else ""))
+                        if available.days >= 0 and available.seconds > 0:
+                            ui_print("item: '" + trakt_match.query() + "' is available in: " + "{:02d}d:{:02d}h:{:02d}m:{:02d}s".format(available.days, available.seconds // 3600, (available.seconds % 3600) // 60, available.seconds % 60) + (" (including offset of: " + offset + "h)" if offset != "0" else ""))
                         return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(offset))
                 except Exception as e:
                     ui_print("media error: (availability exception): " + str(e), debug=ui_settings.debug)
@@ -1112,13 +1112,15 @@ class media:
         if len(self.Releases) > 0:
             ui_print("checking cache status for scraped releases on: [" + "],[".join(debrid.services.active) + "] ...")
         debrid.check(self)
+        self.bitrate()
         if len(self.Releases) > 0:
             ui_print("done")
+            releases.print_releases(self.Releases,True)
         scraped_releases = copy.deepcopy(self.Releases)
         downloaded = []
         if len(scraped_releases) > 0:
             if len(self.versions()) == 0:
-                ui_print("error: it seems that no version applies to this media item! nothing will be downloaded. adjust your version settings.")
+                ui_print("error: it seems that no version applies to this media item! nothing will be downloaded. adjust your version settings.",ui_settings.debug)
             for version in self.versions():
                 debrid_uncached = True
                 for i,rule in enumerate(version.rules):
@@ -1127,6 +1129,8 @@ class media:
                 self.version = version
                 self.Releases = copy.deepcopy(scraped_releases)
                 releases.sort(self.Releases, self.version)
+                if len(self.Releases) > 0:
+                    releases.print_releases(self.Releases,True)
                 ver_dld = False
                 for release in copy.deepcopy(self.Releases):
                     self.Releases = [release,]
@@ -1163,6 +1167,21 @@ class media:
         if self.isanime():
             files = ['(.*)']
         return files
+
+    def bitrate(self):
+        import content.services.plex as plex
+        import content.services.trakt as trakt
+        try:
+            duration = 0
+            if (self.watchlist == trakt.watchlist and len(plex.users) > 0) or self.watchlist == plex.watchlist:
+                if self.watchlist == trakt.watchlist:
+                    self.match('content.services.plex')
+                duration = 0 if not hasattr(self,"duration") or self.duration == None else self.duration
+            for release in self.Releases:
+                release.bitrate = (release.size * 10000) / (duration / 1000) if duration > 0 else 0
+            ui_print("set release bitrate using total "+self.type+" duration: " + "{:02d}h:{:02d}m".format(int(duration / 1000) // 3600, (int(duration / 1000) % 3600) // 60), ui_settings.debug)
+        except:
+            ui_print("error: couldnt set release bitrate",ui_settings.debug)
 
 def download(cls, library, parentReleases, result, index):
     result[index] = cls.download(library=library, parentReleases=parentReleases)

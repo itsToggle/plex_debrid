@@ -563,6 +563,21 @@ class sort:
                     print("This value is not in the correct format. Please enter a number (e.g. '420' or '69.69')")
                     print()
                     return False
+        
+        class bitrate(rule):
+            name = "bitrate"
+            operators = ["==", ">=", "<=", "highest", "lowest"]
+            unit = "Mbit/s"
+
+            def check(self):
+                try:
+                    float(self)
+                    return True
+                except:
+                    print()
+                    print("This value is not in the correct format. Please enter a number (e.g. '420' or '69.69')")
+                    print()
+                    return False
 
         class size(rule):
             name = "size"
@@ -1000,6 +1015,8 @@ class sort:
 
             def apply(self,element):
                 try:
+                    if element.type == "movie":
+                        return True
                     if hasattr(element,"first_aired"):
                         released = datetime.datetime.strptime(element.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(self.value)) - datetime.datetime.utcnow()
                         return released.days <= 0
@@ -1404,14 +1421,17 @@ class torrent2magnet:
                 + '&dn=' + metadata[b'info'][b'name'].decode() \
                 + '&tr=' + metadata[b'announce'].decode() 
 
-def print_releases(scraped_releases):
+def print_releases(scraped_releases,uiprint=False):
     longest_file = 0
     longest_cached = 0
     longest_title = 0
     longest_size = 0
+    longest_bitrate = 0
     longest_index = 0
     longest_seeders = 0
     for index, release in enumerate(scraped_releases):
+        if hasattr(release,"bitrate"):
+            release.printbit = str(round(release.bitrate, 2))
         release.printsize = str(round(release.size, 2))
         release.file = '+' + str(release.wanted) + '/-' + str(release.unwanted)
         if len(release.file) > longest_file:
@@ -1422,16 +1442,22 @@ def print_releases(scraped_releases):
             longest_title = len(release.title)
         if len(str(release.printsize)) > longest_size:
             longest_size = len(str(release.printsize))
+        if hasattr(release,"bitrate") and len(str(release.printbit)) > longest_bitrate:
+            longest_bitrate = len(str(release.printbit))
         if len(str(release.seeders)) > longest_seeders:
             longest_seeders = len(str(release.seeders))
         if len(str(index + 1)) > longest_index:
             longest_index = len(str(index + 1))
     for index, release in enumerate(scraped_releases):
-        print(str(index + 1) + ") " + ' ' * (
-                    longest_index - len(str(index + 1))) + "title: " + release.title + ' ' * (
-                            longest_title - len(release.title)) + " | size: " + str(release.printsize) + ' ' * (
-                            longest_size - len(str(release.printsize))) + " | cached: " + '/'.join(
-            release.cached) + ' ' * (longest_cached - len('/'.join(release.cached))) + " | seeders: " + str(
-            release.seeders) + ' ' * (
-                            longest_seeders - len(str(release.seeders))) + " | files: " + release.file + ' ' * (
-                            longest_file - len(release.file)) + " | source: " + release.source)
+        i = str(index + 1) + ") " + ' ' * (longest_index - len(str(index + 1))) 
+        title = "title: " + release.title + ' ' * (longest_title - len(release.title)) 
+        size = " | size: " + str(release.printsize) + ' ' * (longest_size - len(str(release.printsize)))
+        bitrate = " | bitrate: " + str(release.printbit) + ' ' * (longest_bitrate - len(str(release.printbit))) if hasattr(release,"bitrate") else ""
+        cached = " | cached: " + '/'.join(release.cached) + ' ' * (longest_cached - len('/'.join(release.cached)))
+        seeders = " | seeders: " + str(release.seeders) + ' ' * (longest_seeders - len(str(release.seeders)))
+        files = " | files: " + release.file + ' ' * (longest_file - len(release.file)) 
+        source = " | source: " + release.source
+        if uiprint:
+            ui_print(i + title + size + bitrate + cached + seeders + files + source, ui_settings.debug)
+        else:
+            print(i + title + size + bitrate + cached + seeders + files + source)
