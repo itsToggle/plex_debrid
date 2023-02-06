@@ -979,11 +979,10 @@ class media:
                     toc = time.perf_counter()
                     ui_print('took ' + str(round(toc - tic, 2)) + 's')
         elif self.type == 'season':
-            altquery = self.deviation()
             for release in parentReleases:
-                if regex.match(r'(' + altquery + ')', release.title, regex.I):
+                if regex.match(self.deviation(), release.title, regex.I):
                     self.Releases += [release]
-            if not len(self.Episodes) <= self.leafCount / 2:
+            if len(self.Episodes) > 1:
                 debrid_downloaded, retry = self.debrid_download()
                 if debrid_downloaded:
                     return True, retry
@@ -1005,7 +1004,7 @@ class media:
                                     imdb_scraped = True
                         if len(self.Releases) > 0:
                             break
-                while len(self.Releases) == 0 and i <= retries:
+                if len(self.Releases) == 0:
                     for k,title in enumerate(self.alternate_titles[:3]):
                         self.Releases += scraper.scrape(self.query(title)[:-1], "(.*|S00)")
                         if len(self.Releases) < 20 and k == 0 and not imdb_scraped:
@@ -1040,9 +1039,8 @@ class media:
             else:
                 return True, retry
         elif self.type == 'episode':
-            altquery = self.deviation()
             for release in parentReleases:
-                if regex.match(r'(' + altquery + ')', release.title, regex.I):
+                if regex.match(self.deviation(), release.title, regex.I):
                     self.Releases += [release]
             debrid_downloaded, retry = self.debrid_download()
             if not debrid_downloaded or retry:
