@@ -5,6 +5,8 @@ import debrid
 import scraper
 from ui.ui_print import *
 
+imdb_scraped = False
+
 class watchlist(Sequence):
     def __init__(self, other):
         self.data = other
@@ -788,6 +790,7 @@ class media:
         import content.services.trakt as trakt
         import content.services.overseerr as overseerr
         current_module = sys.modules[__name__]
+        global imdb_scraped
         refresh_ = False
         i = 0
         self.Releases = []
@@ -976,10 +979,6 @@ class media:
                     toc = time.perf_counter()
                     ui_print('took ' + str(round(toc - tic, 2)) + 's')
         elif self.type == 'season':
-            try:
-                imdb_scraped == True
-            except:
-                imdb_scraped = False
             altquery = self.deviation()
             for release in parentReleases:
                 if regex.match(r'(' + altquery + ')', release.title, regex.I):
@@ -992,7 +991,7 @@ class media:
                     self.Releases = []
                 if self.isanime():
                     for k,title in enumerate(self.alternate_titles[:3]):
-                        self.Releases += scraper.scrape(self.anime_query(title), self.deviation())
+                        self.Releases += scraper.scrape(self.anime_query(title), "(.*|S00)")
                         if len(self.Releases) < 20 and k == 0 and not imdb_scraped:
                             EIDS = []
                             if hasattr(self,"EID"):
@@ -1008,7 +1007,7 @@ class media:
                             break
                 while len(self.Releases) == 0 and i <= retries:
                     for k,title in enumerate(self.alternate_titles[:3]):
-                        self.Releases += scraper.scrape(self.query(title), self.deviation())
+                        self.Releases += scraper.scrape(self.query(title)[:-1], "(.*|S00)")
                         if len(self.Releases) < 20 and k == 0 and not imdb_scraped:
                             EIDS = []
                             if hasattr(self,"EID"):
@@ -1023,31 +1022,16 @@ class media:
                         if len(self.Releases) > 0:
                             break
                     i += 1
+            scraped_releases = copy.deepcopy(self.Releases)
+            for release in self.Releases[:]:
+                if not regex.match(self.deviation(),release.title,regex.I):
+                    self.Releases.remove(release)
             debrid_downloaded, retry = self.debrid_download()
             if not debrid_downloaded or retry:
                 if debrid_downloaded:
                     refresh_ = True
-                if self.isanime():
-                    for title in self.alternate_titles[:3]:
-                        self.Releases += scraper.scrape(self.anime_query(title),"(.*|S00)")
-                        if len(self.Releases) > 0:
-                            break
-                if len(self.Releases) == 0 or not self.isanime():
-                    for title in self.alternate_titles[:3]:
-                        if self.isanime():
-                            self.Releases += scraper.scrape(self.query(title).replace('.',' '),"(.*|S00)")
-                        else:
-                            self.Releases += scraper.scrape(self.query()[:-1],"(.*|S00)")
-                        if len(self.Releases) > 0:
-                            break
-                if len(self.Releases) <= 20 and not imdb_scraped:
-                    if hasattr(self,"parentEID"):
-                        for EID in self.parentEID:
-                            if EID.startswith("imdb"):
-                                service,query = EID.split('://')
-                                self.Releases += scraper.scrape(query,"(.*|S00)")
                 for episode in self.Episodes:
-                    downloaded, retry = episode.download(library=library, parentReleases=self.Releases)
+                    downloaded, retry = episode.download(library=library, parentReleases=scraped_releases)
                     if downloaded:
                         refresh_ = True
                     if retry:
@@ -1086,6 +1070,8 @@ class media:
             self.collect()
 
     def downloaded(self):
+        global imdb_scraped
+        imdb_scraped = False
         if self.type == "movie" or self.type == "episode":
             media.downloaded_versions += [self.query() + ' [' + self.version.name + ']']
         elif self.type == 'show':
