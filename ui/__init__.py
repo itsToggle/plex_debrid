@@ -19,6 +19,8 @@ class option:
 
     def input(self):
         func = getattr(self.cls, self.key)
+        if self.key == "download_script_run":
+            ui_cls()
         func()
 
 def ignored():
@@ -340,12 +342,14 @@ def run(cdir = "", smode = False):
     service_mode = smode
     set_log_dir(config_dir)
     if setup():
+        #uvicorn.run("webui:app", port=8008, reload=True)
         options()
     else:
         load()
+        #uvicorn.run("webui:app", port=8008, reload=True)
         download_script_run()
         options()
-
+    
 def update(settings, version):
     ui_cls('/Update ' + version[0] + '/')
     print('There has been an update to plex_debrid, which is not compatible with your current settings:')
@@ -367,7 +371,6 @@ def update(settings, version):
                     settings[setting.name] = setting.get()
 
 def threaded(stop):
-    ui_cls()
     if service_mode == True:
         print("Running in service mode, user input not supported.")
     else:
