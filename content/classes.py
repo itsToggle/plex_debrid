@@ -1028,7 +1028,7 @@ class media:
                 if regex.match(self.deviation(), release.title, regex.I):
                     self.Releases += [release]
             debrid_downloaded, retry = self.debrid_download()
-            if (not debrid_downloaded or retry) and not hasattr(episode,"skip_scraping"):
+            if (not debrid_downloaded or retry) and not hasattr(self,"skip_scraping"):
                 if debrid_downloaded:
                     refresh_ = True
                 if self.isanime():
