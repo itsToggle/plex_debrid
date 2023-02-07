@@ -991,17 +991,17 @@ class media:
                     self.Releases = []
                 if self.isanime():
                     for k,title in enumerate(self.alternate_titles[:3]):
-                        self.Releases += scraper.scrape(self.anime_query(title), "(.*|S00|"+imdbID+")")
+                        self.Releases += scraper.scrape(self.anime_query(title), "(.*|S"+str("{:02d}".format(self.index))+"|"+imdbID+")")
                         if len(self.Releases) < 20 and k == 0 and not imdb_scraped and not imdbID == ".":
-                            self.Releases += scraper.scrape(imdbID,"(.*|S00|"+imdbID+")")
+                            self.Releases += scraper.scrape(imdbID,"(.*|S"+str("{:02d}".format(self.index))+"|"+imdbID+")")
                             imdb_scraped = True
                         if len(self.Releases) > 0:
                             break
                 if len(self.Releases) == 0:
                     for k,title in enumerate(self.alternate_titles[:3]):
-                        self.Releases += scraper.scrape(self.query(title)[:-1], "(.*|S00|"+imdbID+")")
+                        self.Releases += scraper.scrape(self.query(title)[:-1], "(.*|S"+str("{:02d}".format(self.index))+"|"+imdbID+")")
                         if len(self.Releases) < 20 and k == 0 and not imdb_scraped and not imdbID == ".":
-                            self.Releases += scraper.scrape(imdbID,"(.*|S00|"+imdbID+")")
+                            self.Releases += scraper.scrape(imdbID,"(.*|S"+str("{:02d}".format(self.index))+"|"+imdbID+")")
                             imdb_scraped = True
                         if len(self.Releases) > 0:
                             break
