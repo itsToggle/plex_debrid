@@ -799,6 +799,17 @@ class media:
             ui_print("If you have not connected a trakt account to plex_debrid, its recommended to do so as it will help plex_debrid find more accurate metadata.")
             return
         scraper.services.overwrite = []
+        EIDS = []
+        imdbID = "."
+        if hasattr(self,"EID"):
+            EIDS = self.EID
+        if hasattr(self,"parentEID"):
+            EIDS = self.parentEID
+        if hasattr(self,"grandparentEID"):
+            EIDS = self.parentEID
+        for EID in EIDS:
+            if EID.startswith("imdb"):
+                service,imdbID = EID.split('://')
         if self.type == 'movie':
             if (len(self.uncollected(library)) > 0 or self.version_missing()) and len(self.versions()) > 0:
                 if self.released() and not self.watched() and not self.downloading():
@@ -818,14 +829,10 @@ class media:
                         i = 0
                         while len(self.Releases) == 0 and i <= retries:
                             for k,title in enumerate(self.alternate_titles):
-                                self.Releases += scraper.scrape(self.query(title).replace(str(self.year), str(year)),self.deviation(year=str(year)))
-                                if len(self.Releases) < 20 and k == 0 and not imdb_scraped:
-                                    if hasattr(self,"EID"):
-                                        for EID in self.EID:
-                                            if EID.startswith("imdb"):
-                                                service,query = EID.split('://')
-                                                self.Releases += scraper.scrape(query,"(.*)")
-                                                imdb_scraped = True
+                                self.Releases += scraper.scrape(self.query(title).replace(str(self.year), str(year)),self.deviation(year=str(year))+"("+imdbID+")?")
+                                if len(self.Releases) < 20 and k == 0 and not imdb_scraped and not imdbID == ".":
+                                    self.Releases += scraper.scrape(imdbID,"(.*|"+imdbID+")")
+                                    imdb_scraped = True
                                 if len(self.Releases) > 0:
                                     break
                             i += 1
@@ -859,26 +866,18 @@ class media:
                     if len(self.Seasons) > 1:
                         if self.isanime():
                             for k,title in enumerate(self.alternate_titles[:3]):
-                                self.Releases += scraper.scrape(self.anime_query(title), self.deviation())
-                                if len(self.Releases) < 20 and k == 0 and not imdb_scraped:
-                                    if hasattr(self,"EID"):
-                                        for EID in self.EID:
-                                            if EID.startswith("imdb"):
-                                                service,query = EID.split('://')
-                                                self.Releases += scraper.scrape(query,"(.*|S00)")
-                                                imdb_scraped = True
+                                self.Releases += scraper.scrape(self.anime_query(title), self.deviation() + "("+imdbID+")?")
+                                if len(self.Releases) < 20 and k == 0 and not imdb_scraped and not imdbID == ".":
+                                    self.Releases += scraper.scrape(imdbID,"(.*|S00|"+imdbID+")")
+                                    imdb_scraped = True
                                 if len(self.Releases) > 0:
                                     break
                         else:
                             for k,title in enumerate(self.alternate_titles[:3]):
-                                self.Releases += scraper.scrape(self.query(title), self.deviation())
-                                if len(self.Releases) < 20 and k == 0 and not imdb_scraped:
-                                    if hasattr(self,"EID"):
-                                        for EID in self.EID:
-                                            if EID.startswith("imdb"):
-                                                service,query = EID.split('://')
-                                                self.Releases += scraper.scrape(query,"(.*|S00)")
-                                                imdb_scraped = True
+                                self.Releases += scraper.scrape(self.query(title), self.deviation() + "("+imdbID+")?")
+                                if len(self.Releases) < 20 and k == 0 and not imdb_scraped and not imdbID == ".":
+                                    self.Releases += scraper.scrape(imdbID,"(.*|S00|"+imdbID+")")
+                                    imdb_scraped = True
                                 if len(self.Releases) > 0:
                                     break
                         parentReleases = copy.deepcopy(self.Releases)
@@ -987,37 +986,23 @@ class media:
                 if debrid_downloaded:
                     return True, retry
                 else:
+                    for episode in self.Episodes:
+                        episode.skip_scraping = True
                     self.Releases = []
                 if self.isanime():
                     for k,title in enumerate(self.alternate_titles[:3]):
-                        self.Releases += scraper.scrape(self.anime_query(title), "(.*|S00)")
-                        if len(self.Releases) < 20 and k == 0 and not imdb_scraped:
-                            EIDS = []
-                            if hasattr(self,"EID"):
-                                EIDS = self.EID
-                            if hasattr(self,"parentEID"):
-                                EIDS = self.parentEID
-                            for EID in EIDS:
-                                if EID.startswith("imdb"):
-                                    service,query = EID.split('://')
-                                    self.Releases += scraper.scrape(query,"(.*|S00)")
-                                    imdb_scraped = True
+                        self.Releases += scraper.scrape(self.anime_query(title), "(.*|S00|"+imdbID+")")
+                        if len(self.Releases) < 20 and k == 0 and not imdb_scraped and not imdbID == ".":
+                            self.Releases += scraper.scrape(imdbID,"(.*|S00|"+imdbID+")")
+                            imdb_scraped = True
                         if len(self.Releases) > 0:
                             break
                 if len(self.Releases) == 0:
                     for k,title in enumerate(self.alternate_titles[:3]):
-                        self.Releases += scraper.scrape(self.query(title)[:-1], "(.*|S00)")
-                        if len(self.Releases) < 20 and k == 0 and not imdb_scraped:
-                            EIDS = []
-                            if hasattr(self,"EID"):
-                                EIDS = self.EID
-                            if hasattr(self,"parentEID"):
-                                EIDS = self.parentEID
-                            for EID in EIDS:
-                                if EID.startswith("imdb"):
-                                    service,query = EID.split('://')
-                                    self.Releases += scraper.scrape(query,"(.*|S00)")
-                                    imdb_scraped = True
+                        self.Releases += scraper.scrape(self.query(title)[:-1], "(.*|S00|"+imdbID+")")
+                        if len(self.Releases) < 20 and k == 0 and not imdb_scraped and not imdbID == ".":
+                            self.Releases += scraper.scrape(imdbID,"(.*|S00|"+imdbID+")")
+                            imdb_scraped = True
                         if len(self.Releases) > 0:
                             break
                     i += 1
@@ -1043,27 +1028,27 @@ class media:
                 if regex.match(self.deviation(), release.title, regex.I):
                     self.Releases += [release]
             debrid_downloaded, retry = self.debrid_download()
-            if not debrid_downloaded or retry:
+            if (not debrid_downloaded or retry) and not hasattr(episode,"skip_scraping"):
                 if debrid_downloaded:
                     refresh_ = True
                 if self.isanime():
                     for title in self.alternate_titles[:3]:
-                        self.Releases += scraper.scrape(self.anime_query(title), self.deviation())
+                        self.Releases += scraper.scrape(self.anime_query(title), self.deviation() + "("+imdbID+")?")
                         if len(self.Releases) > 0:
                             break
                 if len(self.Releases) == 0 or not self.isanime():
                     for title in self.alternate_titles[:3]:
                         if self.isanime():
-                            self.Releases += scraper.scrape(self.query(title).replace('.',' '), self.deviation())
+                            self.Releases += scraper.scrape(self.query(title).replace('.',' '), self.deviation() + "("+imdbID+")?")
                         else:
-                            self.Releases += scraper.scrape(self.query(title), self.deviation())
+                            self.Releases += scraper.scrape(self.query(title), self.deviation() + "("+imdbID+")?")
                         if len(self.Releases) > 0:
                             break
                 debrid_downloaded, retry = self.debrid_download()
                 if debrid_downloaded:
                     refresh_ = True
                 return refresh_, retry
-            return True, retry
+            return debrid_downloaded, retry
         if refresh_:
             self.collect()
 
