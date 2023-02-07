@@ -91,6 +91,8 @@ def scrape(query, altquery):
         if not e == None:
             opts += '&numberepisode=' + str(int(e))
     scraped_releases = []
+    if regex.search(r'(tt[0-9]+)', altquery, regex.I):
+        query = regex.search(r'(tt[0-9]+)', altquery, regex.I).group()
     if not 'orionoid' in active:
         return scraped_releases
     if regex.search(r'(tt[0-9]+)', query, regex.I):
