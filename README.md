@@ -471,6 +471,7 @@ If you want to run plex_debrid on a VPS or Seedbox, please keep in mind that som
 ><details>
 >  <summary><b><u>Defining versions to download:</u></b></summary>
 >  
+>  - Check out the Wiki for a complete documentation of the version settings: https://github.com/itsToggle/plex_debrid/wiki/Version-Guides
 >  - You can define what release qualities plex_debrid should download by defining a "version". You can add an unlimited amount of versions by navigating to '/Settings/Scraper Settings/versions'. By default, plex_debrid only comes with 1 version definiton ([1080p SDR])
 >  - versions consist of an unlimited amount of completely customizable "rules" and "triggers". 
 >  - "Rules" define the quality requirements of your versions. The rules can be either formulated as a requirement or as a preference. The first rule has the highest priority, the last one the lowest. To give some examples, here are the rules that make up the default [1080p SDR] version:
