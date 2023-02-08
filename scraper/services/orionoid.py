@@ -86,7 +86,7 @@ def scrape(query, altquery):
     if type == "show" and not regex.search(r'(complete)',altquery,regex.I):
         s = (regex.search(r'(?<=S)([0-9]+)',altquery,regex.I).group() if regex.search(r'(?<=S)([0-9]+)',altquery,regex.I) else None)
         e = (regex.search(r'(?<=E)([0-9]+)',altquery,regex.I).group() if regex.search(r'(?<=E)([0-9]+)',altquery,regex.I) else None)
-        if not s == None:
+        if not s == None and not s == 0:
             opts += '&numberseason=' + str(int(s))
         if not e == None:
             opts += '&numberepisode=' + str(int(e))
