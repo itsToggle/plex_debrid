@@ -17,6 +17,7 @@ def scrape(query, altquery):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36'}
         url = 'http://1337x.to/search/' + str(query) + '/1/'
+        response = None
         try:
             response = session.get(url, headers=headers)
             soup = BeautifulSoup(response.content, 'html.parser')
@@ -46,7 +47,9 @@ def scrape(query, altquery):
                             size = float(size)
                         scraped_releases += [
                             releases.release('[1337x]', 'torrent', title, [], size, [download], seeders=int(seeders))]
-        except:
+        except Exception as e:
+            if hasattr(response,"status_code"):
+                ui_print('1337x error '+str(response.status_code)+': 1337x is temporarily not reachable')
             response = None
-            ui_print('1337x error: exception')
+            ui_print('1337x error: exception: ' + str(e),ui_settings.debug)
     return scraped_releases
