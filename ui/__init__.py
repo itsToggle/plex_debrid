@@ -19,8 +19,6 @@ class option:
 
     def input(self):
         func = getattr(self.cls, self.key)
-        if self.key == "download_script_run":
-            ui_cls()
         func()
 
 def ignored():
@@ -371,6 +369,7 @@ def update(settings, version):
                     settings[setting.name] = setting.get()
 
 def threaded(stop):
+    ui_cls()
     if service_mode == True:
         print("Running in service mode, user input not supported.")
     else:
