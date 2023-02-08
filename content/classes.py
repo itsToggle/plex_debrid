@@ -924,8 +924,7 @@ class media:
                                         if match:
                                             for index, season_query in enumerate(season_queries):
                                                 if regex.match(season_query, release.title, regex.I):
-                                                    if version.wanted >= len(self.Seasons[index].files()) and \
-                                                            season_releases[index] == None:
+                                                    if version.wanted >= len(self.Seasons[index].files())-2 and season_releases[index] == None:
                                                         quality = regex.search('(2160|1080|720|480)(?=p|i)',release.title, regex.I)
                                                         if quality:
                                                             quality = int(quality.group())
