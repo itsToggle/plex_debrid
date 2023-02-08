@@ -387,6 +387,22 @@ class media:
             for title in aliases:
                 if title == None or title == []:
                     continue
+                if "." in title:
+                    titledot = releases.rename(title.replace(".",""))
+                    if hasattr(self,"scraping_adjustment"):
+                        for operator, value in self.scraping_adjustment:
+                            title_ = None
+                            if operator == "add text before title":
+                                title_ = value + titledot
+                            elif operator == "add text after title":
+                                title_ = titledot + value
+                            if not title_ == None and not title_ in self.alternate_titles:
+                                self.alternate_titles += [title_]
+                        if not titledot in self.alternate_titles:
+                            self.alternate_titles += [titledot]
+                    else:
+                        if not titledot in self.alternate_titles:
+                            self.alternate_titles += [titledot]
                 title = releases.rename(title)
                 if hasattr(self,"scraping_adjustment"):
                     for operator, value in self.scraping_adjustment:
