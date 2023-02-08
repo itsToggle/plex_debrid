@@ -476,15 +476,17 @@ If you want to run plex_debrid on a VPS or Seedbox, please keep in mind that som
 >  - versions consist of an unlimited amount of completely customizable "rules" and "triggers". 
 >  - "Rules" define the quality requirements of your versions. The rules can be either formulated as a requirement or as a preference. The first rule has the highest priority, the last one the lowest. To give some examples, here are the rules that make up the default [1080p SDR] version:
 >      
->        1) cache status  requirement :   cached
->        2) resolution    requirement :       <=  1080
->        3) resolution    preference  :  highest
->        4) title         requirement :  exclude  (\.DV\.|3D|\.H?D?.?CAM\.)
->        5) title         requirement :  exclude  (\.HDR\.)
->        6) title         preference  :  include  (EXTENDED|REMASTERED)
->        7) size          preference  :   lowest
->        8) seeders       preference  :  highest
->        9) size          requirement :       >=  0.1
+>        1)  cache status  requirement :   cached
+>        2)  resolution    requirement :       <=  1080
+>        3)  resolution    preference  :  highest
+>        4)  title         requirement :  exclude  (H?D?.?CAM|H?D?.?TS)
+>        5)  title         requirement :  exclude  (3D)
+>        6)  title         requirement :  exclude  (DO?VI?)
+>        7)  title         requirement :  exclude  (HDR)
+>        8)  title         preference  :  include  (EXTENDED|REMASTERED)
+>        9)  size          preference  :   lowest
+>        10) seeders       preference  :  highest
+>        11) size          requirement :       >=  0.1
 >      
 >  - "Triggers" define when plex_debrid should look for a version. You can add triggers that limit a version to a specific media type, or to specific movies/shows. You can define how many times plex_debrid should attempt to download a version and how many attempts should be made with other versions, before a version is attempted to be downloaded. Other triggers can limit a version to a specific genre or can limit a version to a specific user that requested the movie/show. Here are some of the possible triggers, given in an example of a 720p version that should only be looked for, if the media items in question are "shows" that have been released "before 2010", are not "Family Guy" or "Last week tonight", and no other version has been found for "5 attempts":
 >      
