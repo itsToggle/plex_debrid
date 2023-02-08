@@ -19,7 +19,7 @@ def scrape(query, altquery):
         url = base_url + '/api/v1/search?query=' + query + '&type=search&limit=1000&offset=0'
         headers = {'X-Api-Key': api_key}
         try:
-            response = session.get(url, headers=headers)
+            response = session.get(url, headers=headers, timeout=60)
         except requests.exceptions.Timeout:
             ui_print('[prowlarr] error: prowlarr request timed out. Reduce the number of prowlarr indexers or make sure they are healthy.')
             return []
