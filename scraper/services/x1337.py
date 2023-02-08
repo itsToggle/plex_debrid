@@ -48,8 +48,10 @@ def scrape(query, altquery):
                         scraped_releases += [
                             releases.release('[1337x]', 'torrent', title, [], size, [download], seeders=int(seeders))]
         except Exception as e:
-            if hasattr(response,"status_code"):
+            if hasattr(response,"status_code") and not str(response.status_code).startswith("2"):
                 ui_print('1337x error '+str(response.status_code)+': 1337x is temporarily not reachable')
+            else:
+                ui_print('1337x error: unknown error')
             response = None
             ui_print('1337x error: exception: ' + str(e),ui_settings.debug)
     return scraped_releases
