@@ -8,6 +8,8 @@ from ui import ui_settings
 from ui.ui_print import *
 from settings import *
 
+#import uvicorn
+
 config_dir = ""
 service_mode = False
 
@@ -392,7 +394,7 @@ def threaded(stop):
         except:
             ui_print("couldnt sort monitored media by newest, using default order.", ui_settings.debug)
         ui_print('checking new content ...')
-        for element in watchlists:
+        for element in list(set(watchlists)):
             if hasattr(element, 'download'):
                 element.download(library=library)
         ui_print('done')
@@ -407,7 +409,7 @@ def threaded(stop):
                 except:
                     ui_print("couldnt sort monitored media by newest, using default order.", ui_settings.debug)
                 ui_print('checking new content ...')
-                for element in watchlists:
+                for element in list(set(watchlists)):
                     if hasattr(element, 'download'):
                         if not element in content.classes.media.ignore_queue:
                             element.download(library=library)
@@ -430,7 +432,7 @@ def threaded(stop):
                 if len(library) == 0:
                     continue
                 ui_print('checking new content ...')
-                for element in watchlists:
+                for element in list(set(watchlists)):
                     if hasattr(element, 'download'):
                         element.download(library=library)
                 ui_print('done')
