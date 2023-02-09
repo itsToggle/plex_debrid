@@ -27,7 +27,7 @@ def set_log_dir(config):
     global config_dir
     config_dir = config
 
-def ui_print(string: str, debug="true", end=""):
+def ui_print(string: str, debug="true"):
     global sameline
     global sameline_log
     try:
@@ -35,9 +35,7 @@ def ui_print(string: str, debug="true", end=""):
         if ui_settings.log == "true":
             try:
                 with open(config_dir + '/plex_debrid.log', 'a') as f:
-                    if end != "":
-                        sameline_log = False
-                    elif string == 'done' and sameline_log:
+                    if string == 'done' and sameline_log:
                         f.write('done' + '\n')
                         sameline_log = False
                     elif sameline_log and string.startswith('done'):
@@ -61,14 +59,7 @@ def ui_print(string: str, debug="true", end=""):
                 print('[' + str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S")) + '] logging error: couldnt write into log file at: ' + config_dir + '/plex_debrid.log')
         #ui
         if debug == "true":
-            if end != "":
-                if end == "replace":
-                    end = " "
-                    sameline = True
-                else:
-                    sameline = False
-                print('[' + str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S")) + '] ' + string, end=end)
-            elif string == 'done' and sameline:
+            if string == 'done' and sameline:
                 print('done')
                 sameline = False
             elif sameline and string.startswith('done'):
