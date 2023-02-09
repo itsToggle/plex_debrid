@@ -434,7 +434,7 @@ def threaded(stop):
                         ui_print('done')
                     t0 = time.time()
                 else:
-                    ui_print('done',end='\r')
+                    ui_print('done',end='\x1b[1K\r')
         ui_print('done')
         while not stop():
             ui_print("checking for new requests ...")
@@ -498,11 +498,11 @@ def threaded(stop):
                                         element.download(library=library)
                                 ui_print('done')
                             else:
-                                ui_print('done',end='\r')
+                                ui_print('done',end='\x1b[1K\r')
                             t0 = time.time()
                 ui_print('done')
             else:
-                ui_print('done',end='\r')
+                ui_print('done',end='\x1b[1K\r')
                 timeout_counter += timeout
             time.sleep(timeout)
 
