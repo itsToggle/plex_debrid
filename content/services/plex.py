@@ -476,7 +476,7 @@ class library(classes.library):
                         names += [section_.title]
                         folders = []
                         for location in section_.Location:
-                            if hasattr(element,"downloaded_releases") and library.refresh.partial == "true":
+                            if hasattr(element,"downloaded_releases") and len(element.downloaded_releases) > 0 and library.refresh.partial == "true":
                                 for release in element.downloaded_releases:
                                     folders += [requests.utils.quote(location.path + "/" + release)]
                             else:

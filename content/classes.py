@@ -186,7 +186,7 @@ class media:
     
     ignore_queue = []
     downloaded_versions = []
-
+    
     def __init__(self, other):
         self.__dict__.update(other.__dict__)
 
@@ -221,9 +221,6 @@ class media:
                 return self.grandparentGuid == other.grandparentGuid and self.parentIndex == other.parentIndex and self.index == other.index
         except:
             return False
-
-    def __repr__(self):
-        return str(self.__dict__)
 
     def match(self,service):
         if not hasattr(self,"services"):
@@ -558,17 +555,48 @@ class media:
         return genres
         
     def versions(self):
+        if not hasattr(self,"existing_releases"):
+            self.existing_releases = []
+        if not hasattr(self,"downloaded_releases"):
+            self.downloaded_releases = []
         versions = []
         for version in releases.sort.versions:
             versions += [releases.sort.version(version[0], version[1], version[2], version[3])]
         for version in versions[:]:
             missing = False
             if self.type == "movie" or self.type == "episode":
+                for i,rule in enumerate(version.rules):
+                    if rule[1] == "upgrade":
+                        if not self.query() + ' [' + version.name + " " + rule[0] + " upgrade to " + rule[2] + " " + rule[3] + ']' in media.downloaded_versions:
+                            self.upgrade()
+                            if releases.sort.version.rule(rule[0],rule[1],rule[2],rule[3]).upgrade(self.existing_releases):
+                                upgrade_rules = copy.deepcopy(version.rules)
+                                upgrade_rules[i][1] = "requirement"
+                                versions += [releases.sort.version(version.name + " " + rule[0] + " upgrade to " + rule[2] + " " + rule[3],version.triggers,version.lang,upgrade_rules)]
+                                break
                 if self.query() + ' [' + version.name + ']' in media.downloaded_versions:
                     versions.remove(version)
             elif self.type == 'show':
                 for season in self.Seasons:
+                    if not hasattr(season,"existing_releases"):
+                        season.existing_releases = []
+                    if not hasattr(season,"downloaded_releases"):
+                        season.downloaded_releases = []
                     for episode in season.Episodes:
+                        if not hasattr(episode,"existing_releases"):
+                            episode.existing_releases = []
+                        if not hasattr(episode,"downloaded_releases"):
+                            episode.downloaded_releases = []
+                        for i,rule in enumerate(version.rules):
+                            if rule[1] == "upgrade":
+                                if not episode.query() + ' [' + version.name + " " + rule[0] + " upgrade to " + rule[2] + " " + rule[3] + ']' in media.downloaded_versions:
+                                    episode.upgrade()
+                                    if releases.sort.version.rule(rule[0],rule[1],rule[2],rule[3]).upgrade(episode.existing_releases):
+                                        upgrade_rules = copy.deepcopy(version.rules)
+                                        upgrade_rules[i][1] = "requirement"
+                                        versions += [releases.sort.version(version.name + " " + rule[0] + " upgrade to " + rule[2] + " " + rule[3],version.triggers,version.lang,upgrade_rules)]
+                                        missing = True
+                                        break
                         if not episode.query() + ' [' + version.name + ']' in media.downloaded_versions:
                             missing = True
                             break
@@ -578,6 +606,20 @@ class media:
                     versions.remove(version)            
             elif self.type == 'season':
                 for episode in self.Episodes:
+                    if not hasattr(episode,"existing_releases"):
+                        episode.existing_releases = []
+                    if not hasattr(episode,"downloaded_releases"):
+                        episode.downloaded_releases = []
+                    for i,rule in enumerate(version.rules):
+                        if rule[1] == "upgrade":
+                            if not episode.query() + ' [' + version.name + " " + rule[0] + " upgrade to " + rule[2] + " " + rule[3] + ']' in media.downloaded_versions:
+                                episode.upgrade()
+                                if releases.sort.version.rule(rule[0],rule[1],rule[2],rule[3]).upgrade(episode.existing_releases):
+                                    upgrade_rules = copy.deepcopy(version.rules)
+                                    upgrade_rules[i][1] = "requirement"
+                                    versions += [releases.sort.version(version.name + " " + rule[0] + " upgrade to " + rule[2] + " " + rule[3],version.triggers,version.lang,upgrade_rules)]
+                                    missing = True
+                                    break
                     if not episode.query() + ' [' + version.name + ']' in media.downloaded_versions:
                         missing = True
                         break
@@ -603,7 +645,48 @@ class media:
                 all_versions.remove(version)
         return (len(self.versions()) > 0) and not (len(self.versions()) == len(all_versions))
 
+    def upgrade(self):
+        if not library()[0].name == 'Plex Library' or hasattr(self,"upgradable"):
+            return
+        import content.services.plex as plex
+        self.upgradable = True
+        if self.type == "show":
+            for season in self.Seasons:
+                season.upgrade()
+        if self.type == "season":
+            for episode in self.Episodes:
+                episode.upgrade()
+        if self.type in ["episode","movie"]:
+            for element in plex.current_library:
+                if self.type == "moive":
+                    if self == element:
+                        try:
+                            for Media in element.Media:
+                                res = "2160" if Media.videoResolution == "4k" else Media.videoResolution
+                                for Part in Media.Part:
+                                    self.existing_releases += ["(" + res + "p) " + Part.file]
+                            return
+                        except:
+                            return
+                elif self.type == "episode":
+                    if element.type == "show":
+                        if any(eid in self.grandparentEID for eid in element.EID):
+                            for season in element.Seasons:
+                                if self.parentIndex == season.index:
+                                    for episode in season.Episodes:
+                                        if self == episode:
+                                            try:
+                                                for Media in episode.Media:
+                                                    res = "2160" if Media.videoResolution == "4k" else Media.videoResolution
+                                                    for Part in Media.Part:
+                                                        self.existing_releases += ["(" + res + "p) " + Part.file]
+                                                return
+                                            except:
+                                                return
+
     def watch(self):
+        global imdb_scraped
+        imdb_scraped = False
         names = []
         retries = 0
         for version in self.versions():
@@ -802,10 +885,6 @@ class media:
             return False
 
     def download(self, retries=0, library=[], parentReleases=[]):
-        import content.services.plex as plex
-        import content.services.trakt as trakt
-        import content.services.overseerr as overseerr
-        current_module = sys.modules[__name__]
         global imdb_scraped
         refresh_ = False
         i = 0

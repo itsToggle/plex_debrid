@@ -23,6 +23,12 @@ def download(element, stream=True, query='', force=False):
                     if service.download(element, stream=stream, query=query, force=force):
                         downloaded = True
                         downloaded_files += element.Releases[0].files
+                        if not hasattr(element,"existing_releases"):
+                            element.existing_releases = []
+                        if not hasattr(element,"downloaded_releases"):
+                            element.downloaded_releases = []
+                        element.existing_releases += [element.Releases[0].title]
+                        element.downloaded_releases += [element.Releases[0].title]
                         break
             if downloaded:
                 break
@@ -44,11 +50,15 @@ def download(element, stream=True, query='', force=False):
                         if service.download(element, stream=stream, query=query, force=force):
                             downloaded = True
                             downloaded_files += element.Releases[0].files
+                            element.existing_releases += [element.Releases[0].title]
+                            element.downloaded_releases += [element.Releases[0].title]
                             break
                 else:
                     if service.download(element, stream=stream, query=query, force=force):
                         downloaded = True
                         downloaded_files += element.Releases[0].files
+                        element.existing_releases += [element.Releases[0].title]
+                        element.downloaded_releases += [element.Releases[0].title]
                         break
             if downloaded:
                 break
