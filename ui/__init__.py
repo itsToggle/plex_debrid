@@ -413,6 +413,7 @@ def threaded(stop):
                 t1 = time.time()
                 #if more than 5 seconds have passed, check for newly watchlisted content
                 if t1-t0 >= 5:
+                    ui_print("checking for new requests ...")
                     if plex_watchlist.update() or overseerr_requests.update() or trakt_watchlist.update():
                         library = content.classes.library()[0]()
                         if len(library) == 0:
@@ -432,8 +433,11 @@ def threaded(stop):
                                 element.download(library=library)
                         ui_print('done')
                     t0 = time.time()
+                else:
+                    ui_print('done',end='\r')
         ui_print('done')
         while not stop():
+            ui_print("checking for new requests ...")
             if plex_watchlist.update() or overseerr_requests.update() or trakt_watchlist.update():
                 library = content.classes.library()[0]()
                 if len(library) == 0:
@@ -474,6 +478,7 @@ def threaded(stop):
                         t1 = time.time()
                         #if more than 5 seconds have passed, check for newly watchlisted content
                         if t1-t0 >= 5:
+                            ui_print("checking for new requests ...")
                             if plex_watchlist.update() or overseerr_requests.update() or trakt_watchlist.update():
                                 library = content.classes.library()[0]()
                                 if len(library) == 0:
@@ -492,9 +497,12 @@ def threaded(stop):
                                     if hasattr(element, 'download'):
                                         element.download(library=library)
                                 ui_print('done')
+                            else:
+                                ui_print('done',end='\r')
                             t0 = time.time()
                 ui_print('done')
             else:
+                ui_print('done',end='\r')
                 timeout_counter += timeout
             time.sleep(timeout)
 
