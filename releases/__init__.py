@@ -537,6 +537,7 @@ class sort:
                             scraped_releases.sort(
                                 key=lambda s: bool(regex.search(self.value, getattr(s, self.attribute), regex.I)),reverse=False)
                             return scraped_releases
+                    return scraped_releases
                 except:
                     ui_print("version rule exception - ignoring this rule")
                     return scraped_releases
@@ -645,6 +646,7 @@ class sort:
                             scraped_releases.sort(key=lambda s: 5 * round(float(getattr(s, self.attribute)) / 5),
                                                     reverse=False)
                             return scraped_releases
+                    return scraped_releases
                 except:
                     ui_print("version rule exception - ignoring this rule")
                     return scraped_releases
@@ -734,6 +736,7 @@ class sort:
                         if self.operator == "uncached":
                             scraped_releases.sort(key=lambda s: len(getattr(s, self.attribute)), reverse=False)
                             return scraped_releases
+                    return scraped_releases
                 except:
                     ui_print("version rule exception - ignoring this rule")
                     return scraped_releases
@@ -826,6 +829,7 @@ class sort:
                                 release.files.sort(key=lambda s: s.file_name_sorting, reverse=True)
                             scraped_releases.sort(key=lambda s: s.file_name_sorting, reverse=True)
                             return scraped_releases
+                    return scraped_releases
                 except:
                     ui_print("version rule exception - ignoring this rule")
                     return scraped_releases
@@ -947,6 +951,7 @@ class sort:
                                 release.files.sort(key=lambda s: s.file_size_sorting, reverse=True)
                             scraped_releases.sort(key=lambda s: s.file_size_sorting, reverse=True)
                             return scraped_releases
+                    return scraped_releases
                 except:
                     ui_print("version rule exception - ignoring this rule")
                     return scraped_releases
