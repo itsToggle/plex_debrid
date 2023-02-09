@@ -377,6 +377,7 @@ def unique(lst):
         for unique_obj in unique_objects:
             if unique_obj == obj:
                 is_unique = False
+                break
         if is_unique:
             unique_objects.append(obj)
     return unique_objects
