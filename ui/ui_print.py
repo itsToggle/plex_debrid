@@ -27,7 +27,7 @@ def set_log_dir(config):
     global config_dir
     config_dir = config
 
-def ui_print(string: str, debug="true"):
+def ui_print(string: str, debug="true", end=""):
     global sameline
     global sameline_log
     try:
@@ -58,6 +58,8 @@ def ui_print(string: str, debug="true"):
             except:
                 print('[' + str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S")) + '] logging error: couldnt write into log file at: ' + config_dir + '/plex_debrid.log')
         #ui
+        if end != "":
+            print('[' + str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S")) + '] ' + string, end=end)
         if debug == "true":
             if string == 'done' and sameline:
                 print('done')
