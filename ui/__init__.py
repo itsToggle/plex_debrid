@@ -370,6 +370,17 @@ def update(settings, version):
                 elif setting.name == 'version':
                     settings[setting.name] = setting.get()
 
+def unique(lst):
+    unique_objects = []
+    for obj in lst:
+        is_unique = True
+        for unique_obj in unique_objects:
+            if unique_obj == obj:
+                is_unique = False
+        if is_unique:
+            unique_objects.append(obj)
+    return unique_objects
+
 def threaded(stop):
     ui_cls()
     if service_mode == True:
@@ -394,7 +405,7 @@ def threaded(stop):
         except:
             ui_print("couldnt sort monitored media by newest, using default order.", ui_settings.debug)
         ui_print('checking new content ...')
-        for element in list(set(watchlists)):
+        for element in unique(watchlists):
             if hasattr(element, 'download'):
                 element.download(library=library)
         ui_print('done')
@@ -409,7 +420,7 @@ def threaded(stop):
                 except:
                     ui_print("couldnt sort monitored media by newest, using default order.", ui_settings.debug)
                 ui_print('checking new content ...')
-                for element in list(set(watchlists)):
+                for element in unique(watchlists):
                     if hasattr(element, 'download'):
                         if not element in content.classes.media.ignore_queue:
                             element.download(library=library)
@@ -432,7 +443,7 @@ def threaded(stop):
                 if len(library) == 0:
                     continue
                 ui_print('checking new content ...')
-                for element in list(set(watchlists)):
+                for element in unique(watchlists):
                     if hasattr(element, 'download'):
                         element.download(library=library)
                 ui_print('done')
