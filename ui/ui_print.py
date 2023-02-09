@@ -60,7 +60,7 @@ def ui_print(string: str, debug="true", end=""):
         #ui
         if end != "":
             print('[' + str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S")) + '] ' + string, end=end)
-        if debug == "true":
+        elif debug == "true":
             if string == 'done' and sameline:
                 print('done')
                 sameline = False
