@@ -36,7 +36,6 @@ def ui_print(string: str, debug="true", end=""):
             try:
                 with open(config_dir + '/plex_debrid.log', 'a') as f:
                     if end != "":
-                        f.write('[' + str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S")) + '] ' + string  + end)
                         sameline_log = False
                     elif string == 'done' and sameline_log:
                         f.write('done' + '\n')
@@ -63,8 +62,12 @@ def ui_print(string: str, debug="true", end=""):
         #ui
         if debug == "true":
             if end != "":
+                if end == "replace":
+                    end = " "
+                    sameline = True
+                else:
+                    sameline = False
                 print('[' + str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S")) + '] ' + string, end=end)
-                sameline = False
             elif string == 'done' and sameline:
                 print('done')
                 sameline = False
