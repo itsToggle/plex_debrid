@@ -1031,12 +1031,15 @@ class sort:
                         element.offset_airtime = {}
                     if element.type == "show":
                         for season in element.Seasons:
-                            season.offset_airtime = {}
+                            if not hasattr(season,"offset_airtime"):
+                                season.offset_airtime = {}
                             for episode in season.Episodes:
-                                episode.offset_airtime = {}
+                                if not hasattr(episode,"offset_airtime"):
+                                    episode.offset_airtime = {}
                     elif element.type == "season":
                         for episode in element.Episodes:
-                            episode.offset_airtime = {}
+                            if not hasattr(episode,"offset_airtime"):
+                                episode.offset_airtime = {}
                     if not self.value in element.offset_airtime:
                         if hasattr(element,"first_aired"):
                             element.offset_airtime[self.value] = datetime.datetime.strptime(element.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(self.value))
@@ -1044,6 +1047,26 @@ class sort:
                             element.offset_airtime[self.value] = datetime.datetime.strptime(element.originallyAvailableAt,'%Y-%m-%d') + datetime.timedelta(hours=float(self.value))
                     if element.type == "movie":
                         return True
+                    elif element.type == "show":
+                        for season in element.Seasons:
+                            if not self.value in season.offset_airtime:
+                                if hasattr(season,"first_aired"):
+                                    season.offset_airtime[self.value] = datetime.datetime.strptime(season.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(self.value))
+                                elif hasattr(season,"originallyAvailableAt"):
+                                    season.offset_airtime[self.value] = datetime.datetime.strptime(season.originallyAvailableAt,'%Y-%m-%d') + datetime.timedelta(hours=float(self.value))
+                            for episode in season.Episodes:
+                                if not self.value in episode.offset_airtime:
+                                    if hasattr(episode,"first_aired"):
+                                        episode.offset_airtime[self.value] = datetime.datetime.strptime(episode.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(self.value))
+                                    elif hasattr(episode,"originallyAvailableAt"):
+                                        episode.offset_airtime[self.value] = datetime.datetime.strptime(episode.originallyAvailableAt,'%Y-%m-%d') + datetime.timedelta(hours=float(self.value))
+                    elif element.type == "season":
+                        for episode in element.Episodes:
+                            if not self.value in episode.offset_airtime:
+                                if hasattr(episode,"first_aired"):
+                                    episode.offset_airtime[self.value] = datetime.datetime.strptime(episode.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(self.value))
+                                elif hasattr(episode,"originallyAvailableAt"):
+                                    episode.offset_airtime[self.value] = datetime.datetime.strptime(episode.originallyAvailableAt,'%Y-%m-%d') + datetime.timedelta(hours=float(self.value))
                     return element.offset_airtime[self.value] < datetime.datetime.utcnow() 
                 except:
                     return False
