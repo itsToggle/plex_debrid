@@ -899,9 +899,11 @@ class media:
                             available = self.offset_airtime[offset] - datetime.datetime.utcnow()
                             ui_print("item: '" + self.query() + "' is available in: " + "{:02d}d:{:02d}h:{:02d}m:{:02d}s".format(available.days, available.seconds // 3600, (available.seconds % 3600) // 60, available.seconds % 60) + (" (including offset of: " + offset + "h)" if offset != "0" else ""))
                         return False
+                    if datetime.datetime.utcnow() > datetime.datetime.strptime(self.first_aired,'%Y-%m-%dT%H:%M:%S.000Z'):
+                        return True
                     available = datetime.datetime.strptime(self.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') - datetime.datetime.utcnow()
                     ui_print("item: '" + self.query() + "' is available in: " + "{:02d}d:{:02d}h:{:02d}m:{:02d}s".format(available.days, available.seconds // 3600, (available.seconds % 3600) // 60, available.seconds % 60))
-                    return datetime.datetime.utcnow() > datetime.datetime.strptime(release_date,'%Y-%m-%d')
+                    return False
             except Exception as e:
                 ui_print("media error: (availability exception): " + str(e), debug=ui_settings.debug)
                 return False
