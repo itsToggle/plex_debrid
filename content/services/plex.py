@@ -631,42 +631,39 @@ class library(classes.library):
     def __new__(self):
         global current_library
         list_ = []
-        if not library.check == [['']] and not library.check == []:
-            ui_print(
-                '[plex] getting plex library section/s "' + ','.join(x[0] for x in library.check) + '" ...')
-            types = ['1', '2', '3', '4']
-            for section in library.check:
-                if section[0] == '':
-                    continue
-                section_response = []
-                for type in types:
-                    url = library.url + '/library/sections/' + section[
-                        0] + '/all?type=' + type + '&X-Plex-Token=' + users[0][1]
-                    response = get(url)
-                    if hasattr(response, 'MediaContainer'):
-                        if hasattr(response.MediaContainer, 'Metadata'):
-                            for element in response.MediaContainer.Metadata:
-                                section_response += [classes.media(element)]
-                if len(section_response) == 0:
-                    ui_print("[plex error]: couldnt reach local plex library section '" + section[
-                        0] + "' at server address: " + library.url + " - or this library really is empty.")
-                else:
-                    list_ += section_response
-        else:
-            ui_print('[plex] getting entire plex library ...')
-            url = library.url + '/library/all?X-Plex-Token=' + users[0][1]
-            response = get(url,timeout=60)
-            if hasattr(response, 'MediaContainer'):
-                if hasattr(response.MediaContainer, 'Metadata'):
-                    for element in response.MediaContainer.Metadata:
-                        list_ += [classes.media(element)]
+        sections = []
+        names = []
+        if library.check == [['']]:
+            library.check = []
+        try:
+            response = get(library.url  + '/library/sections/?X-Plex-Token=' + users[0][1])
+            for Directory in response.MediaContainer.Directory:
+                if [Directory.key] in library.check or library.check == []:
+                    sections += [[Directory.key]]
+                    names += [Directory.title]
+        except:
+            ui_print("[plex error]: couldnt reach local plex server at: " + library.url + " to determine library sections. Make sure the address is correct, the server is running, and youve set up at least one library.")
+        if len(sections) == 0:
+            return list_
+        ui_print('[plex] getting plex library section/s "' + '","'.join(names) + '" ...')
+        types = ['1', '2', '3', '4']
+        for section in sections:
+            if section[0] == '':
+                continue
+            section_response = []
+            for type in types:
+                url = library.url + '/library/sections/' + section[0] + '/all?type=' + type + '&X-Plex-Token=' + users[0][1]
+                response = get(url)
+                if hasattr(response, 'MediaContainer'):
+                    if hasattr(response.MediaContainer, 'Metadata'):
+                        for element in response.MediaContainer.Metadata:
+                            section_response += [classes.media(element)]
+            if len(section_response) == 0:
+                ui_print("[plex error]: couldnt reach local plex library section '" + section[0] + "' at server address: " + library.url + " - or this library really is empty.")
             else:
-                ui_print('done')
-                ui_print(
-                    "[plex error]: couldnt reach local plex server at server address: " + library.url + " - or this library really is empty.")
+                list_ += section_response
         if len(list_) == 0:
-            ui_print(
-                "[plex error]: Your library seems empty. To prevent unwanted behaviour, no further downloads will be started. If your library really is empty, please add at least one media item manually.")
+            ui_print("[plex error]: Your library seems empty. To prevent unwanted behaviour, no further downloads will be started. If your library really is empty, please add at least one media item manually.")
         for show in list_:
             if show.type == "show":
                 show.childCount = 0
