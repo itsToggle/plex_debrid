@@ -725,7 +725,7 @@ class media:
                                     self.existing_releases += ["(" + res + "p) " + Part.file]
                             return
                         except Exception as e:
-                            ui_print("error: (file name exception): " + str(e))
+                            ui_print("error: (file name exception): " + self.query() + " " + str(e))
                             return
                 elif self.type == "episode":
                     if element.type == "show":
@@ -741,7 +741,7 @@ class media:
                                                         self.existing_releases += ["(" + res + "p) " + Part.file]
                                                 return
                                             except Exception as e:
-                                                ui_print("error: (file name exception): " + str(e))
+                                                ui_print("error: (file name exception): " + self.query() + " " + str(e))
                                                 return
 
     def complete(self, list):
