@@ -546,6 +546,8 @@ class sort:
                 return True
 
             def upgrade(self,list):
+                if len(list) == 0:
+                    return False
                 self.weight = "requirement"
                 releases = []
                 for title in list:
@@ -553,7 +555,7 @@ class sort:
                 upgrade = len(self.apply(releases)) == 0
                 self.weight = "upgrade"
                 return upgrade
-
+            
         class resolution(rule):
             name = "resolution"
             operators = ["==", ">=", "<=", "highest", "lowest"]
@@ -1025,15 +1027,24 @@ class sort:
 
             def apply(self,element):
                 try:
+                    if not hasattr(element,"offset_airtime"):
+                        element.offset_airtime = {}
+                    if element.type == "show":
+                        for season in element.Seasons:
+                            season.offset_airtime = {}
+                            for episode in season.Episodes:
+                                episode.offset_airtime = {}
+                    elif element.type == "season":
+                        for episode in element.Episodes:
+                            episode.offset_airtime = {}
+                    if not self.value in element.offset_airtime:
+                        if hasattr(element,"first_aired"):
+                            element.offset_airtime[self.value] = datetime.datetime.strptime(element.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(self.value))
+                        elif hasattr(element,"originallyAvailableAt"):
+                            element.offset_airtime[self.value] = datetime.datetime.strptime(element.originallyAvailableAt,'%Y-%m-%d') + datetime.timedelta(hours=float(self.value))
                     if element.type == "movie":
                         return True
-                    if hasattr(element,"first_aired"):
-                        released = datetime.datetime.strptime(element.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(self.value)) - datetime.datetime.utcnow()
-                        return released.days <= 0
-                    if hasattr(element,"originallyAvailableAt"):
-                        released = datetime.datetime.strptime(element.originallyAvailableAt,'%Y-%m-%d') + datetime.timedelta(hours=float(self.value)) - datetime.datetime.utcnow()
-                        return released.days <= 0
-                    return False
+                    return element.offset_airtime[self.value] < datetime.datetime.utcnow() 
                 except:
                     return False
         
@@ -1266,6 +1277,9 @@ class sort:
             if self.lang == "true":
                 self.lang = copy.deepcopy(sort.default_language)
             self.rules = rules
+
+        def __eq__(self, __o: object) -> bool:
+            return self.name == __o.name
 
         def applies(self,element):
             for trigger in self.triggers:
