@@ -815,7 +815,7 @@ class media:
                         smallest_offset = float(offset)
                 released = datetime.datetime.utcnow() - datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d') - datetime.timedelta(hours=float(smallest_offset))
             if self.type == 'movie':
-                if released.days >= -30 and released.days <= 60:
+                if released.days >= -30 and released.days <= 180:
                     return self.available()
                 return released.days > 0
             else:
