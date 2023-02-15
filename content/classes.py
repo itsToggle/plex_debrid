@@ -1005,7 +1005,7 @@ class media:
         if hasattr(self,"parentEID"):
             EIDS = self.parentEID
         if hasattr(self,"grandparentEID"):
-            EIDS = self.parentEID
+            EIDS = self.grandparentEID
         for EID in EIDS:
             if EID.startswith("imdb"):
                 service,imdbID = EID.split('://')
