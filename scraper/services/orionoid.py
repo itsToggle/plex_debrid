@@ -13,7 +13,7 @@ session = requests.Session()
 
 def get(url):
     try:
-        response = session.get(url)
+        response = session.get(url,timeout=60)
         response = json.loads(response.content, object_hook=lambda d: SimpleNamespace(**d))
         return response
     except:
@@ -86,7 +86,7 @@ def scrape(query, altquery):
     if type == "show" and not regex.search(r'(complete)',altquery,regex.I):
         s = (regex.search(r'(?<=S)([0-9]+)',altquery,regex.I).group() if regex.search(r'(?<=S)([0-9]+)',altquery,regex.I) else None)
         e = (regex.search(r'(?<=E)([0-9]+)',altquery,regex.I).group() if regex.search(r'(?<=E)([0-9]+)',altquery,regex.I) else None)
-        if not s == None and not s == 0:
+        if not s == None and not s == "00":
             opts += '&numberseason=' + str(int(s))
         if not e == None:
             opts += '&numberepisode=' + str(int(e))

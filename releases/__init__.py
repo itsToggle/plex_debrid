@@ -340,6 +340,7 @@ class sort:
                 return True
 
         class rule:
+
             def setup(choice, default, new=True):
                 back = False
                 while not back:
@@ -351,9 +352,7 @@ class sort:
                         print("1) Edit  attribute : " + default[int(choice) - 1][0])
                         print("2) Edit  weight    : " + default[int(choice) - 1][1])
                         print("3) Edit  operator  : " + default[int(choice) - 1][2])
-                        if not default[int(choice) - 1][0] == "cache status" and not default[int(choice) - 1][
-                                                                                            2] in ["highest",
-                                                                                                "lowest"]:
+                        if not default[int(choice) - 1][0] == "cache status" and not default[int(choice) - 1][2] in ["highest","lowest"]:
                             print("4) Edit  value     : " + default[int(choice) - 1][3])
                         print()
                         print(
@@ -383,22 +382,23 @@ class sort:
                             print()
                             choice3 = input("Please choose an attribute: ")
                             if choice3 in indices:
-                                default[int(choice) - 1][int(choice2) - 1] = \
-                                sort.version.rule.__subclasses__()[int(choice3) - 1].name
+                                default[int(choice) - 1][int(choice2) - 1] = sort.version.rule.__subclasses__()[int(choice3) - 1].name
                             choice2 = '2'
                     if choice2 == '2':
-                        print(
-                            "Please choose a weight for this rule. This rule can either be a requirement or a preference.")
+                        weights = sort.version.rule.weights
+                        for sub in sort.version.rule.__subclasses__():
+                            if sub.name == default[int(choice) - 1][0]:
+                                weights = sub.weights
+                        print("Please choose a weight for this rule.")
                         print()
                         indices = []
-                        for index, attribute in enumerate(sort.version.rule.weights):
+                        for index, attribute in enumerate(weights):
                             print(str(index + 1) + ') ' + attribute)
                             indices += [str(index + 1)]
                         print()
                         choice3 = input("Please choose a weight: ")
                         if choice3 in indices:
-                            default[int(choice) - 1][int(choice2) - 1] = sort.version.rule.weights[
-                                int(choice3) - 1]
+                            default[int(choice) - 1][int(choice2) - 1] = weights[int(choice3) - 1]
                         if new:
                             choice2 = '3'
                     if choice2 == '3':
@@ -417,8 +417,7 @@ class sort:
                         choice3 = input("Please choose an operator: ")
                         if choice3 in indices:
                             default[int(choice) - 1][int(choice2) - 1] = subclass.operators[int(choice3) - 1]
-                        if new and not default[int(choice) - 1][0] == "cache status" and not \
-                        default[int(choice) - 1][2] in ["highest", "lowest"]:
+                        if new and not default[int(choice) - 1][0] == "cache status" and not default[int(choice) - 1][2] in ["highest", "lowest"]:
                             choice2 = '4'
                         elif new:
                             print("New rule added!")
@@ -464,15 +463,15 @@ class sort:
             operators = [""]
             weights = ["requirement", "preference"]
 
-            def __init__(self, attribute, required, operator, value=None) -> None:
+            def __init__(self, attribute, weight, operator, value=None) -> None:
                 self.attribute = attribute
-                self.required = (required == "requirement")
+                self.weight = weight
                 self.operator = operator
                 self.value = value
 
             def apply(self, scraped_releases: list):
                 try:
-                    if self.required:
+                    if self.weight == "requirement":
                         if self.operator == "==":
                             for release in scraped_releases[:]:
                                 if not getattr(release, self.attribute) == self.value:
@@ -512,20 +511,17 @@ class sort:
                                 if bool(regex.search(self.value, getattr(release, self.attribute), regex.I)):
                                     scraped_releases.remove(release)
                             return scraped_releases
-                    else:
+                    elif self.weight == "preference":
                         if self.operator == "==":
-                            scraped_releases.sort(key=lambda s: (getattr(s, self.attribute) == self.value),
-                                                    reverse=True)
+                            scraped_releases.sort(key=lambda s: (getattr(s, self.attribute) == self.value),reverse=True)
                             return scraped_releases
                         if self.operator == ">=":
                             scraped_releases.sort(
-                                key=lambda s: (float(getattr(s, self.attribute)) >= float(self.value)),
-                                reverse=True)
+                                key=lambda s: (float(getattr(s, self.attribute)) >= float(self.value)),reverse=True)
                             return scraped_releases
                         if self.operator == "<=":
                             scraped_releases.sort(
-                                key=lambda s: (float(getattr(s, self.attribute)) <= float(self.value)),
-                                reverse=True)
+                                key=lambda s: (float(getattr(s, self.attribute)) <= float(self.value)),reverse=True)
                             return scraped_releases
                         if self.operator == "highest":
                             scraped_releases.sort(key=lambda s: float(getattr(s, self.attribute)), reverse=True)
@@ -535,14 +531,13 @@ class sort:
                             return scraped_releases
                         if self.operator == "include":
                             scraped_releases.sort(
-                                key=lambda s: bool(regex.search(self.value, getattr(s, self.attribute), regex.I)),
-                                reverse=True)
+                                key=lambda s: bool(regex.search(self.value, getattr(s, self.attribute), regex.I)),reverse=True)
                             return scraped_releases
                         if self.operator == "exclude":
                             scraped_releases.sort(
-                                key=lambda s: bool(regex.search(self.value, getattr(s, self.attribute), regex.I)),
-                                reverse=False)
+                                key=lambda s: bool(regex.search(self.value, getattr(s, self.attribute), regex.I)),reverse=False)
                             return scraped_releases
+                    return scraped_releases
                 except:
                     ui_print("version rule exception - ignoring this rule")
                     return scraped_releases
@@ -550,9 +545,21 @@ class sort:
             def check(self):
                 return True
 
+            def upgrade(self,list):
+                if len(list) == 0:
+                    return False
+                self.weight = "requirement"
+                releases = []
+                for title in list:
+                    releases += [release("","",title,[],"",[],0)]
+                upgrade = len(self.apply(releases)) == 0
+                self.weight = "upgrade"
+                return upgrade
+            
         class resolution(rule):
             name = "resolution"
             operators = ["==", ">=", "<=", "highest", "lowest"]
+            weights = ["requirement", "preference", "upgrade"]
 
             def check(self):
                 try:
@@ -563,7 +570,7 @@ class sort:
                     print("This value is not in the correct format. Please enter a number (e.g. '420' or '69.69')")
                     print()
                     return False
-        
+
         class bitrate(rule):
             name = "bitrate"
             operators = ["==", ">=", "<=", "highest", "lowest"]
@@ -586,7 +593,7 @@ class sort:
 
             def apply(self, scraped_releases: list):
                 try:
-                    if self.required:
+                    if self.weight == "requirement":
                         if self.operator == "==":
                             for release in scraped_releases[:]:
                                 if not getattr(release, self.attribute) == self.value:
@@ -618,7 +625,7 @@ class sort:
                                         float(getattr(scraped_releases[0], self.attribute)) / 5):
                                     scraped_releases.remove(release)
                             return scraped_releases
-                    else:
+                    elif self.weight == "preference":
                         if self.operator == "==":
                             scraped_releases.sort(key=lambda s: (getattr(s, self.attribute) == self.value),
                                                     reverse=True)
@@ -641,6 +648,7 @@ class sort:
                             scraped_releases.sort(key=lambda s: 5 * round(float(getattr(s, self.attribute)) / 5),
                                                     reverse=False)
                             return scraped_releases
+                    return scraped_releases
                 except:
                     ui_print("version rule exception - ignoring this rule")
                     return scraped_releases
@@ -672,6 +680,7 @@ class sort:
         class title(rule):
             name = "title"
             operators = ["==", "include", "exclude"]
+            weights = ["requirement", "preference", "upgrade"]
 
             def check(self):
                 try:
@@ -705,13 +714,13 @@ class sort:
 
             def __init__(self, attribute, required, operator, value=None) -> None:
                 self.attribute = "cached"
-                self.required = (required == "requirement")
+                self.weight = (required == "requirement")
                 self.operator = operator
                 self.value = value
 
             def apply(self, scraped_releases: list):
                 try:
-                    if self.required:
+                    if self.weight == "requirement":
                         if self.operator == "cached":
                             for release in scraped_releases[:]:
                                 if len(getattr(release, self.attribute)) == 0:
@@ -722,13 +731,14 @@ class sort:
                                 if len(getattr(release, self.attribute)) > 0:
                                     scraped_releases.remove(release)
                             return scraped_releases
-                    else:
+                    elif self.weight == "preference":
                         if self.operator == "cached":
                             scraped_releases.sort(key=lambda s: len(getattr(s, self.attribute)), reverse=True)
                             return scraped_releases
                         if self.operator == "uncached":
                             scraped_releases.sort(key=lambda s: len(getattr(s, self.attribute)), reverse=False)
                             return scraped_releases
+                    return scraped_releases
                 except:
                     ui_print("version rule exception - ignoring this rule")
                     return scraped_releases
@@ -739,7 +749,7 @@ class sort:
 
             def apply(self, scraped_releases: list):
                 try:
-                    if self.required:
+                    if self.weight == "requirement":
                         if self.operator == "include":
                             for release in scraped_releases[:]:
                                 remove = True
@@ -784,7 +794,7 @@ class sort:
                                 if remove or len(release.files) == 0:
                                     scraped_releases.remove(release)
                             return scraped_releases
-                    else:
+                    elif self.weight == "preference":
                         if self.operator == "include":
                             for release in scraped_releases:
                                 release.file_name_sorting = 0
@@ -821,6 +831,7 @@ class sort:
                                 release.files.sort(key=lambda s: s.file_name_sorting, reverse=True)
                             scraped_releases.sort(key=lambda s: s.file_name_sorting, reverse=True)
                             return scraped_releases
+                    return scraped_releases
                 except:
                     ui_print("version rule exception - ignoring this rule")
                     return scraped_releases
@@ -844,7 +855,7 @@ class sort:
             def apply(self, scraped_releases: list):
                 video_formats = '(\.)(YUV|WMV|WEBM|VOB|VIV|SVI|ROQ|RMVB|RM|OGV|OGG|NSV|MXF|MTS|M2TS|TS|MPG|MPEG|M2V|MP2|MPE|MPV|MP4|M4P|M4V|MOV|QT|MNG|MKV|FLV|DRC|AVI|ASF|AMV)'
                 try:
-                    if self.required:
+                    if self.weight == "requirement":
                         if ">=" in self.operator:
                             for release in scraped_releases[:]:
                                 remove = False
@@ -897,7 +908,7 @@ class sort:
                                 if remove or len(release.files) == 0:
                                     scraped_releases.remove(release)
                             return scraped_releases
-                    else:
+                    elif self.weight == "preference":
                         if ">=" in self.operator:
                             for release in scraped_releases:
                                 release.file_size_sorting = 0
@@ -942,6 +953,7 @@ class sort:
                                 release.files.sort(key=lambda s: s.file_size_sorting, reverse=True)
                             scraped_releases.sort(key=lambda s: s.file_size_sorting, reverse=True)
                             return scraped_releases
+                    return scraped_releases
                 except:
                     ui_print("version rule exception - ignoring this rule")
                     return scraped_releases
@@ -1015,15 +1027,47 @@ class sort:
 
             def apply(self,element):
                 try:
+                    if not hasattr(element,"offset_airtime"):
+                        element.offset_airtime = {}
+                    if element.type == "show":
+                        for season in element.Seasons:
+                            if not hasattr(season,"offset_airtime"):
+                                season.offset_airtime = {}
+                            for episode in season.Episodes:
+                                if not hasattr(episode,"offset_airtime"):
+                                    episode.offset_airtime = {}
+                    elif element.type == "season":
+                        for episode in element.Episodes:
+                            if not hasattr(episode,"offset_airtime"):
+                                episode.offset_airtime = {}
+                    if not self.value in element.offset_airtime:
+                        if hasattr(element,"first_aired"):
+                            element.offset_airtime[self.value] = datetime.datetime.strptime(element.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(self.value))
+                        elif hasattr(element,"originallyAvailableAt"):
+                            element.offset_airtime[self.value] = datetime.datetime.strptime(element.originallyAvailableAt,'%Y-%m-%d') + datetime.timedelta(hours=float(self.value))
                     if element.type == "movie":
                         return True
-                    if hasattr(element,"first_aired"):
-                        released = datetime.datetime.strptime(element.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(self.value)) - datetime.datetime.utcnow()
-                        return released.days <= 0
-                    if hasattr(element,"originallyAvailableAt"):
-                        released = datetime.datetime.strptime(element.originallyAvailableAt,'%Y-%m-%d') + datetime.timedelta(hours=float(self.value)) - datetime.datetime.utcnow()
-                        return released.days <= 0
-                    return False
+                    elif element.type == "show":
+                        for season in element.Seasons:
+                            if not self.value in season.offset_airtime:
+                                if hasattr(season,"first_aired"):
+                                    season.offset_airtime[self.value] = datetime.datetime.strptime(season.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(self.value))
+                                elif hasattr(season,"originallyAvailableAt"):
+                                    season.offset_airtime[self.value] = datetime.datetime.strptime(season.originallyAvailableAt,'%Y-%m-%d') + datetime.timedelta(hours=float(self.value))
+                            for episode in season.Episodes:
+                                if not self.value in episode.offset_airtime:
+                                    if hasattr(episode,"first_aired"):
+                                        episode.offset_airtime[self.value] = datetime.datetime.strptime(episode.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(self.value))
+                                    elif hasattr(episode,"originallyAvailableAt"):
+                                        episode.offset_airtime[self.value] = datetime.datetime.strptime(episode.originallyAvailableAt,'%Y-%m-%d') + datetime.timedelta(hours=float(self.value))
+                    elif element.type == "season":
+                        for episode in element.Episodes:
+                            if not self.value in episode.offset_airtime:
+                                if hasattr(episode,"first_aired"):
+                                    episode.offset_airtime[self.value] = datetime.datetime.strptime(episode.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(self.value))
+                                elif hasattr(episode,"originallyAvailableAt"):
+                                    episode.offset_airtime[self.value] = datetime.datetime.strptime(episode.originallyAvailableAt,'%Y-%m-%d') + datetime.timedelta(hours=float(self.value))
+                    return element.offset_airtime[self.value] < datetime.datetime.utcnow() 
                 except:
                     return False
         
@@ -1257,6 +1301,9 @@ class sort:
                 self.lang = copy.deepcopy(sort.default_language)
             self.rules = rules
 
+        def __eq__(self, __o: object) -> bool:
+            return self.name == __o.name
+
         def applies(self,element):
             for trigger in self.triggers:
                 for subtrigger in sort.version.trigger.__subclasses__():
@@ -1281,8 +1328,10 @@ class sort:
             ["cache status", "requirement", "cached", ""],
             ["resolution", "requirement", "<=", "1080"],
             ["resolution", "preference", "highest", ""],
-            ["title", "requirement", "exclude", "(\.DV\.|\.3D\.|\.H?D?.?CAM\.|\.HDTS\.)"],
-            ["title", "requirement", "exclude", "(\.HDR\.)"],
+            ["title", "requirement", "exclude", "[^A-CE-Z0-9](CAM|TS|TC)[^A-Z0-9]"],
+            ["title", "requirement", "exclude", "(3D)"],
+            ["title", "requirement", "exclude", "(DO?VI?)"],
+            ["title", "requirement", "exclude", "(HDR)"],
             ["title", "preference", "include", "(EXTENDED|REMASTERED)"],
             ["size", "preference", "highest", ""],
             ["seeders", "preference", "highest", ""],

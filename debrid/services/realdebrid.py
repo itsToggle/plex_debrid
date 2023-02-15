@@ -139,11 +139,9 @@ def download(element, stream=True, query='', force=False):
                                 continue
                             response = post('https://api.real-debrid.com/rest/1.0/torrents/selectFiles/' + torrent_id,{'files': str(','.join(cached_ids))})
                             response = get('https://api.real-debrid.com/rest/1.0/torrents/info/' + torrent_id)
+                            actual_title = ""
                             if len(response.links) == len(cached_ids):
-                                if not hasattr(element,"downloaded_releases"):
-                                    element.downloaded_releases = [response.filename]
-                                else:
-                                    element.downloaded_releases += [response.filename]
+                                actual_title = response.filename
                                 release.download = response.links
                             else:
                                 if response.status in ["queued","magnet_convesion","downloading","uploading"]:
@@ -170,6 +168,8 @@ def download(element, stream=True, query='', force=False):
                                         break
                                 release.files = version.files
                                 ui_print('[realdebrid] adding cached release: ' + release.title)
+                                if not actual_title == "":
+                                    release.title = actual_title
                                 return True
                 ui_print('done')
                 return False

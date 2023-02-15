@@ -186,7 +186,7 @@ class media:
     
     ignore_queue = []
     downloaded_versions = []
-
+    
     def __init__(self, other):
         self.__dict__.update(other.__dict__)
 
@@ -221,9 +221,6 @@ class media:
                 return self.grandparentGuid == other.grandparentGuid and self.parentIndex == other.parentIndex and self.index == other.index
         except:
             return False
-
-    def __repr__(self):
-        return str(self.__dict__)
 
     def match(self,service):
         if not hasattr(self,"services"):
@@ -558,9 +555,42 @@ class media:
         return genres
         
     def versions(self):
+        #initialize downloaded and existing releases
+        if not hasattr(self,"existing_releases"):
+            self.existing_releases = []
+        if not hasattr(self,"downloaded_releases"):
+            self.downloaded_releases = []
+        if self.type == "show":
+            for season in self.Seasons:
+                if not hasattr(season,"existing_releases"):
+                    season.existing_releases = []
+                if not hasattr(season,"downloaded_releases"):
+                    season.downloaded_releases = []
+                for episode in season.Episodes:
+                    if not hasattr(episode,"existing_releases"):
+                        episode.existing_releases = []
+                    if not hasattr(episode,"downloaded_releases"):
+                        episode.downloaded_releases = []
+        if self.type == "season":
+            for episode in self.Episodes:
+                if not hasattr(episode,"existing_releases"):
+                    episode.existing_releases = []
+                if not hasattr(episode,"downloaded_releases"):
+                    episode.downloaded_releases = []
+        #get all versions
         versions = []
         for version in releases.sort.versions:
             versions += [releases.sort.version(version[0], version[1], version[2], version[3])]
+        #update media items ignore count
+        if self in media.ignore_queue:
+            match = next((x for x in media.ignore_queue if self == x), None)
+            self.ignored_count = match.ignored_count
+        #remove versions that dont apply
+        for version in versions[:]:
+            if not version.applies(self):
+                versions.remove(version)
+        #remove versions that have been downloaded in this session:
+        all_versions = copy.deepcopy(versions)
         for version in versions[:]:
             missing = False
             if self.type == "movie" or self.type == "episode":
@@ -582,13 +612,81 @@ class media:
                         missing = True
                         break
                 if not missing:
-                    versions.remove(version)   
-        if self in media.ignore_queue:
-            match = next((x for x in media.ignore_queue if self == x), None)
-            self.ignored_count = match.ignored_count
-        for version in versions[:]:
-            if not version.applies(self):
-                versions.remove(version)
+                    versions.remove(version)  
+        #If Trakt is the  collection service, the upgrading of collected content is not possible, since no record of the downloaded file names is kept. return the missing versions from this session. 
+        if library()[0].name != 'Plex Library':
+            return versions
+        #If Plex is the collection service, check if all versions are missing in this session. If not all versions are missing, at least one can still be downloaded normally and no upgrades should be made.
+        if versions != all_versions:
+            return versions
+        #Check if there are any missing versions with upgrade rules for this media item, if not, return all versions.
+        upgrade_versions = []
+        for version in versions:
+            for rule in version.rules:
+                if rule[1] == "upgrade":
+                    if not self.query() + ' [' + version.name + " upgrade]" in media.downloaded_versions:
+                        upgrade_versions += [version]
+                        break
+        if len(upgrade_versions) == 0:
+            return versions
+        #Check if the content is completely collected:
+        from content.services.plex import current_library
+        if not self.complete(current_library):
+            return versions
+        #If the collection service is Plex, all versions are missing, there are upgradable versions and content is completely collected, look for upgrades:
+        versions = []
+        for version in upgrade_versions:
+            added = False
+            self.set_file_names()
+            if self.type == "movie" or self.type == "episode":
+                if not self.query() + ' [' + version.name + " upgrade]" in media.downloaded_versions:
+                    for rule in version.rules:
+                        if not rule[1] == "upgrade":
+                            continue
+                        if releases.sort.version.rule(rule[0],rule[1],rule[2],rule[3]).upgrade(self.existing_releases):
+                            upgrade_rules = copy.deepcopy(version.rules)
+                            for i,rule_ in enumerate(version.rules):
+                                if rule_[1] == "upgrade":
+                                    upgrade_rules[i][1] = "requirement"
+                            versions += [releases.sort.version(version.name + " upgrade",version.triggers,version.lang,upgrade_rules)]
+                            break
+            elif self.type == 'show':
+                for season in self.Seasons:
+                    for episode in season.Episodes:
+                        if not episode.query() + ' [' + version.name + " upgrade]" in media.downloaded_versions:
+                            for rule in version.rules:
+                                if not rule[1] == "upgrade":
+                                    continue
+                                if releases.sort.version.rule(rule[0],rule[1],rule[2],rule[3]).upgrade(episode.existing_releases):
+                                    upgrade_rules = copy.deepcopy(version.rules)
+                                    for i,rule_ in enumerate(version.rules):
+                                        if rule_[1] == "upgrade":
+                                            upgrade_rules[i][1] = "requirement"
+                                    versions += [releases.sort.version(version.name + " upgrade",version.triggers,version.lang,upgrade_rules)]
+                                    added = True
+                                    break
+                            if added:
+                                break
+                    if added:
+                        break
+            elif self.type == "season":
+                for episode in self.Episodes:
+                    if not episode.query() + ' [' + version.name + " upgrade]" in media.downloaded_versions:
+                        for rule in version.rules:
+                            if not rule[1] == "upgrade":
+                                continue
+                            if releases.sort.version.rule(rule[0],rule[1],rule[2],rule[3]).upgrade(episode.existing_releases):
+                                upgrade_rules = copy.deepcopy(version.rules)
+                                for i,rule_ in enumerate(version.rules):
+                                    if rule_[1] == "upgrade":
+                                        upgrade_rules[i][1] = "requirement"
+                                versions += [releases.sort.version(version.name + " upgrade",version.triggers,version.lang,upgrade_rules)]
+                                added = True
+                                break
+                        if added:
+                            break
+        if len(versions) > 0:
+            versions
         return versions
 
     def version_missing(self):
@@ -601,9 +699,83 @@ class media:
         for version in all_versions[:]:
             if not version.applies(self):
                 all_versions.remove(version)
-        return (len(self.versions()) > 0) and not (len(self.versions()) == len(all_versions))
+        return len(self.versions()) > 0 and not self.versions() == all_versions
+
+    def set_file_names(self):
+        if not library()[0].name == 'Plex Library' or hasattr(self,"upgradable"):
+            return
+        import content.services.plex as plex
+        self.upgradable = True
+        if self.type == "show":
+            for season in self.Seasons:
+                season.upgradable = True
+                for episode in season.Episodes:
+                    episode.set_file_names()
+        if self.type == "season":
+            for episode in self.Episodes:
+                episode.set_file_names()
+        if self.type in ["episode","movie"]:
+            for element in plex.current_library:
+                if self.type == "movie":
+                    if self == element:
+                        try:
+                            for Media in element.Media:
+                                res = "2160" if Media.videoResolution == "4k" else Media.videoResolution
+                                for Part in Media.Part:
+                                    self.existing_releases += ["(" + res + "p) " + Part.file]
+                            return
+                        except Exception as e:
+                            ui_print("error: (file name exception): " + self.query() + " " + str(e),ui_settings.debug)
+                            return
+                elif self.type == "episode":
+                    if element.type == "show":
+                        if any(eid in self.grandparentEID for eid in element.EID):
+                            for season in element.Seasons:
+                                if self.parentIndex == season.index:
+                                    for episode in season.Episodes:
+                                        if self == episode:
+                                            try:
+                                                for Media in episode.Media:
+                                                    res = "2160" if Media.videoResolution == "4k" else Media.videoResolution
+                                                    for Part in Media.Part:
+                                                        self.existing_releases += ["(" + res + "p) " + Part.file]
+                                                return
+                                            except Exception as e:
+                                                ui_print("error: (file name exception): " + self.query() + " " + str(e),ui_settings.debug)
+                                                return
+
+    def complete(self, list):
+        if self.type in ['movie','episode']:
+            if self.collected(list) or self.watched() or not self.released() or self.downloading():
+                return True
+        elif self.type == 'show':
+            if self.collected(list):
+                return True
+            Seasons = copy.deepcopy(self.Seasons)
+            for season in Seasons[:]:
+                if not season.collected(list) and not season.watched() and season.released() and not season.downloading():
+                    for episode in season.Episodes[:]:
+                        if episode.collected(list) or episode.watched() or not episode.released() or episode.downloading():
+                            season.Episodes.remove(episode)
+                else:
+                    if season in Seasons:
+                        Seasons.remove(season)
+                if len(season.Episodes) == 0 and season in Seasons:
+                    Seasons.remove(season)
+            return len(Seasons) == 0
+        elif self.type == "season":
+            if self.collected(list):
+                return True
+            Episodes = copy.deepcopy(self.Episodes)
+            for episode in Episodes[:]:
+                if episode.collected(list) or episode.watched() or not episode.released() or episode.downloading():
+                    Episodes.remove(episode)
+            return len(Episodes) == 0
+        return False
 
     def watch(self):
+        global imdb_scraped
+        imdb_scraped = False
         names = []
         retries = 0
         for version in self.versions():
@@ -636,12 +808,14 @@ class media:
     def released(self):
         try:
             released = datetime.datetime.utcnow() - datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
-            for version in self.versions():
-                for i,trigger in enumerate(version.triggers):
-                    if trigger[0] == "airtime offset":
-                        released = datetime.datetime.utcnow() - datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d') - datetime.timedelta(hours=float(trigger[2]))
+            if hasattr(self,"offset_airtime"):
+                smallest_offset = 0
+                for offset in self.offset_airtime:
+                    if float(offset) < smallest_offset or smallest_offset == 0:
+                        smallest_offset = float(offset)
+                released = datetime.datetime.utcnow() - datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d') - datetime.timedelta(hours=float(smallest_offset))
             if self.type == 'movie':
-                if released.days >= -30 and released.days <= 60:
+                if released.days >= -30 and released.days <= 180:
                     return self.available()
                 return released.days > 0
             else:
@@ -659,68 +833,82 @@ class media:
         if (self.watchlist == plex.watchlist and len(trakt.users) > 0) or self.watchlist == trakt.watchlist:
             if self.watchlist == plex.watchlist:
                 self.match('content.services.trakt')
-            offset = "0"
-            for version in self.versions():
-                for i,trigger in enumerate(version.triggers):
-                    if trigger[0] == "airtime offset":
-                        offset = trigger[2]
-            released = datetime.datetime.utcnow() - datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d') - datetime.timedelta(hours=float(offset))
-            trakt_match = self
-            if not trakt_match == None:
-                trakt.current_user = trakt.users[0]
-                try:
-                    if trakt_match.type == 'show':
-                        return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(offset))
-                    elif trakt_match.type == 'movie':
-                        release_date = None
-                        releases, header = trakt.get(
-                            'https://api.trakt.tv/movies/' + str(trakt_match.ids.trakt) + '/releases/')
+            trakt.current_user = trakt.users[0]
+            try:
+                if self.type == 'show':
+                    if hasattr(self,"offset_airtime"):
+                        for offset in self.offset_airtime:
+                            if datetime.datetime.utcnow() > self.offset_airtime[offset]:
+                                return True
+                        return False
+                    return datetime.datetime.utcnow() > datetime.datetime.strptime(self.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')
+                elif self.type == 'movie':
+                    release_date = None
+                    releases, header = trakt.get(
+                        'https://api.trakt.tv/movies/' + str(self.ids.trakt) + '/releases/')
+                    for release in releases:
+                        if release.release_type == 'digital' or release.release_type == 'physical' or release.release_type == 'tv':
+                            if release_date == None:
+                                release_date = release.release_date
+                            elif datetime.datetime.strptime(release_date,'%Y-%m-%d') > datetime.datetime.strptime(release.release_date, '%Y-%m-%d'):
+                                release_date = release.release_date
+                    # If no release date was found, select the theatrical release date + 2 Month delay
+                    if release_date == None:
                         for release in releases:
-                            if release.release_type == 'digital' or release.release_type == 'physical' or release.release_type == 'tv':
-                                if release_date == None:
-                                    release_date = release.release_date
-                                elif datetime.datetime.strptime(release_date,'%Y-%m-%d') > datetime.datetime.strptime(release.release_date, '%Y-%m-%d'):
-                                    release_date = release.release_date
-                        # If no release date was found, select the theatrical release date + 2 Month delay
-                        if release_date == None:
-                            for release in releases:
-                                if release_date == None:
-                                    release_date = release.release_date
-                                elif datetime.datetime.strptime(release_date,'%Y-%m-%d') > datetime.datetime.strptime(release.release_date, '%Y-%m-%d'):
-                                    release_date = release.release_date
-                            release_date = datetime.datetime.strptime(release_date,'%Y-%m-%d') + datetime.timedelta(days=60)
-                            release_date = release_date.strftime("%Y-%m-%d")
-                        # Get trakt 'Latest HD/4k Releases' Lists to accept early releases
-                        match = False
-                        if trakt.early_releases == "true":
-                            trakt_lists, header = trakt.get(
-                                'https://api.trakt.tv/movies/' + str(trakt_match.ids.trakt) + '/lists/personal/popular')
-                            for trakt_list in trakt_lists:
-                                if regex.search(r'(latest|new).*?(releases)', trakt_list.name, regex.I):
-                                    match = True
-                        # if release_date and delay have passed or the movie was released early
-                        try:
+                            if release_date == None:
+                                release_date = release.release_date
+                            elif datetime.datetime.strptime(release_date,'%Y-%m-%d') > datetime.datetime.strptime(release.release_date, '%Y-%m-%d'):
+                                release_date = release.release_date
+                        release_date = datetime.datetime.strptime(release_date,'%Y-%m-%d') + datetime.timedelta(days=60)
+                        release_date = release_date.strftime("%Y-%m-%d")
+                    # Get trakt 'Latest HD/4k Releases' Lists to accept early releases
+                    match = False
+                    if trakt.early_releases == "true":
+                        trakt_lists, header = trakt.get(
+                            'https://api.trakt.tv/movies/' + str(self.ids.trakt) + '/lists/personal/popular')
+                        for trakt_list in trakt_lists:
+                            if regex.search(r'(latest|new).*?(releases)', trakt_list.name, regex.I):
+                                match = True
+                    # if release_date and delay have passed or the movie was released early
+                    if match:
+                        ui_print("item: '" + self.query() + "' seems to be released prior to its official release date and will be downloaded.")
+                        return True
+                    if hasattr(self,"offset_airtime"):
+                        for offset in self.offset_airtime:
+                            if datetime.datetime.utcnow() > (datetime.datetime.strptime(release_date,'%Y-%m-%d') + datetime.timedelta(hours=float(offset))):
+                                return True
                             available = datetime.datetime.strptime(release_date,'%Y-%m-%d') + datetime.timedelta(hours=float(offset)) - datetime.datetime.utcnow()
-                            if match:
-                                ui_print("item: '" + trakt_match.query() + "' seems to be released prior to its official release date and will be downloaded.")
-                            elif available.days >= 0 and available.seconds > 0:
-                                ui_print("item: '" + trakt_match.query() + "' is available in: " + "{:02d}d:{:02d}h:{:02d}m:{:02d}s".format(available.days, available.seconds // 3600, (available.seconds % 3600) // 60, available.seconds % 60) + (" (including offset of: " + offset + "h)" if offset != "0" else ""))
-                            return datetime.datetime.utcnow() > datetime.datetime.strptime(release_date,'%Y-%m-%d') + datetime.timedelta(hours=float(offset)) or match
-                        except:
-                            return datetime.datetime.utcnow() > datetime.datetime.strptime(release_date,'%Y-%m-%d') + datetime.timedelta(hours=float(offset)) or match
-                    elif trakt_match.type == 'season':
-                        try:
-                            return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(offset))
-                        except:
-                            return True
-                    elif trakt_match.type == 'episode':
-                        available = datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(offset)) - datetime.datetime.utcnow()
-                        if available.days >= 0 and available.seconds > 0:
-                            ui_print("item: '" + trakt_match.query() + "' is available in: " + "{:02d}d:{:02d}h:{:02d}m:{:02d}s".format(available.days, available.seconds // 3600, (available.seconds % 3600) // 60, available.seconds % 60) + (" (including offset of: " + offset + "h)" if offset != "0" else ""))
-                        return datetime.datetime.utcnow() > datetime.datetime.strptime(trakt_match.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(offset))
-                except Exception as e:
-                    ui_print("media error: (availability exception): " + str(e), debug=ui_settings.debug)
+                            ui_print("item: '" + self.query() + "' is available in: " + "{:02d}d:{:02d}h:{:02d}m:{:02d}s".format(available.days, available.seconds // 3600, (available.seconds % 3600) // 60, available.seconds % 60) + (" (including offset of: " + offset + "h)" if offset != "0" else ""))
+                        return False
+                    available = datetime.datetime.strptime(release_date,'%Y-%m-%d') - datetime.datetime.utcnow()
+                    ui_print("item: '" + self.query() + "' is available in: " + "{:02d}d:{:02d}h:{:02d}m:{:02d}s".format(available.days, available.seconds // 3600, (available.seconds % 3600) // 60, available.seconds % 60))
+                    return datetime.datetime.utcnow() > datetime.datetime.strptime(release_date,'%Y-%m-%d')
+                elif self.type == 'season':
+                    try:
+                        if hasattr(self,"offset_airtime"):
+                            for offset in self.offset_airtime:
+                                if datetime.datetime.utcnow() > self.offset_airtime[offset]:
+                                    return True
+                            return False
+                        return datetime.datetime.utcnow() > datetime.datetime.strptime(self.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')
+                    except:
+                        return True
+                elif self.type == 'episode':
+                    if hasattr(self,"offset_airtime"):
+                        for offset in self.offset_airtime:
+                            if datetime.datetime.utcnow() > self.offset_airtime[offset]:
+                                return True
+                            available = self.offset_airtime[offset] - datetime.datetime.utcnow()
+                            ui_print("item: '" + self.query() + "' is available in: " + "{:02d}d:{:02d}h:{:02d}m:{:02d}s".format(available.days, available.seconds // 3600, (available.seconds % 3600) // 60, available.seconds % 60) + (" (including offset of: " + offset + "h)" if offset != "0" else ""))
+                        return False
+                    if datetime.datetime.utcnow() > datetime.datetime.strptime(self.first_aired,'%Y-%m-%dT%H:%M:%S.000Z'):
+                        return True
+                    available = datetime.datetime.strptime(self.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') - datetime.datetime.utcnow()
+                    ui_print("item: '" + self.query() + "' is available in: " + "{:02d}d:{:02d}h:{:02d}m:{:02d}s".format(available.days, available.seconds // 3600, (available.seconds % 3600) // 60, available.seconds % 60))
                     return False
+            except Exception as e:
+                ui_print("media error: (availability exception): " + str(e), debug=ui_settings.debug)
+                return False
         try:
             released = datetime.datetime.utcnow() - datetime.datetime.strptime(self.originallyAvailableAt,'%Y-%m-%d')
             if released.days < 0:
@@ -794,7 +982,7 @@ class media:
                     Seasons.remove(season)
             return Seasons
         return []
-
+    
     def downloading(self):
         if hasattr(self, "version"):
             return [self.query() + ' [' + self.version.name + ']'] in debrid.downloading
@@ -802,17 +990,12 @@ class media:
             return False
 
     def download(self, retries=0, library=[], parentReleases=[]):
-        import content.services.plex as plex
-        import content.services.trakt as trakt
-        import content.services.overseerr as overseerr
-        current_module = sys.modules[__name__]
         global imdb_scraped
         refresh_ = False
         i = 0
         self.Releases = []
         if self.type in ["movie","show"] and ((not hasattr(self,"title") or self.title == "" or self.title == None) or (not hasattr(self,"year") or self.year == None or self.year == "")):
             ui_print("error: media item has no title or release year. This unknown movie/show might not be released yet.") 
-            ui_print("If you have not connected a trakt account to plex_debrid, its recommended to do so as it will help plex_debrid find more accurate metadata.")
             return
         scraper.services.overwrite = []
         EIDS = []
@@ -822,7 +1005,7 @@ class media:
         if hasattr(self,"parentEID"):
             EIDS = self.parentEID
         if hasattr(self,"grandparentEID"):
-            EIDS = self.parentEID
+            EIDS = self.grandparentEID
         for EID in EIDS:
             if EID.startswith("imdb"):
                 service,imdbID = EID.split('://')
@@ -865,7 +1048,7 @@ class media:
                     if retry:
                         self.watch()
         elif self.type == 'show':
-            if self.released() and (not self.collected(library) or self.version_missing()) and not self.watched() and len(self.versions()) > 0:
+            if len(self.versions()) > 0 and self.released() and (not self.collected(library) or self.version_missing()) and not self.watched():
                 self.isanime()
                 self.Seasons = self.uncollected(library)
                 # if there are uncollected episodes
