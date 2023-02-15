@@ -887,7 +887,7 @@ class media:
                     try:
                         if hasattr(self,"offset_airtime"):
                             for offset in self.offset_airtime:
-                                if datetime.datetime.utcnow() > self.offset_airtime[offset]:
+                                if datetime.datetime.utcnow() > datetime.datetime.strptime(self.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(offset)):
                                     return True
                             return False
                         return datetime.datetime.utcnow() > datetime.datetime.strptime(self.first_aired,'%Y-%m-%dT%H:%M:%S.000Z')
@@ -896,9 +896,9 @@ class media:
                 elif self.type == 'episode':
                     if hasattr(self,"offset_airtime"):
                         for offset in self.offset_airtime:
-                            if datetime.datetime.utcnow() > self.offset_airtime[offset]:
+                            if datetime.datetime.utcnow() > datetime.datetime.strptime(self.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(offset)):
                                 return True
-                            available = self.offset_airtime[offset] - datetime.datetime.utcnow()
+                            available = datetime.datetime.strptime(self.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(offset)) - datetime.datetime.utcnow()
                             ui_print("item: '" + self.query() + "' is available in: " + "{:02d}d:{:02d}h:{:02d}m:{:02d}s".format(available.days, available.seconds // 3600, (available.seconds % 3600) // 60, available.seconds % 60) + (" (including offset of: " + offset + "h)" if offset != "0" else ""))
                         return False
                     if datetime.datetime.utcnow() > datetime.datetime.strptime(self.first_aired,'%Y-%m-%dT%H:%M:%S.000Z'):
