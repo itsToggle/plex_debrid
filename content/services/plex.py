@@ -638,7 +638,7 @@ class library(classes.library):
         try:
             response = get(library.url  + '/library/sections/?X-Plex-Token=' + users[0][1])
             for Directory in response.MediaContainer.Directory:
-                if [Directory.key] in library.check or library.check == []:
+                if ([Directory.key] in library.check or library.check == []) and Directory.type in ["movie","show"]:
                     sections += [[Directory.key]]
                     names += [Directory.title]
         except:
