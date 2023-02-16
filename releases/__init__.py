@@ -1302,6 +1302,8 @@ class sort:
             self.rules = rules
 
         def __eq__(self, __o: object) -> bool:
+            if __o == None:
+                return False
             return self.name == __o.name
 
         def applies(self,element):
