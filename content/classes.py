@@ -638,7 +638,7 @@ class media:
                 episode.grandparentGenre = genres
         return genres
         
-    def versions(self):
+    def versions(self,quick=False):
         #initialize downloaded and existing releases
         if not hasattr(self,"existing_releases"):
             self.existing_releases = []
@@ -697,6 +697,8 @@ class media:
                         break
                 if not missing:
                     versions.remove(version)  
+        if quick:
+            return versions
         #If Trakt is the  collection service, the upgrading of collected content is not possible, since no record of the downloaded file names is kept. return the missing versions from this session. 
         if library()[0].name != 'Plex Library':
             return versions
@@ -1279,7 +1281,7 @@ class media:
                     if debrid_downloaded:
                         refresh_ = True
                     for episode in self.Episodes:
-                        if len(episode.versions()) > 0:
+                        if len(episode.versions(quick=True)) > 0:
                             downloaded, retry = episode.download(library=library, parentReleases=scraped_releases)
                             if downloaded:
                                 refresh_ = True
@@ -1315,7 +1317,7 @@ class media:
             if debrid_downloaded:
                 refresh_ = True
             for episode in self.Episodes:
-                if len(episode.versions()) > 0:
+                if len(episode.versions(quick=True)) > 0:
                     downloaded, retry = episode.download(library=library, parentReleases=scraped_releases)
                     if downloaded:
                         refresh_ = True
