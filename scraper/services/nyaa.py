@@ -6,6 +6,7 @@ import releases
 name = "nyaa"
 session = requests.Session()
 params = "&c=1_0&s=seeders&o=desc"
+proxy = 'nyaa.si'
 sleep = "5"
 last = 0
 
@@ -33,7 +34,7 @@ def scrape(query, altquery):
         if regex.search(r'(?<=nyaa)(.*?)(?=\))',altquery,regex.I):
             query = '"' + regex.search(r'(?<=nyaa)(.*?)(?=\))',altquery,regex.I).group().replace('.',' ').replace('|','"|"') + '"'
             ui_print("[nyaa] using extended query: " + query,ui_settings.debug)
-        url = 'https://nyaa.si/?f=0' + params + '&q=' + str(query) 
+        url = 'https://' + proxy + '/?f=0' + params + '&q=' + str(query) 
         response = None
         try:
             response = get(url)
