@@ -6,6 +6,7 @@ import releases
 name = "nyaa"
 session = requests.Session()
 params = "&c=1_0"
+sleep = "5"
 last = 0
 
 # very much leaning on Otaku, show them some love! https://github.com/Goldenfreddy0703/Otaku/blob/main/plugin.video.otaku/resources/lib/pages/nyaa.py
@@ -18,7 +19,7 @@ def get(url):
     global last
     try:
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36'}
-        if time.time() - last < 4:
+        if time.time() - last < int(sleep):
             time.sleep(time.time() - last)
         last = time.time()
         response = session.get(url, headers=headers,timeout=60)
