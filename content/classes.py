@@ -182,11 +182,79 @@ class ignore:
                 check = True
         return check
 
+class map:
+
+    import xml.etree.ElementTree as ET
+
+    def element_to_dict(element):
+        result = {}
+        for key, value in element.items():
+            result[key] = value
+
+        if element.text and element.text.strip():
+            result[element.tag] = element.text.strip()
+
+        for child in element:
+            child_dict = map.element_to_dict(child)
+            if child.tag in result:
+                if isinstance(result[child.tag], list):
+                    result[child.tag].append(child_dict)
+                else:
+                    result[child.tag] = [result[child.tag], child_dict]
+            else:
+                result[child.tag] = child_dict
+
+        return result
+
+    def xml_to_dict(xml_string):
+        root = map.ET.fromstring(xml_string)
+        return {root.tag: map.element_to_dict(root)}
+
+    class anidb:
+
+        titles = {}
+        last_update = 0
+
+        def construct():
+            try:
+                response = requests.get("https://raw.githubusercontent.com/Anime-Lists/anime-lists/master/anime-list.xml",timeout=60)
+                ids = map.xml_to_dict(response.content.decode('utf-8'))
+                response = requests.get("https://raw.githubusercontent.com/Anime-Lists/anime-lists/master/animetitles.xml",timeout=60)
+                titles = map.xml_to_dict(response.content.decode('utf-8'))
+            except Exception as e:
+                ui_print("Failed to get anime mapping lists: " + str(e),ui_settings.debug)
+                return
+            map.anidb.titles = {}
+            temp = {}
+            for match in titles['animetitles']['anime']:
+                temp[match['aid']] = match
+            for element in ids['anime-list']['anime']:
+                aliases = []
+                match = temp[element['anidbid']]
+                if match == None:
+                    continue
+                if not isinstance(match['title'],list):
+                    match['title'] = [match['title']]
+                for title in match['title']:
+                    if title['type'] in ['main','official','short'] and not title['title'] in aliases:
+                        aliases += [title['title']]
+                if 'imdbid' in element:
+                    map.anidb.titles['imdb://' + str(element['imdbid'])] = aliases
+                if 'tvdbid' in element and not element['tvdbid'] == "movie":
+                    map.anidb.titles['tvdb://' + str(element['tvdbid'])] = aliases
+        def __new__(cls,self) -> list:
+            if time.time() - map.anidb.last_update > 3600:
+                map.anidb.construct()
+                map.anidb.last_update = time.time()
+            for EID in self.EID:
+                if EID in map.anidb.titles:
+                    return map.anidb.titles[EID]
+
 class media:
     
     ignore_queue = []
     downloaded_versions = []
-    
+
     def __init__(self, other):
         self.__dict__.update(other.__dict__)
 
@@ -381,6 +449,9 @@ class media:
                 aliases.insert(0,self.title)
             elif not releases.rename(self.title) in self.alternate_titles:
                 aliases += [self.title]
+            if self.isanime():
+                anidbtitles = map.anidb(self)
+                aliases = anidbtitles + aliases
             for title in aliases:
                 if title == None or title == []:
                     continue
@@ -509,7 +580,7 @@ class media:
                 return '(.*?)(' + title + '.)(.*?)(season[^0-9]?0*' + str(self.index) + '|S0*' + str(self.index) + '(?!E?[0-9])|'+self.anime_count+')'
             elif self.type == 'episode':
                 title = title.replace('.' + str(self.grandparentYear), '')
-                return '(.*?)(' + title + '.)([^1-9]*?)(S' + str("{:02d}".format(self.parentIndex)) + '.?E' + str("{:02d}".format(self.index)) + '|'+self.anime_count+'(?!E?[0-9]))'
+                return '(.*?)(' + title + '.)([^1-9]*?)(S' + str("{:02d}".format(self.parentIndex)) + '.?E' + str("{:02d}".format(self.index)) + '|'+self.anime_count+'(?!E?[0-9]|\]))'
 
     def isanime(self):
         if 'anime' in self.genre():
@@ -524,9 +595,9 @@ class media:
                                 self.anime_count += 1
                                 episode.genres = ['anime']
                                 episode.anime_count = str(self.anime_count)
-                        season.anime_count = '-[^0-9]?0*(' + str(self.anime_count) + '|' + str(self.anime_count+1) + ')'
+                        season.anime_count = '[0-9][^0-9]?-[^0-9]?0*(' + str(self.anime_count) + '|' + str(self.anime_count+1) + ')'
                         season.anime_season = season.anime_season + '-' + str(self.anime_count)
-                self.anime_count = '-[^0-9]?0*(' + str(self.anime_count) + '|' + str(self.anime_count+1) + ')'
+                self.anime_count = '[0-9][^0-9]?-[^0-9]?0*(' + str(self.anime_count) + '|' + str(self.anime_count+1) + ')'
             return True
         return False
     
