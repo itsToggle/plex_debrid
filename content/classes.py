@@ -237,8 +237,6 @@ class map:
                     match['title'] = [match['title']]
                 for title in match['title']:
                     if title['type'] in ['main','official','short'] and not title['title'].split(":")[0] in aliases:
-                        if title['title'] == 'Dungeon ni Deai o Motomeru no wa Machigatte Iru Darouka: Familia Myth IV (2023)':
-                            title['title']
                         aliases += [title['title'].split(":")[0]]
                 if 'imdbid' in element:
                     map.anidb.titles['imdb://' + str(element['imdbid'])] = aliases
@@ -585,15 +583,21 @@ class media:
                 title = title.replace('.' + str(self.year), '')
                 return '(.*?)(' + title + '.)(.*?)('+self.anime_count+'|(complete)|(seasons?[^0-9]?[0-9]+[^A-Z0-9]+S?[0-9]+)|(S[0-9]+[^A-Z0-9]+S?[0-9]+))'
             elif self.type == 'season':
+                n = self.index
+                roman = 'I' if n == 1 else 'II' if n==2 else 'III' if n==3 else 'IV' if n==4 else 'V' if n==5 else 'VI' if n==6 else 'VII' if n==7 else 'VIII' if n==8 else 'IX' if n==9 else 'X' if n==10 else str(n)
                 title = title.replace('.' + str(self.parentYear), '')
-                return '(.*?)(' + title + '.)(.*?)(season[^0-9]?0*' + str(self.index) + '|S0*' + str(self.index) + '(?!E?[0-9])|'+self.anime_count+')'
+                return '(.*?)(' + title + '.)(.*?)(season[^0-9]?0*' + str(self.index) + '|S0*' + str(self.index) + '(?!E?[0-9])|'+self.anime_count+'|[^A-Z0-9]'+roman+'[^A-Z0-9])'
             elif self.type == 'episode':
+                n = self.parentIndex
+                roman = 'I' if n == 1 else 'II' if n==2 else 'III' if n==3 else 'IV' if n==4 else 'V' if n==5 else 'VI' if n==6 else 'VII' if n==7 else 'VIII' if n==8 else 'IX' if n==9 else 'X' if n==10 else str(n)
                 title = title.replace('.' + str(self.grandparentYear), '')
-                return '(.*?)(' + title + '.)(.*?)(S' + str("{:02d}".format(self.parentIndex)) + '.?E' + str("{:02d}".format(self.index)) + '|(?<!part)[^0-9A-Z\[]0*'+self.anime_count+'(?![A-Z0-9]|\]))'
+                return '(.*?)(' + title + '.)(.*?)((?<!part)[^0-9A-RT-Z\[]0*('+str(self.parentIndex)+'|'+roman+')[^0-9A-DF-Z\[]0*'+str(self.index)+'(?![A-Z0-9]|\])|(?<!part)[^0-9A-Z\[]0*'+self.anime_count+'(?![A-Z0-9]|\]))'
 
     def isanime(self):
         if 'anime' in self.genre():
             if self.type == "show":
+                if hasattr(self,"anime_count"):
+                    return True
                 self.anime_count = 0
                 if hasattr(self,'Seasons'):
                     for season in self.Seasons:
@@ -1097,6 +1101,8 @@ class media:
         for EID in EIDS:
             if EID.startswith("imdb"):
                 service,imdbID = EID.split('://')
+        #set anime info before episodes are removed
+        self.isanime()
         if self.type == 'movie':
             if (len(self.uncollected(library)) > 0 or self.version_missing()) and len(self.versions()) > 0:
                 if self.released() and not self.watched() and not self.downloading():
@@ -1270,7 +1276,16 @@ class media:
             if len(self.Episodes) > 1:
                 debrid_downloaded, retry = self.debrid_download()
                 if debrid_downloaded:
-                    return True, retry
+                    if debrid_downloaded:
+                        refresh_ = True
+                    for episode in self.Episodes:
+                        if len(episode.versions()) > 0:
+                            downloaded, retry = episode.download(library=library, parentReleases=scraped_releases)
+                            if downloaded:
+                                refresh_ = True
+                            if retry:
+                                episode.watch()
+                    return refresh_, retry
                 else:
                     for episode in self.Episodes:
                         episode.skip_scraping = True
