@@ -236,8 +236,10 @@ class map:
                 if not isinstance(match['title'],list):
                     match['title'] = [match['title']]
                 for title in match['title']:
-                    if title['type'] in ['main','official','short'] and not title['title'] in aliases:
-                        aliases += [title['title']]
+                    if title['type'] in ['main','official','short'] and not title['title'].split(":")[0] in aliases:
+                        if title['title'] == 'Dungeon ni Deai o Motomeru no wa Machigatte Iru Darouka: Familia Myth IV (2023)':
+                            title['title']
+                        aliases += [title['title'].split(":")[0]]
                 if 'imdbid' in element:
                     map.anidb.titles['imdb://' + str(element['imdbid'])] = aliases
                 if 'tvdbid' in element and not element['tvdbid'] == "movie":
@@ -452,7 +454,14 @@ class media:
             if self.isanime():
                 anidbtitles = map.anidb(self)
                 aliases = anidbtitles + aliases
+            aliases = list(dict.fromkeys(aliases))
             for title in aliases:
+                special_char = False
+                for i in title:
+                    if ord(i) > 128:
+                        special_char = True
+                if special_char:
+                    continue
                 if title == None or title == []:
                     continue
                 if "." in title:
@@ -580,7 +589,7 @@ class media:
                 return '(.*?)(' + title + '.)(.*?)(season[^0-9]?0*' + str(self.index) + '|S0*' + str(self.index) + '(?!E?[0-9])|'+self.anime_count+')'
             elif self.type == 'episode':
                 title = title.replace('.' + str(self.grandparentYear), '')
-                return '(.*?)(' + title + '.)([^1-9]*?)(S' + str("{:02d}".format(self.parentIndex)) + '.?E' + str("{:02d}".format(self.index)) + '|'+self.anime_count+'(?!E?[0-9]|\]))'
+                return '(.*?)(' + title + '.)(.*?)(S' + str("{:02d}".format(self.parentIndex)) + '.?E' + str("{:02d}".format(self.index)) + '|(?<!part)[^0-9A-Z\[]0*'+self.anime_count+'(?!E?[0-9]|\]))'
 
     def isanime(self):
         if 'anime' in self.genre():
@@ -1144,9 +1153,9 @@ class media:
                     if len(self.Seasons) > 1:
                         if self.isanime():
                             for k,title in enumerate(self.alternate_titles[:3]):
-                                self.Releases += scraper.scrape(self.anime_query(title), self.deviation() + "("+imdbID+")?")
+                                self.Releases += scraper.scrape(self.anime_query(title), self.deviation() + "("+imdbID+")?(nyaa"+"|".join(self.alternate_titles)+")?")
                                 if len(self.Releases) < 20 and k == 0 and not imdb_scraped and not imdbID == ".":
-                                    self.Releases += scraper.scrape(imdbID,"(.*|S00|"+imdbID+")")
+                                    self.Releases += scraper.scrape(imdbID,"(.*|S00|"+imdbID+"|nyaa"+"|".join(self.alternate_titles)+")")
                                     imdb_scraped = True
                                 if len(self.Releases) > 0:
                                     break
@@ -1268,9 +1277,9 @@ class media:
                     self.Releases = []
                 if self.isanime():
                     for k,title in enumerate(self.alternate_titles[:3]):
-                        self.Releases += scraper.scrape(self.anime_query(title), "(.*|S"+str("{:02d}".format(self.index))+"|"+imdbID+")")
+                        self.Releases += scraper.scrape(self.anime_query(title), "(.*|S"+str("{:02d}".format(self.index))+"|"+imdbID+"|nyaa"+"|".join(self.alternate_titles)+")")
                         if len(self.Releases) < 20 and k == 0 and not imdb_scraped and not imdbID == ".":
-                            self.Releases += scraper.scrape(imdbID,"(.*|S"+str("{:02d}".format(self.index))+"|"+imdbID+")")
+                            self.Releases += scraper.scrape(imdbID,"(.*|S"+str("{:02d}".format(self.index))+"|"+imdbID+"|nyaa"+"|".join(self.alternate_titles)+")")
                             imdb_scraped = True
                         if len(self.Releases) > 0:
                             break
@@ -1310,7 +1319,7 @@ class media:
                     refresh_ = True
                 if self.isanime():
                     for title in self.alternate_titles[:3]:
-                        self.Releases += scraper.scrape(self.anime_query(title), self.deviation() + "("+imdbID+")?")
+                        self.Releases += scraper.scrape(self.anime_query(title), self.deviation() + "("+imdbID+")?(nyaa"+"|".join(self.alternate_titles)+")?")
                         if len(self.Releases) > 0:
                             break
                 if len(self.Releases) == 0 or not self.isanime():
@@ -1409,9 +1418,10 @@ class media:
             for episode in self.Episodes:
                 files += episode.files()
         elif self.type == 'episode':
-            files += ['S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index)) + '']
-        if self.isanime():
-            files = ['(.*)']
+            if self.isanime():
+                files += ['[^0-9A-Z\[]0*'+self.anime_count+'(?!E?[0-9]|\])']
+            else:
+                files += ['S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index)) + '']
         return files
 
     def bitrate(self):
