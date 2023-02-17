@@ -589,7 +589,7 @@ class media:
                 return '(.*?)(' + title + '.)(.*?)(season[^0-9]?0*' + str(self.index) + '|S0*' + str(self.index) + '(?!E?[0-9])|'+self.anime_count+')'
             elif self.type == 'episode':
                 title = title.replace('.' + str(self.grandparentYear), '')
-                return '(.*?)(' + title + '.)(.*?)(S' + str("{:02d}".format(self.parentIndex)) + '.?E' + str("{:02d}".format(self.index)) + '|(?<!part)[^0-9A-Z\[]0*'+self.anime_count+'(?!E?[0-9]|\]))'
+                return '(.*?)(' + title + '.)(.*?)(S' + str("{:02d}".format(self.parentIndex)) + '.?E' + str("{:02d}".format(self.index)) + '|(?<!part)[^0-9A-Z\[]0*'+self.anime_count+'(?![A-Z0-9]|\]))'
 
     def isanime(self):
         if 'anime' in self.genre():
@@ -1419,7 +1419,7 @@ class media:
                 files += episode.files()
         elif self.type == 'episode':
             if self.isanime():
-                files += ['[^0-9A-Z\[]0*'+self.anime_count+'(?!E?[0-9]|\])']
+                files += ['[^A-DF-Z0-9\[]0*('+self.anime_count+'|'+str(self.index)+')(?!E?[0-9]|\])']
             else:
                 files += ['S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index)) + '']
         return files
