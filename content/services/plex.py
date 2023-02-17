@@ -162,8 +162,7 @@ class season(classes.media):
                     token = user[1]
         viewCount = 0
         while len(self.Episodes) < self.leafCount:
-            url = 'https://metadata.provider.plex.tv/library/metadata/' + self.ratingKey + '/children?includeUserState=1&X-Plex-Container-Size=200&X-Plex-Container-Start=' + str(
-                len(self.Episodes)) + '&X-Plex-Token=' + token
+            url = 'https://metadata.provider.plex.tv/library/metadata/' + self.ratingKey + '/children?includeUserState=1&X-Plex-Container-Size=200&X-Plex-Container-Start=' + str(len(self.Episodes)) + '&X-Plex-Token=' + token
             response = get(url)
             if not response == None:
                 if hasattr(response, 'MediaContainer'):
