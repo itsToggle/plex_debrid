@@ -56,21 +56,27 @@ class watchlist(classes.watchlist):
         self.data = []
         try:
             for user in users:
-                url = 'https://metadata.provider.plex.tv/library/sections/watchlist/all?X-Plex-Token=' + user[1]
-                response = get(url)
-                if hasattr(response, 'MediaContainer'):
-                    if hasattr(response.MediaContainer, 'Metadata'):
-                        for entry in response.MediaContainer.Metadata:
-                            entry.user = [user]
-                            if not entry in self.data:
-                                if entry.type == 'show':
-                                    self.data += [show(entry)]
-                                if entry.type == 'movie':
-                                    self.data += [movie(entry)]
-                            else:
-                                element = next(x for x in self.data if x == entry)
-                                if not user in element.user:
-                                    element.user += [user]
+                added = 0
+                total = 1
+                while added < total:
+                    total = 0
+                    url = 'https://metadata.provider.plex.tv/library/sections/watchlist/all?X-Plex-Container-Size=200&X-Plex-Container-Start=' + str(added) + '&X-Plex-Token=' + user[1]
+                    response = get(url)
+                    if hasattr(response, 'MediaContainer'):
+                        total = response.MediaContainer.totalSize
+                        added += response.MediaContainer.size
+                        if hasattr(response.MediaContainer, 'Metadata'):
+                            for entry in response.MediaContainer.Metadata:
+                                entry.user = [user]
+                                if not entry in self.data:
+                                    if entry.type == 'show':
+                                        self.data += [show(entry)]
+                                    if entry.type == 'movie':
+                                        self.data += [movie(entry)]
+                                else:
+                                    element = next(x for x in self.data if x == entry)
+                                    if not user in element.user:
+                                        element.user += [user]
             self.data.sort(key=lambda s: s.watchlistedAt, reverse=True)
         except Exception as e:
             ui_print('done')
@@ -156,8 +162,7 @@ class season(classes.media):
                     token = user[1]
         viewCount = 0
         while len(self.Episodes) < self.leafCount:
-            url = 'https://metadata.provider.plex.tv/library/metadata/' + self.ratingKey + '/children?includeUserState=1&X-Plex-Container-Size=200&X-Plex-Container-Start=' + str(
-                len(self.Episodes)) + '&X-Plex-Token=' + token
+            url = 'https://metadata.provider.plex.tv/library/metadata/' + self.ratingKey + '/children?includeUserState=1&X-Plex-Container-Size=200&X-Plex-Container-Start=' + str(len(self.Episodes)) + '&X-Plex-Token=' + token
             response = get(url)
             if not response == None:
                 if hasattr(response, 'MediaContainer'):

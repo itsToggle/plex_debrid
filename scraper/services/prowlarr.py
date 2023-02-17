@@ -36,12 +36,6 @@ def scrape(query, altquery):
                 result.title = result.title.replace(' ', '.')
                 result.title = result.title.replace(':', '').replace("'", '')
                 result.title = regex.sub(r'\.+', ".", result.title)
-                if not altquery == '(.*)':
-                    variations = result.title.split('/')
-                    variations += result.title.split(']')
-                    for variation in variations:
-                        if regex.match(r'(' + altquery.replace('.', '\.').replace("\.*", ".*") + ')', variation,regex.I):
-                            result.title = variation
                 if regex.match(r'(' + altquery.replace('.', '\.').replace("\.*", ".*") + ')', result.title,regex.I) and result.protocol == 'torrent':
                     if hasattr(result, 'magnetUrl'):
                         if not result.magnetUrl == None:
