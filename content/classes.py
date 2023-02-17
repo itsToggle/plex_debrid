@@ -1297,18 +1297,16 @@ class media:
                 if not regex.match(self.deviation(),release.title,regex.I):
                     self.Releases.remove(release)
             debrid_downloaded, retry = self.debrid_download()
-            if not debrid_downloaded or retry:
-                if debrid_downloaded:
-                    refresh_ = True
-                for episode in self.Episodes:
+            if debrid_downloaded:
+                refresh_ = True
+            for episode in self.Episodes:
+                if len(episode.versions()) > 0:
                     downloaded, retry = episode.download(library=library, parentReleases=scraped_releases)
                     if downloaded:
                         refresh_ = True
                     if retry:
                         episode.watch()
-                return refresh_, retry
-            else:
-                return True, retry
+            return refresh_, retry
         elif self.type == 'episode':
             for release in parentReleases:
                 if regex.match(self.deviation(), release.title, regex.I):
@@ -1359,9 +1357,20 @@ class media:
                     season.version = self.version
                     season.downloaded()
         elif self.type == 'season':
+            filemode = False
             for episode in self.Episodes:
                 episode.version = self.version
-                episode.downloaded()
+                for file in self.Releases[0].files:
+                    if hasattr(file, 'match'):
+                        if file.match == episode.files()[0]:
+                            episode.version = self.version
+                            episode.downloaded()
+                            filemode = True
+                            break
+            if not filemode:
+                for episode in self.Episodes:
+                    episode.version = self.version
+                    episode.downloaded()
 
     def debrid_download(self,force=False):
         if len(self.Releases) > 0:
@@ -1419,7 +1428,7 @@ class media:
                 files += episode.files()
         elif self.type == 'episode':
             if self.isanime():
-                files += ['[^A-DF-Z0-9\[]0*('+self.anime_count+'|'+str(self.index)+')(?!E?[0-9]|\])']
+                files += ['[^A-DF-Z0-9\[]0*('+self.anime_count+'|'+str(self.index)+')(?![A-Z0-9]|\])']
             else:
                 files += ['S' + str("{:02d}".format(self.parentIndex)) + 'E' + str("{:02d}".format(self.index)) + '']
         return files
