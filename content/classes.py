@@ -503,10 +503,10 @@ class media:
                 return '(.*?)(' + title + '.)(.*?)(' + str(self.year) + '|' + str(self.year - 1) + '|' + str(self.year + 1) + ')'
             elif self.type == 'show':
                 title = title.replace('.' + str(self.year), '')
-                return '(.*?)(' + title + '.)(.*?)('+self.anime_count+'|(complete)|(seasons?.[0-9]+.[0-9]+)|(S[0-9]+[^E]S?[0-9]+))'
+                return '(.*?)(' + title + '.)(.*?)('+self.anime_count+'|(complete)|(seasons?[^0-9]?[0-9]+[^A-Z0-9]+S?[0-9]+)|(S[0-9]+[^A-Z0-9]+S?[0-9]+))'
             elif self.type == 'season':
                 title = title.replace('.' + str(self.parentYear), '')
-                return '(.*?)(' + title + '.)(.*?)(season.0*' + str(self.index) + '|S0*' + str(self.index) + '(?!E?[0-9])|'+self.anime_count+')'
+                return '(.*?)(' + title + '.)(.*?)(season[^0-9]?0*' + str(self.index) + '|S0*' + str(self.index) + '(?!E?[0-9])|'+self.anime_count+')'
             elif self.type == 'episode':
                 title = title.replace('.' + str(self.grandparentYear), '')
                 return '(.*?)(' + title + '.)([^1-9]*?)(S' + str("{:02d}".format(self.parentIndex)) + '.?E' + str("{:02d}".format(self.index)) + '|'+self.anime_count+'(?!E?[0-9]))'
@@ -524,9 +524,9 @@ class media:
                                 self.anime_count += 1
                                 episode.genres = ['anime']
                                 episode.anime_count = str(self.anime_count)
-                        season.anime_count = '-0*(' + str(self.anime_count) + '|' + str(self.anime_count+1) + ')'
+                        season.anime_count = '-[^0-9]?0*(' + str(self.anime_count) + '|' + str(self.anime_count+1) + ')'
                         season.anime_season = season.anime_season + '-' + str(self.anime_count)
-                self.anime_count = '-0*(' + str(self.anime_count) + '|' + str(self.anime_count+1) + ')'
+                self.anime_count = '-[^0-9]?0*(' + str(self.anime_count) + '|' + str(self.anime_count+1) + ')'
             return True
         return False
     
