@@ -1060,6 +1060,14 @@ class media:
         else:
             return False
 
+    def hasended(self):
+        if hasattr(self,"status"):
+            if self.status == "ended":
+                return True
+        if hasattr(self,"isContinuingSeries"):
+            return not self.isContinuingSeries
+        return False
+
     def download(self, retries=0, library=[], parentReleases=[]):
         global imdb_scraped
         refresh_ = False
@@ -1242,7 +1250,7 @@ class media:
                             refresh_ = True
                         if result[1]:
                             retry = True
-                    if not retry and (self.watchlist.autoremove == "both" or self.watchlist.autoremove == "show"):
+                    if not retry and (self.watchlist.autoremove == "both" or self.watchlist.autoremove == "show" or self.hasended()):
                         self.watchlist.remove([], self)
                     toc = time.perf_counter()
                     ui_print('took ' + str(round(toc - tic, 2)) + 's')
