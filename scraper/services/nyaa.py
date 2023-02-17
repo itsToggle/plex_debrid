@@ -5,8 +5,8 @@ import releases
 
 name = "nyaa"
 session = requests.Session()
-params = "&c=1_0"
-sleep = "5"
+params = "&c=1_0&s=seeders&o=desc"
+sleep = "2"
 last = 0
 
 # very much leaning on Otaku, show them some love! https://github.com/Goldenfreddy0703/Otaku/blob/main/plugin.video.otaku/resources/lib/pages/nyaa.py
