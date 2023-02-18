@@ -6,18 +6,18 @@ sameline = False
 sameline_log = False
 config_dir = "."
 
-def ui_cls(path=''):
+def ui_cls(path='',update=""):
     os.system('cls' if os.name == 'nt' else 'clear')
-    logo(path=path)
+    logo(path=path,update=update)
 
-def logo(path=''):
+def logo(path='',update=""):
     print('                                                         ')
     print('           __                  __     __         _     __')
     print('    ____  / /__  _  __    ____/ /__  / /_  _____(_)___/ /')
     print('   / __ \/ / _ \| |/_/   / __  / _ \/ __ \/ ___/ / __  / ')
     print('  / /_/ / /  __/>  <    / /_/ /  __/ /_/ / /  / / /_/ /  ')
     print(' / .___/_/\___/_/|_|____\__,_/\___/_.___/_/  /_/\__,_/   ')
-    print('/_/               /_____/                         [v' + ui_settings.version[0] + ']')
+    print('/_/               /_____/                         [v' + ui_settings.version[0] + ']' + update)
     print()
     print(path)
     print()

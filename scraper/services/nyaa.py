@@ -29,6 +29,7 @@ def get(url):
         return None
 def scrape(query, altquery):
     from scraper.services import active
+    global proxy
     scraped_releases = []
     if 'nyaa' in active:
         if regex.search(r'(?<=nyaa)(.*?)(?=\))',altquery,regex.I):

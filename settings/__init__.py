@@ -376,9 +376,9 @@ settings_list = [
         setting('Prowlarr API Key', 'Please specify your Prowlarr API Key: ', scraper.services.prowlarr, 'api_key',hidden=True),
         setting('Orionoid API Key','Please open your favorite browser, log into your orionoid account and open "https://auth.orionoid.com". Enter this code: ',scraper.services.orionoid, 'token', hidden=True, oauth=True),
         setting('Orionoid Scraper Parameters',['Please enter a valid orionoid parameter: ','Please enter a valid value: '],scraper.services.orionoid, 'default_opts', entry="parameter", help='This settings lets you control the orionoid scraping parameters. Check out the possible parameters and their values at "https://panel.orionoid.com/" in the "Developers" menu, section "API Docs" under "Stream API".', hidden=True),
-        setting('Nyaa parameters', 'Enter custom url parameters. Categories: anime "&c=1_0", anime raw "&c=1_4", anime EN subs "&c=1_2", anime non-EN subs "&c=1_3". Enter your parameters: ',scraper.services.nyaa, 'params', hidden=True),
-        setting('Nyaa sleep time', 'Enter a time in seconds to sleep between requests: ',scraper.services.nyaa, 'sleep', hidden=True),
-        setting('Nyaa proxy', 'Enter a proxy to use for nyaa: ',scraper.services.nyaa, 'proxy', hidden=True),
+        setting('Nyaa parameters', 'Enter custom url parameters. Categories: anime "&c=1_0", anime raw "&c=1_4", anime EN subs "&c=1_2", anime non-EN subs "&c=1_3". Enter your parameters (default: "&c=1_0&s=seeders&o=desc"): ',scraper.services.nyaa, 'params', hidden=True),
+        setting('Nyaa sleep time', 'Enter a time in seconds to sleep between requests (default: "5"): ',scraper.services.nyaa, 'sleep', hidden=True),
+        setting('Nyaa proxy', 'Enter a proxy to use for nyaa (default: "nyaa.si"): ',scraper.services.nyaa, 'proxy', hidden=True),
     ]
         ],
     ['Debrid Services', [
