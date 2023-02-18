@@ -7,8 +7,17 @@ name = "nyaa"
 session = requests.Session()
 params = "&c=1_0&s=seeders&o=desc"
 proxy = 'nyaa.si'
+proxies = ["nyaa.sbs", "nya.iss.one",]
 sleep = "5"
 last = 0
+errors = [
+    [202," action already done"],
+    [400," bad request) make sure your nyaa parameters are correct and that the used proxy resembles nyaa.si closely."],
+    [403," permission denied)"],
+    [503," service unavailable)"],
+    [404," wrong parameter) make sure your nyaa parameters are correct and that the used proxy resembles nyaa.si."],
+    [429," too many requests) nyaa is likely blocking your ip. please use a proxy: "+str(proxies)"],
+    ]
 
 # very much leaning on Otaku, show them some love! https://github.com/Goldenfreddy0703/Otaku/blob/main/plugin.video.otaku/resources/lib/pages/nyaa.py
 
@@ -16,6 +25,16 @@ def setup(cls, new=False):
     from scraper.services import setup
     setup(cls,new)
 
+# Error Log
+def logerror(response):
+    if hasattr(response,"status_code") and not response.status_code in [200,201,204]:
+        desc = ""
+        for error in errors:
+            if response.status_code == error[0]:
+                desc = error[1]
+        ui_print("[nyaa] error: (" + str(response.status_code) + desc)
+        
+# Get Function
 def get(url):
     global last
     try:
@@ -24,9 +43,11 @@ def get(url):
             time.sleep(time.time() - last)
         last = time.time()
         response = session.get(url, headers=headers,timeout=60)
+        logerror(response)
         return response
     except:
         return None
+    
 def scrape(query, altquery):
     from scraper.services import active
     global proxy
@@ -88,14 +109,9 @@ def scrape(query, altquery):
                     response = get(url + '&p=' + str(i))
                     soup = BeautifulSoup(response.content, 'html.parser')
         except Exception as e:
-            if hasattr(response,"status_code") and not str(response.status_code).startswith("2"):
-                ui_print('nyaa error '+str(response.status_code)+': nyaa is temporarily not reachable')
-            elif session.get(url).status_code == 200:
-                ui_print('nyaa error: proxy unable to be scraped. please choose another proxy.')
-            elif session.get(url).status_code == 429:
-                ui_print('nyaa error: too many requests. nyaa.si is blocking your ip. please use a proxy.')
+            if hasattr(response,"status_code") and response.status_code == 200:
+                ui_print('[nyaa] error: proxy unable to be scraped. please choose another proxy that resembles the nyaa.si website exactly: ' + str(proxies))
             else:
-                ui_print('nyaa error: unknown error')
-            response = None
-            ui_print('nyaa error: exception: ' + str(e),ui_settings.debug)
+                ui_print('[nyaa] error: unknown error. turn on debug printing for more information.')
+            ui_print('[nyaa] error: exception: ' + str(e),ui_settings.debug)
     return scraped_releases
