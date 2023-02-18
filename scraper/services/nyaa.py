@@ -37,7 +37,9 @@ def scrape(query, altquery):
             ui_print("[nyaa] using extended query: " + query,ui_settings.debug)
         if proxy == "":
             proxy = "nyaa.si"
-        url = 'https://' + proxy + '/?f=0' + params + '&q=' + str(query) 
+            url = 'https://' + proxy + '/?f=0' + params + '&q=' + str(query) 
+        elif proxy.startswith("http://") or proxy.startswith("https://"):
+            url = proxy + '/?f=0' + params + '&q=' + str(query)
         response = None
         try:
             response = get(url)
@@ -87,7 +89,11 @@ def scrape(query, altquery):
                     soup = BeautifulSoup(response.content, 'html.parser')
         except Exception as e:
             if hasattr(response,"status_code") and not str(response.status_code).startswith("2"):
-                ui_print('nyaa error '+str(response.status_code)+': 1337x is temporarily not reachable')
+                ui_print('nyaa error '+str(response.status_code)+': nyaa is temporarily not reachable')
+            elif session.get(url).status_code == 200:
+                ui_print('nyaa error: proxy unable to be scraped. please choose another proxy.')
+            elif session.get(url).status_code == 429:
+                ui_print('nyaa error: too many requests. nyaa.si is blocking your ip. please use a proxy.')
             else:
                 ui_print('nyaa error: unknown error')
             response = None
