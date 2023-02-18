@@ -356,7 +356,9 @@ def update_available():
         response = response.content.decode()
         if regex.search("(?<=')([0-9]+\.[0-9]+)(?=')",response):
             v = regex.search("(?<=')([0-9]+\.[0-9]+)(?=')",response).group()
-            return " | [v"+v+"] available!"
+            if ui_settings.version[0] != v:
+                return " | [v"+v+"] available!"
+            return ""
         return ""
     except:
         return ""
