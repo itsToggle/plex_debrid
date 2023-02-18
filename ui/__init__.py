@@ -224,7 +224,7 @@ def options():
         option('Ignored Media', current_module, 'ignored'),
         option('Scraper', current_module, 'scrape'),
     ]
-    ui_cls('Options/')
+    ui_cls('Options/',update=update_available())
     for index, option_ in enumerate(list):
         print(str(index + 1) + ') ' + option_.name)
     print()
@@ -349,7 +349,17 @@ def run(cdir = "", smode = False):
         #uvicorn.run("webui:app", port=8008, reload=True)
         download_script_run()
         options()
-    
+
+def update_available():
+    try:
+        response = requests.get('https://raw.githubusercontent.com/itsToggle/plex_debrid/main/ui/ui_settings.py',timeout=0.25)
+        response = response.content.decode()
+        if regex.search("(?<=')([0-9]+\.[0-9]+)(?=')",response):
+            v = regex.search("(?<=')([0-9]+\.[0-9]+)(?=')",response).group()
+            return " | [v"+v+"] available!"
+        return ""
+    except:
+        return ""
 def update(settings, version):
     ui_cls('/Update ' + version[0] + '/')
     print('There has been an update to plex_debrid, which is not compatible with your current settings:')
