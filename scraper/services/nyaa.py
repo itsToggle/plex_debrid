@@ -34,6 +34,8 @@ def scrape(query, altquery):
         if regex.search(r'(?<=nyaa)(.*?)(?=\))',altquery,regex.I):
             query = '"' + regex.search(r'(?<=nyaa)(.*?)(?=\))',altquery,regex.I).group().replace('.',' ').replace('|','"|"') + '"'
             ui_print("[nyaa] using extended query: " + query,ui_settings.debug)
+        if proxy == "":
+            proxy = "nyaa.si"
         url = 'https://' + proxy + '/?f=0' + params + '&q=' + str(query) 
         response = None
         try:
