@@ -451,7 +451,8 @@ class media:
                 aliases += [self.title]
             if self.isanime():
                 anidbtitles = map.anidb(self)
-                aliases = anidbtitles + aliases
+                if not aliases == None and not anidbtitles == None:
+                    aliases = anidbtitles + aliases
             aliases = list(dict.fromkeys(aliases))
             for title in aliases:
                 special_char = False
