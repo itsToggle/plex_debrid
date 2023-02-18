@@ -16,7 +16,7 @@ errors = [
     [403," permission denied)"],
     [503," service unavailable)"],
     [404," wrong parameter) make sure your nyaa parameters are correct and that the used proxy resembles nyaa.si."],
-    [429," too many requests) nyaa is likely blocking your ip. please use a proxy: "+str(proxies)"],
+    [429," too many requests) nyaa is likely blocking your ip. please use a proxy: "+str(proxies)],
     ]
 
 # very much leaning on Otaku, show them some love! https://github.com/Goldenfreddy0703/Otaku/blob/main/plugin.video.otaku/resources/lib/pages/nyaa.py
