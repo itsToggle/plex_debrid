@@ -39,6 +39,7 @@ This is a work in progress, and im not a professional programmer. shits not read
    - <img src="https://orionoid.com/web/images/logo/logo256.png" height="16"> **[Orionoid](https://orionoid.com/)**
    - <img src="https://progsoft.net/images/rarbg-icon-648af4dcc6ec63ee49d6c050af63d2547c74d46c.png" height="16"> **[RARBG](https://rarbg.to/)**
    - <img src="https://1337x.to/favicon.ico" height="16"> **[1337X](https://1337x.to/)**
+   - <img src="https://nyaa.si/static/favicon.png" height="16"> **[NYAA](https://nyaa.si/)**
 - Defining multiple, completely customizable versions to download (2160p HDR, 1080p SDR, etc)
 - Checking for cached releases and adding them to:
    - <img src="https://fcdn.real-debrid.com/0818/favicons/favicon.ico" height="16"> **[RealDebrid](http://real-debrid.com/?id=5708990)**
@@ -50,37 +51,44 @@ This is a work in progress, and im not a professional programmer. shits not read
    - <img src="https://app.plex.tv/desktop/favicon.ico" height="16"> **[Plex](https://plex.tv/)**
    - <img src="https://jellyfin.org/images/favicon.ico" height="16"> **[Jellyfin](https://jellyfin.org/)**
  
-### Community
+ 
+## Community
 
-Feel free to ask any questions on github [discussions](https://github.com/itsToggle/plex_debrid/discussions) or create a new [issue](https://github.com/itsToggle/plex_debrid/issues) if you find a bug or have an idea for an improvement.
+- Feel free to ask any questions on github [discussions](https://github.com/itsToggle/plex_debrid/discussions) 
+- or create a new [issue](https://github.com/itsToggle/plex_debrid/issues) if you find a bug or have an idea for an improvement.
 
-If github is not your cup of tee, join the plex_debrid [discord server](https://discord.gg/u3vTDGjeKE) or find me on [reddit](https://www.reddit.com/user/itsToggle)
+If github is not your cup of tea; 
+- join the plex_debrid [discord server](https://discord.gg/u3vTDGjeKE) 
+- or find me on [reddit](https://www.reddit.com/user/itsToggle)
+
  
 ## Setup:
 
-Aside from this general setup guide, here some step-by-step guides with specific examples for a few different operating systems:
+### :pushpin: Step by Step and VPS Guides:
 
-<details>
-  <summary><b><u>Step by Step for your OS:</u></b></summary>
-  
-  - **[Docker (Wiki)](https://github.com/itsToggle/plex_debrid/wiki/Setup-Guides#docker-setup)**
-  - **[Windows (Wiki)](https://github.com/itsToggle/plex_debrid/wiki/Setup-Guides#windows-setup)**
-  - **[Linux Server (Wiki)](https://github.com/itsToggle/plex_debrid/wiki/Setup-Guides#linux-server-setup)**
-  - **[Linux ARM Server (Wiki)](https://github.com/itsToggle/plex_debrid/wiki/Setup-Guides#linux-arm64-server-setup)**
-  - **[FreeBSD (u/TheNicestRichtofen)](https://www.reddit.com/r/Piracy/comments/v5zpj7/comment/ibnikqh/?utm_source=share&utm_medium=web2x&context=3)**
-  - **[Android](https://github.com/itsToggle/plex_debrid/tree/android)**
-  - **Rooted Nvidia Shield guide from user "b u n n y" up on discord**
-</details>
+*Aside from this general setup guide, here some step-by-step guides with specific examples for a few different operating systems. If you want to run plex_debrid on a VPS or Seedbox, please keep in mind that some debrid services block such IP addresses from accessing their servers.*
 
-If you want to run plex_debrid on a VPS or Seedbox, please keep in mind that some debrid services block such IP addresses from accessing their servers:
-<details>
-  <summary><b><u>Help for a VPS/Seedbox Setup</u></b></summary>
-  
-  - **I do not encourage you to disregard your debrid services code of conduct.**
-  - Debrid services like realdebrid block common VPS or Seedbox IP addresses. They do however have a list of whitelisted VPNs, behind which you can run your server. For realdebrid you can find this list on https://real-debrid.com/vpn . You can also use this address to check wether or not your servers IP is blocked by running the commands `curl -4 https://real-debrid.com/vpn | grep blocked` and `curl -6 https://real-debrid.com/vpn | grep blocked`. If you have the option, you can try to request a different IP address from your VPS provider, preferably your own personal IPv4 address which will most likely not be blocked.
-</details>
+><details>
+>  <summary><b><u>Step by Step for your OS:</u></b></summary>
+>  
+>  - **[Docker (Wiki)](https://github.com/itsToggle/plex_debrid/wiki/Setup-Guides#docker-setup)**
+>  - **[Windows (Wiki)](https://github.com/itsToggle/plex_debrid/wiki/Setup-Guides#windows-setup)**
+>  - **[Linux Server (Wiki)](https://github.com/itsToggle/plex_debrid/wiki/Setup-Guides#linux-server-setup)**
+>  - **[Linux ARM Server (Wiki)](https://github.com/itsToggle/plex_debrid/wiki/Setup-Guides#linux-arm64-server-setup)**
+>  - **[FreeBSD (u/TheNicestRichtofen)](https://www.reddit.com/r/Piracy/comments/v5zpj7/comment/ibnikqh/?utm_source=share&utm_medium=web2x&context=3)**
+>  - **[Android](https://github.com/itsToggle/plex_debrid/tree/android)**
+>  - **Rooted Nvidia Shield guide from user "b u n n y" up on discord**
+></details>
+>
+><details>
+>  <summary><b><u>Help for a VPS/Seedbox Setup</u></b></summary>
+>  
+>  - **I do not encourage you to disregard your debrid services code of conduct.**
+>  - Debrid services like realdebrid block common VPS or Seedbox IP addresses. They do however have a list of whitelisted VPNs, behind which you can run your server. >For realdebrid you can find this list on https://real-debrid.com/vpn . You can also use this address to check wether or not your servers IP is blocked by running the >commands `curl -4 https://real-debrid.com/vpn | grep blocked` and `curl -6 https://real-debrid.com/vpn | grep blocked`. If you have the option, you can try to request >a different IP address from your VPS provider, preferably your own personal IPv4 address which will most likely not be blocked.
+></details>
+>
 
-
+ 
 ### 1) :open_file_folder: Mount your debrid services:
 
 *For this download automation to work, you need to mount at least one debrid service as a virtual drive. I highly recommend using RealDebrid, as this service will recieve updates and new features from plex_debrid first. Please keep in mind that most debrid services dont allow you to access their service from multiple IP addresses in parallel. This is not an issue if you have a Plex server running, since everything you stream through plex (from any location, no matter how many in parallel) is routed through your servers IP address. While you have your plex server running though, you should not download from your debrid service in any other way than through plex.*
@@ -91,9 +99,9 @@ If you want to run plex_debrid on a VPS or Seedbox, please keep in mind that som
 >  
 >  Realdebrid has now implement support for WebDav, which makes it mountable with official rclone software.
 >  
->  I do still recomend using my fork, since realdebrids WebDav does not allow for torrent file deletion through rclone and they limit the amount of torrents displayed to 200. They do claim the torrent file deletion works with other webdav mount programs, but i have not been able to test this yet. It also seems that the official realdebrid webdav is still slower and more bandwidth heavy than my rclone fork, because mounting the webdav leads to frequent re-discovering of already downloaded content. 
+>  I do still recomend using my forked version of rclone thats written explicitly for realdebrid, since realdebrids WebDav does not allow for torrent file deletion through rclone and they limit the amount of torrents displayed to 200. They do claim the torrent file deletion works with other webdav mount programs, but i have not been able to test this yet. It also seems that the official realdebrid webdav is still slower and more bandwidth heavy than my rclone fork, because mounting the webdav leads to frequent re-discovering of already downloaded content. 
 >  
->  **Mounting with my fork:**
+>  **Mounting with my rclone fork:**
 >  
 >  1. Install my rclone fork: https://github.com/itsToggle/rclone_rd
 >  2. configure rclone by running the command 'rclone config' (could be './rclone config' and depending on your os, the filename could be './rclone-linux' or similar. If you get a permission denied error (linux & macos), run 'sudo chmod u+x rclone-linux', adjusted to the filename.)
@@ -191,6 +199,7 @@ If you want to run plex_debrid on a VPS or Seedbox, please keep in mind that som
 >  *You can run rclone as a background service by adding the mounting tag '--no-console' (Windows) or '--deamon' (Linux, Mac, etc)*
 ></details>
 
+ 
 ### 2) :tv: Setup your personal media server:
 
 *To stream content from your newly mounted virtual drive, its recommended to set up a personal media server like plex, emby or jellyfin. These services allow you to stream your content from outside your local network. You will have the best expirience when using plex, since you dont need any 3rd party website to download new content - you can simply add new movies/shows to your watchlist from inside any plex client app, wait a few seconds and then watch it (see the gif above). If you prefer emby or jellyfin as your personal media server, the only way to add new content is via trakt and jellyseerr. A different approach is to use media players like Infuse to access the mounted files, which too relies on trakt to add new content.*
@@ -208,6 +217,7 @@ If you want to run plex_debrid on a VPS or Seedbox, please keep in mind that som
 >  **Please keep your libraries metadata agent as the default Plex metadata agent**
 >  </details>
 
+ 
 ### 3) :page_facing_up: Setup plex_debrid:
 
 *The plex_debrid script can be run as a docker container (dockerized version) or by simply executing it with python 3 (standard version).*
@@ -510,6 +520,7 @@ If you want to run plex_debrid on a VPS or Seedbox, please keep in mind that som
 >
 ></details>
 
+ 
 ## Buy me a beer/coffee? :)
 
 I've written this automation because it's a hell of a lot of fun and because I've wanted a setup like this for a while. The continuation of this project does **not**, in any way, depend on monetary contributions. If you do want to buy me a beer/coffee, feel free to use my real-debrid [affiliate link](http://real-debrid.com/?id=5708990) or send a virtual beverage via [PayPal](https://www.paypal.com/paypalme/oidulibbe) :)
