@@ -58,9 +58,10 @@ def scrape(query, altquery):
             ui_print("[nyaa] using extended query: " + query,ui_settings.debug)
         if proxy == "":
             proxy = "nyaa.si"
-            url = 'https://' + proxy + '/?f=0' + params + '&q=' + str(query) 
-        elif proxy.startswith("http://") or proxy.startswith("https://"):
+        if proxy.startswith("http://") or proxy.startswith("https://"):
             url = proxy + '/?f=0' + params + '&q=' + str(query)
+        else:
+            url = 'https://' + proxy + '/?f=0' + params + '&q=' + str(query) 
         response = None
         try:
             response = get(url)
