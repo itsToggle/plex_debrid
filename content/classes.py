@@ -1320,7 +1320,7 @@ class media:
                 for episode in self.Episodes:
                     for version in episode.versions():
                         test_releases = copy.deepcopy(scraped_releases)
-                        releases.sort(test_releases, version)
+                        releases.sort(test_releases, version, False)
                         if len(test_releases) > 0:
                             attempt_episodes = True
                             break
