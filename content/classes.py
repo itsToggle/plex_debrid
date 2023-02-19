@@ -1273,40 +1273,48 @@ class media:
                     toc = time.perf_counter()
                     ui_print('took ' + str(round(toc - tic, 2)) + 's')
         elif self.type == 'season':
+            debrid_downloaded = False
             for release in parentReleases:
                 if regex.match(self.deviation(), release.title, regex.I):
                     self.Releases += [release]
+            # Set the episodes parent releases to be the seasons parent releases:
+            scraped_releases = copy.deepcopy(parentReleases)
+            # If there is more than one episode
             if len(self.Episodes) > 1:
                 debrid_downloaded, retry = self.debrid_download()
-                if debrid_downloaded and not retry:
-                    return True, False
-                else:
-                    for episode in self.Episodes:
-                        episode.skip_scraping = True
+                #If there is more than one episode missing, skip scraping for individual episodes
+                for episode in self.Episodes:
+                    episode.skip_scraping = True
+                #If there was nothing downloaded, scrape specifically for this season
+                if not debrid_downloaded:
                     self.Releases = []
-                if self.isanime():
-                    for k,title in enumerate(self.alternate_titles[:3]):
-                        self.Releases += scraper.scrape(self.anime_query(title), "(.*|S"+str("{:02d}".format(self.index))+"|"+imdbID+"|nyaa"+"|".join(self.alternate_titles)+")")
-                        if len(self.Releases) < 20 and k == 0 and not imdb_scraped and not imdbID == ".":
-                            self.Releases += scraper.scrape(imdbID,"(.*|S"+str("{:02d}".format(self.index))+"|"+imdbID+"|nyaa"+"|".join(self.alternate_titles)+")")
-                            imdb_scraped = True
-                        if len(self.Releases) > 0:
-                            break
-                if len(self.Releases) == 0:
-                    for k,title in enumerate(self.alternate_titles[:3]):
-                        self.Releases += scraper.scrape(self.query(title)[:-1], "(.*|S"+str("{:02d}".format(self.index))+"|"+imdbID+")")
-                        if len(self.Releases) < 20 and k == 0 and not imdb_scraped and not imdbID == ".":
-                            self.Releases += scraper.scrape(imdbID,"(.*|S"+str("{:02d}".format(self.index))+"|"+imdbID+")")
-                            imdb_scraped = True
-                        if len(self.Releases) > 0:
-                            break
-            scraped_releases = copy.deepcopy(self.Releases)
-            for release in self.Releases[:]:
-                if not regex.match(self.deviation(),release.title,regex.I):
-                    self.Releases.remove(release)
-            debrid_downloaded, retry = self.debrid_download()
+                    if self.isanime():
+                        for k,title in enumerate(self.alternate_titles[:3]):
+                            self.Releases += scraper.scrape(self.anime_query(title), "(.*|S"+str("{:02d}".format(self.index))+"|"+imdbID+"|nyaa"+"|".join(self.alternate_titles)+")")
+                            if len(self.Releases) < 20 and k == 0 and not imdb_scraped and not imdbID == ".":
+                                self.Releases += scraper.scrape(imdbID,"(.*|S"+str("{:02d}".format(self.index))+"|"+imdbID+"|nyaa"+"|".join(self.alternate_titles)+")")
+                                imdb_scraped = True
+                            if len(self.Releases) > 0:
+                                break
+                    if len(self.Releases) == 0:
+                        for k,title in enumerate(self.alternate_titles[:3]):
+                            self.Releases += scraper.scrape(self.query(title)[:-1], "(.*|S"+str("{:02d}".format(self.index))+"|"+imdbID+")")
+                            if len(self.Releases) < 20 and k == 0 and not imdb_scraped and not imdbID == ".":
+                                self.Releases += scraper.scrape(imdbID,"(.*|S"+str("{:02d}".format(self.index))+"|"+imdbID+")")
+                                imdb_scraped = True
+                            if len(self.Releases) > 0:
+                                break
+                    #Set the episodes parent releases to be the newly scraped releases
+                    scraped_releases = copy.deepcopy(self.Releases)
+            #If there was nothing downloaded, attempt downloading again using the newly scraped releases
+            if not debrid_downloaded:
+                for release in self.Releases[:]:
+                    if not regex.match(self.deviation(),release.title,regex.I):
+                        self.Releases.remove(release)
+                debrid_downloaded, retry = self.debrid_download()
             if debrid_downloaded:
                 refresh_ = True
+            #Check if all episodes were successfuly downloaded, queue them to be ignored otherwise
             for episode in self.Episodes:
                 if len(episode.versions(quick=True)) > 0:
                     downloaded, retryep = episode.download(library=library, parentReleases=scraped_releases)
