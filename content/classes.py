@@ -1412,10 +1412,11 @@ class media:
     def debrid_download(self,force=False):
         if len(self.Releases) > 0:
             ui_print("checking cache status for scraped releases on: [" + "],[".join(debrid.services.active) + "] ...")
-            debrid.check(self)
+        debrid.check(self)
+        self.bitrate()
+        if len(self.Releases) > 0:
             ui_print("done")
             releases.print_releases(self.Releases,True)
-        self.bitrate()
         scraped_releases = copy.deepcopy(self.Releases)
         downloaded = []
         if len(scraped_releases) > 0:
