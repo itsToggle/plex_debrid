@@ -1312,12 +1312,27 @@ class media:
                     if not regex.match(self.deviation(),release.title,regex.I):
                         self.Releases.remove(release)
                 debrid_downloaded, retry = self.debrid_download()
+            retryep = False
+            #If a season pack was downloaded, make sure there are episode releases available for missing versions before attempting to download
             if debrid_downloaded:
                 refresh_ = True
+                attempt_episodes = False
+                for episode in self.Episodes:
+                    for version in episode.versions():
+                        test_releases = copy.deepcopy(scraped_releases)
+                        releases.sort(test_releases, version)
+                        if len(test_releases) > 0:
+                            attempt_episodes = True
+                            break
+                    if not attempt_episodes:
+                        episode.skip_download = True
             #Check if all episodes were successfuly downloaded, download them or queue them to be ignored otherwise
             for episode in self.Episodes:
-                if len(episode.versions(quick=True)) > 0:
-                    downloaded, retryep = episode.download(library=library, parentReleases=scraped_releases)
+                if len(episode.versions()) > 0:
+                    downloaded = False
+                    retryep = True
+                    if not hasattr(episode,"skip_download"):
+                        downloaded, retryep = episode.download(library=library, parentReleases=scraped_releases)
                     if downloaded:
                         refresh_ = True
                     if retryep:
@@ -1392,11 +1407,7 @@ class media:
                     episode.downloaded()
 
     def debrid_download(self,force=False):
-        debrid_checked = False
-        for r in self.Releases:
-            if hasattr(r,"cached") and len(r.cached) > 0:
-                debrid_checked = True
-        if not debrid_checked:
+        if len(self.Releases) > 0:
             ui_print("checking cache status for scraped releases on: [" + "],[".join(debrid.services.active) + "] ...")
             debrid.check(self)
             ui_print("done")
