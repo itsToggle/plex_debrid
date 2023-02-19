@@ -12,10 +12,10 @@ sleep = "5"
 last = 0
 errors = [
     [202," action already done"],
-    [400," bad request) make sure your nyaa parameters are correct and that the used proxy resembles nyaa.si closely."],
+    [400," bad request) make sure your nyaa parameters are correct and that the used proxy resembles the nyaa.si website closely."],
     [403," permission denied)"],
     [503," service unavailable)"],
-    [404," wrong parameter) make sure your nyaa parameters are correct and that the used proxy resembles nyaa.si."],
+    [404," wrong parameter) make sure your nyaa parameters are correct and that the used proxy resembles the nyaa.si website closely."],
     [429," too many requests) nyaa is likely blocking your ip. please use a proxy: "+str(proxies)],
     ]
 
@@ -114,6 +114,8 @@ def scrape(query, altquery):
         except Exception as e:
             if hasattr(response,"status_code") and response.status_code == 200:
                 ui_print('[nyaa] error: proxy unable to be scraped. please choose another proxy that resembles the nyaa.si website exactly: ' + str(proxies))
+            elif response == None:
+                ui_print('[nyaa] error: nyaa could not be reached using the current proxy.')
             else:
                 ui_print('[nyaa] error: unknown error. turn on debug printing for more information.')
             ui_print('[nyaa] error: exception: ' + str(e),ui_settings.debug)
