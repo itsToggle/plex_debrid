@@ -1315,6 +1315,8 @@ class media:
                         refresh_ = True
                     if retryep:
                         episode.watch()
+                else:
+                    print("no version missing for ep: " + episode.query())
             return refresh_, (retry or retryep)
         elif self.type == 'episode':
             for release in parentReleases:
