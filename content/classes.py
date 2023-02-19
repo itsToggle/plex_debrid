@@ -1318,7 +1318,10 @@ class media:
                 refresh_ = True
                 attempt_episodes = False
                 for episode in self.Episodes:
-                    for version in episode.versions():
+                    for version in copy.deepcopy(episode.versions()):
+                        for rule in version.rules[:]:
+                            if rule[0] == "cache status":
+                                version.rules.remove(rule)
                         test_releases = copy.deepcopy(scraped_releases)
                         releases.sort(test_releases, version, False)
                         if len(test_releases) > 0:
