@@ -1314,7 +1314,7 @@ class media:
                 debrid_downloaded, retry = self.debrid_download()
             if debrid_downloaded:
                 refresh_ = True
-            #Check if all episodes were successfuly downloaded, queue them to be ignored otherwise
+            #Check if all episodes were successfuly downloaded, download them or queue them to be ignored otherwise
             for episode in self.Episodes:
                 if len(episode.versions(quick=True)) > 0:
                     downloaded, retryep = episode.download(library=library, parentReleases=scraped_releases)
@@ -1327,7 +1327,10 @@ class media:
             for release in parentReleases:
                 if regex.match(self.deviation(), release.title, regex.I):
                     self.Releases += [release]
-            debrid_downloaded, retry = self.debrid_download()
+            debrid_downloaded = False
+            retry = True
+            if len(self.Releases) > 0:
+                debrid_downloaded, retry = self.debrid_download()
             if (not debrid_downloaded or retry) and not hasattr(self,"skip_scraping"):
                 if debrid_downloaded:
                     refresh_ = True
@@ -1389,13 +1392,16 @@ class media:
                     episode.downloaded()
 
     def debrid_download(self,force=False):
-        if len(self.Releases) > 0:
+        debrid_checked = False
+        for r in self.Releases:
+            if hasattr(r,"cached") and len(r.cached) > 0:
+                debrid_checked = True
+        if not debrid_checked:
             ui_print("checking cache status for scraped releases on: [" + "],[".join(debrid.services.active) + "] ...")
-        debrid.check(self)
-        self.bitrate()
-        if len(self.Releases) > 0:
+            debrid.check(self)
             ui_print("done")
             releases.print_releases(self.Releases,True)
+        self.bitrate()
         scraped_releases = copy.deepcopy(self.Releases)
         downloaded = []
         if len(scraped_releases) > 0:
