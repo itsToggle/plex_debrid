@@ -1279,16 +1279,7 @@ class media:
             if len(self.Episodes) > 1:
                 debrid_downloaded, retry = self.debrid_download()
                 if debrid_downloaded:
-                    if debrid_downloaded:
-                        refresh_ = True
-                    for episode in self.Episodes:
-                        if len(episode.versions(quick=True)) > 0:
-                            downloaded, retry = episode.download(library=library, parentReleases=scraped_releases)
-                            if downloaded:
-                                refresh_ = True
-                            if retry:
-                                episode.watch()
-                    return refresh_, retry
+                    return True, retry
                 else:
                     for episode in self.Episodes:
                         episode.skip_scraping = True
