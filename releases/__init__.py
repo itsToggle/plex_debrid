@@ -1338,7 +1338,7 @@ class sort:
     ]
     always_on_rules = [version.rule("wanted", "preference", "highest", ""),version.rule("unwanted", "preference", "lowest", "")]
 
-    def __new__(self, scraped_releases: list, version: version):
+    def __new__(self, scraped_releases: list, version: version,doprint=True):
         if len(scraped_releases) > 0:
             for rule in reversed(sort.always_on_rules):
                 rule.apply(scraped_releases)
@@ -1352,8 +1352,8 @@ class sort:
                 except:
                     ui_print('error: there seems to be an undefined rule in your version settings. skipping this rule.')
                     continue
-            ui_print('sorting releases for version [' + version.name + '] ... done - found ' + str(
-                len(scraped_releases)) + ' releases')
+            if doprint:
+                ui_print('sorting releases for version [' + version.name + '] ... done - found ' + str(len(scraped_releases)) + ' releases')
         return scraped_releases
 
 class torrent2magnet:
