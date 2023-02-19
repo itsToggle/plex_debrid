@@ -1277,8 +1277,10 @@ class media:
                 if regex.match(self.deviation(), release.title, regex.I):
                     self.Releases += [release]
             if len(self.Episodes) > 1:
+                print("more than one episode to be downloaded")
                 debrid_downloaded, retry = self.debrid_download()
                 if debrid_downloaded:
+                    print("season pack downloaded, retry = " + str(retry))
                     return True, retry
                 else:
                     for episode in self.Episodes:
@@ -1309,6 +1311,7 @@ class media:
             if debrid_downloaded:
                 refresh_ = True
             for episode in self.Episodes:
+                print("checking episode for missing versions: " + episode.query())
                 if len(episode.versions(quick=True)) > 0:
                     downloaded, retryep = episode.download(library=library, parentReleases=scraped_releases)
                     if downloaded:
