@@ -1320,7 +1320,7 @@ class media:
                 for episode in self.Episodes:
                     for version in copy.deepcopy(episode.versions()):
                         for rule in version.rules[:]:
-                            if rule[0] == "cache status":
+                            if rule[0] == "bitrate":
                                 version.rules.remove(rule)
                         test_releases = copy.deepcopy(scraped_releases)
                         releases.sort(test_releases, version, False)
