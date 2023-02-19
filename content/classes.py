@@ -1310,12 +1310,12 @@ class media:
                 refresh_ = True
             for episode in self.Episodes:
                 if len(episode.versions(quick=True)) > 0:
-                    downloaded, retry = episode.download(library=library, parentReleases=scraped_releases)
+                    downloaded, retryep = episode.download(library=library, parentReleases=scraped_releases)
                     if downloaded:
                         refresh_ = True
-                    if retry:
+                    if retryep:
                         episode.watch()
-            return refresh_, retry
+            return refresh_, (retry or retryep)
         elif self.type == 'episode':
             for release in parentReleases:
                 if regex.match(self.deviation(), release.title, regex.I):
