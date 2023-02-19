@@ -669,35 +669,26 @@ class library(classes.library):
                 list_ += section_response
         if len(list_) == 0:
             ui_print("[plex error]: Your library seems empty. To prevent unwanted behaviour, no further downloads will be started. If your library really is empty, please add at least one media item manually.")
-        for show in list_:
-            if show.type == "show":
-                show.childCount = 0
-                show.leafCount = 0
-                show.Seasons = []
-                for season in list_:
-                    if season.type == "season":
-                        if hasattr(season,"parentGuid"):
-                            if season.parentGuid == show.guid:
-                                show.childCount += 1
-                                season.Episodes = []
-                                season.leafCount = 0
-                                for episode in list_:
-                                    if episode.type == "episode":
-                                        if hasattr(episode,"parentGuid"):
-                                            if episode.parentGuid == season.guid:
-                                                show.leafCount += 1
-                                                season.leafCount += 1
-                                                season.Episodes += [episode]
-                                        elif hasattr(episode,'grandparentGuid') and hasattr(episode,'parentIndex') and hasattr(season,'index'):
-                                            if episode.grandparentGuid == season.parentGuid and episode.parentIndex == season.index:
-                                                episode.parentGuid = season.guid
-                                                show.leafCount += 1
-                                                season.leafCount += 1
-                                                season.Episodes += [episode]
-                                show.Seasons += [season]
-        for item in list_[:] :
-            if not item.type in ["show","movie"]:
-                list_.remove(item)
+        shows = {}
+        for item in list_:
+            if item.type == "show":
+                shows[item.guid] = item
+        for item in list_:
+            if item.type == "season" and hasattr(item, "parentGuid"):
+                show = shows.get(item.parentGuid)
+                if show is not None:
+                    show.childCount += 1
+                    if show.Seasons is None:
+                        show.Seasons = []
+                    show.Seasons.append(item)
+                    item.Episodes = []
+                    for episode in list_:
+                        if episode.type == "episode" and hasattr(episode, "parentGuid") and episode.parentGuid == item.guid:
+                            item.leafCount += 1
+                            show.leafCount += 1
+                            item.Episodes.append(episode)
+        # Remove non-show and non-movie items from list
+        list_ = [item for item in list_ if item.type in ["show", "movie"]]
         for item in list_:
             try:
                 if not item in current_library:
