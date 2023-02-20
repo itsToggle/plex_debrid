@@ -644,64 +644,71 @@ class library(classes.library):
             response = get(library.url  + '/library/sections/?X-Plex-Token=' + users[0][1])
             for Directory in response.MediaContainer.Directory:
                 if ([Directory.key] in library.check or library.check == []) and Directory.type in ["movie","show"]:
-                    sections += [[Directory.key]]
+                    types = ['1'] if Directory.type == "movie" else  ['2', '3', '4']
+                    sections += [[Directory.key,types]]
                     names += [Directory.title]
         except:
             ui_print("[plex error]: couldnt reach local plex server at: " + library.url + " to determine library sections. Make sure the address is correct, the server is running, and youve set up at least one library.")
         if len(sections) == 0:
             return list_
         ui_print('[plex] getting plex library section/s "' + '","'.join(names) + '" ...')
-        types = ['1', '2', '3', '4']
-        for section in sections:
-            if section[0] == '':
+        for section,types in sections:
+            if section == '':
                 continue
             section_response = []
             for type in types:
-                url = library.url + '/library/sections/' + section[0] + '/all?type=' + type + '&X-Plex-Token=' + users[0][1]
+                url = library.url + '/library/sections/' + section + '/all?type=' + type + '&X-Plex-Token=' + users[0][1]
                 response = get(url)
                 if hasattr(response, 'MediaContainer'):
                     if hasattr(response.MediaContainer, 'Metadata'):
                         for element in response.MediaContainer.Metadata:
                             section_response += [classes.media(element)]
             if len(section_response) == 0:
-                ui_print("[plex error]: couldnt reach local plex library section '" + section[0] + "' at server address: " + library.url + " - or this library really is empty.")
+                ui_print("[plex error]: couldnt reach local plex library section '" + section + "' at server address: " + library.url + " - or this library really is empty.")
             else:
                 list_ += section_response
         if len(list_) == 0:
             ui_print("[plex error]: Your library seems empty. To prevent unwanted behaviour, no further downloads will be started. If your library really is empty, please add at least one media item manually.")
-        for show in list_:
-            if show.type == "show":
-                show.childCount = 0
-                show.leafCount = 0
-                show.Seasons = []
-                for season in list_:
-                    if season.type == "season":
-                        if hasattr(season,"parentGuid"):
-                            if season.parentGuid == show.guid:
-                                show.childCount += 1
-                                season.Episodes = []
-                                season.leafCount = 0
-                                for episode in list_:
-                                    if episode.type == "episode":
-                                        if hasattr(episode,"parentGuid"):
-                                            if episode.parentGuid == season.guid:
-                                                show.leafCount += 1
-                                                season.leafCount += 1
-                                                season.Episodes += [episode]
-                                        elif hasattr(episode,'grandparentGuid') and hasattr(episode,'parentIndex') and hasattr(season,'index'):
-                                            if episode.grandparentGuid == season.parentGuid and episode.parentIndex == season.index:
-                                                episode.parentGuid = season.guid
-                                                show.leafCount += 1
-                                                season.leafCount += 1
-                                                season.Episodes += [episode]
-                                show.Seasons += [season]
-        for item in list_[:] :
-            if not item.type in ["show","movie"]:
-                list_.remove(item)
+        shows = {}
+        seasons = {}
+        for item in list_:
+            if item.type == "show":
+                item.childCount = 0
+                item.leafCount = 0
+                item.Seasons = []
+                shows[item.guid] = item
+            elif item.type == "season":
+                item.leafCount = 0
+                item.Episodes = []
+                seasons[item.guid] = item
+        for episode in list_:
+            if episode.type != "episode" or not episode.parentGuid in seasons:
+                continue
+            season = seasons[episode.parentGuid]
+            if not season.parentGuid in shows:
+                continue
+            show = shows[season.parentGuid]
+            if season in show.Seasons:
+                season = next((x for x in show.Seasons if season == x), None)
+                season.Episodes.append(episode)
+                season.leafCount += 1
+                show.leafCount += 1
+            else:
+                season.Episodes.append(episode)
+                season.leafCount += 1
+                show.childCount += 1
+                show.leafCount += 1
+                show.Seasons.append(season)
+        list_ = [item for item in list_ if item.type == "movie"]
+        for value in shows.values():
+            list_.append(value)
+        if len(list_) - len(current_library) > 0:
+            ui_print('done')
+            ui_print('[plex] getting metadata for ' + str(len(list_) - len(current_library)) + ' collected movies/shows ...')
         for item in list_:
             try:
                 if not item in current_library:
-                    url = library.url + '/library/metadata/'+item.ratingKey+'?X-Plex-Token=' + users[0][1]
+                    url = library.url + '/library/metadata/' + item.ratingKey + '?X-Plex-Token=' + users[0][1]
                     response = get(url)
                     item.__dict__.update(response.MediaContainer.Metadata[0].__dict__)
                 else:
