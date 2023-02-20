@@ -644,27 +644,27 @@ class library(classes.library):
             response = get(library.url  + '/library/sections/?X-Plex-Token=' + users[0][1])
             for Directory in response.MediaContainer.Directory:
                 if ([Directory.key] in library.check or library.check == []) and Directory.type in ["movie","show"]:
-                    sections += [[Directory.key]]
+                    types = ['1'] if Directory.type == "movie" else  ['2', '3', '4']
+                    sections += [[Directory.key,types]]
                     names += [Directory.title]
         except:
             ui_print("[plex error]: couldnt reach local plex server at: " + library.url + " to determine library sections. Make sure the address is correct, the server is running, and youve set up at least one library.")
         if len(sections) == 0:
             return list_
         ui_print('[plex] getting plex library section/s "' + '","'.join(names) + '" ...')
-        types = ['1', '2', '3', '4']
-        for section in sections:
-            if section[0] == '':
+        for section,types in sections:
+            if section == '':
                 continue
             section_response = []
             for type in types:
-                url = library.url + '/library/sections/' + section[0] + '/all?type=' + type + '&X-Plex-Token=' + users[0][1]
+                url = library.url + '/library/sections/' + section + '/all?type=' + type + '&X-Plex-Token=' + users[0][1]
                 response = get(url)
                 if hasattr(response, 'MediaContainer'):
                     if hasattr(response.MediaContainer, 'Metadata'):
                         for element in response.MediaContainer.Metadata:
                             section_response += [classes.media(element)]
             if len(section_response) == 0:
-                ui_print("[plex error]: couldnt reach local plex library section '" + section[0] + "' at server address: " + library.url + " - or this library really is empty.")
+                ui_print("[plex error]: couldnt reach local plex library section '" + section + "' at server address: " + library.url + " - or this library really is empty.")
             else:
                 list_ += section_response
         if len(list_) == 0:
@@ -702,8 +702,9 @@ class library(classes.library):
         list_ = [item for item in list_ if item.type == "movie"]
         for value in shows.values():
             list_.append(value)
-        ui_print('done')
-        ui_print('[plex] getting metadata for library items ...')
+        if len(list_) - len(current_library) > 0:
+            ui_print('done')
+            ui_print('[plex] getting metadata for ' + str(len(list_) - len(current_library)) + ' collected movies/shows ...')
         for item in list_:
             try:
                 if not item in current_library:
