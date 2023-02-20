@@ -669,39 +669,45 @@ class library(classes.library):
                 list_ += section_response
         if len(list_) == 0:
             ui_print("[plex error]: Your library seems empty. To prevent unwanted behaviour, no further downloads will be started. If your library really is empty, please add at least one media item manually.")
-        for show in list_:
-            if show.type == "show":
-                show.childCount = 0
-                show.leafCount = 0
-                show.Seasons = []
-                for season in list_:
-                    if season.type == "season":
-                        if hasattr(season,"parentGuid"):
-                            if season.parentGuid == show.guid:
-                                show.childCount += 1
-                                season.Episodes = []
-                                season.leafCount = 0
-                                for episode in list_:
-                                    if episode.type == "episode":
-                                        if hasattr(episode,"parentGuid"):
-                                            if episode.parentGuid == season.guid:
-                                                show.leafCount += 1
-                                                season.leafCount += 1
-                                                season.Episodes += [episode]
-                                        elif hasattr(episode,'grandparentGuid') and hasattr(episode,'parentIndex') and hasattr(season,'index'):
-                                            if episode.grandparentGuid == season.parentGuid and episode.parentIndex == season.index:
-                                                episode.parentGuid = season.guid
-                                                show.leafCount += 1
-                                                season.leafCount += 1
-                                                season.Episodes += [episode]
-                                show.Seasons += [season]
-        for item in list_[:] :
-            if not item.type in ["show","movie"]:
-                list_.remove(item)
+        shows = {}
+        seasons = {}
+        for item in list_:
+            if item.type == "show":
+                item.childCount = 0
+                item.leafCount = 0
+                item.Seasons = []
+                shows[item.guid] = item
+            elif item.type == "season":
+                item.leafCount = 0
+                item.Episodes = []
+                seasons[item.guid] = item
+        for episode in list_:
+            if episode.type != "episode" or not episode.parentGuid in seasons:
+                continue
+            season = seasons[episode.parentGuid]
+            if not season.parentGuid in shows:
+                continue
+            show = shows[season.parentGuid]
+            if season in show.Seasons:
+                season = next((x for x in show.Seasons if season == x), None)
+                season.Episodes.append(episode)
+                season.leafCount += 1
+                show.leafCount += 1
+            else:
+                season.Episodes.append(episode)
+                season.leafCount += 1
+                show.childCount += 1
+                show.leafCount += 1
+                show.Seasons.append(season)
+        list_ = [item for item in list_ if item.type == "movie"]
+        for value in shows.values():
+            list_.append(value)
+        ui_print('done')
+        ui_print('[plex] getting metadata for library items ...')
         for item in list_:
             try:
                 if not item in current_library:
-                    url = library.url + '/library/metadata/'+item.ratingKey+'?X-Plex-Token=' + users[0][1]
+                    url = library.url + '/library/metadata/' + item.ratingKey + '?X-Plex-Token=' + users[0][1]
                     response = get(url)
                     item.__dict__.update(response.MediaContainer.Metadata[0].__dict__)
                 else:
