@@ -968,7 +968,8 @@ class media:
                             ui_print("item: '" + self.query() + "' is available in: " + "{:02d}d:{:02d}h:{:02d}m:{:02d}s".format(available.days, available.seconds // 3600, (available.seconds % 3600) // 60, available.seconds % 60) + (" (including offset of: " + offset + "h)" if offset != "0" else ""))
                         return False
                     available = datetime.datetime.strptime(release_date,'%Y-%m-%d') - datetime.datetime.utcnow()
-                    ui_print("item: '" + self.query() + "' is available in: " + "{:02d}d:{:02d}h:{:02d}m:{:02d}s".format(available.days, available.seconds // 3600, (available.seconds % 3600) // 60, available.seconds % 60))
+                    if not datetime.datetime.utcnow() > datetime.datetime.strptime(release_date,'%Y-%m-%d'):
+                        ui_print("item: '" + self.query() + "' is available in: " + "{:02d}d:{:02d}h:{:02d}m:{:02d}s".format(available.days, available.seconds // 3600, (available.seconds % 3600) // 60, available.seconds % 60))
                     return datetime.datetime.utcnow() > datetime.datetime.strptime(release_date,'%Y-%m-%d')
                 elif self.type == 'season':
                     try:
