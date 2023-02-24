@@ -390,8 +390,11 @@ class media:
             elif self.type == 'episode':
                 title = releases.rename(self.grandparentTitle)
         if self.type == 'movie':
-            title = title.replace('.' + str(self.year), '')
-            return title + '.' + str(self.year)
+            if regex.search(str(self.year),releases.rename(self.title.replace(str(self.year),'') + ' ' + str(self.year))):
+                title = title.replace('.' + str(self.year), '')
+                return title + '.' + str(self.year)
+            else:
+                return title
         elif self.type == 'show':
             title = title.replace('.' + str(self.year), '')
             return title
@@ -542,10 +545,14 @@ class media:
                     title = releases.rename(self.grandparentTitle)
             title = title.replace('[','\[').replace(']','\]')
             if self.type == 'movie':
-                title = title.replace('.' + str(self.year), '')
-                if year != "":
-                    return '[^A-Za-z0-9]*(' + title + ':?.)\(?\[?(' + str(year) + ')'
-                return '[^A-Za-z0-9]*(' + title + ':?.)\(?\[?(' + str(self.year) + '|' + str(self.year - 1) + '|' + str(self.year + 1) + ')'
+                if regex.search(str(self.year),releases.rename(self.title.replace(str(self.year),'') + ' ' + str(self.year))):
+                    title = title.replace('.' + str(self.year), '')
+                    if year != "":
+                        return '[^A-Za-z0-9]*(' + title + ':?.)\(?\[?(' + str(year) + ')'
+                    return '[^A-Za-z0-9]*(' + title + ':?.)\(?\[?(' + str(self.year) + '|' + str(self.year - 1) + '|' + str(self.year + 1) + ')'
+                else:
+                    title = title.replace('.' + str(self.year), '')
+                    return '[^A-Za-z0-9]*(' + title + ')'
             elif self.type == 'show':
                 title = title.replace('.' + str(self.year), '')
                 return '[^A-Za-z0-9]*(' + title + ':?.)(series.)?((\(?' + str(self.year) + '\)?.)|(complete.)|(seasons?.[0-9]+.[0-9]?[0-9]?.?)|(S[0-9]+.S?[0-9]?[0-9]?.?)|(S[0-9]+E[0-9]+))'
