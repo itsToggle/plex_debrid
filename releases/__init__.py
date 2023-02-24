@@ -62,8 +62,8 @@ class rename:
         string = string.lower()
         for specialChar, repl in self.replaceChars:
             if specialChar.startswith('{{') and specialChar.endswith('}}'):
-                if regex.search(specialChar[2:-2],string):
-                    string = regex.sub(specialChar[2:-2],repl,string)
+                if regex.search(specialChar[2:-2].lower(),string):
+                    string = regex.sub(specialChar[2:-2].lower(),repl.lower(),string)
             else:
                 string = string.replace(specialChar.lower(), repl.lower())
         string = regex.sub(r'\.+', ".", string)
