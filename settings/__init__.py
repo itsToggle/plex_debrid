@@ -366,7 +366,7 @@ settings_list = [
     ['Scraper Settings', [
         setting('Sources', [''], scraper.services, 'active', entry="source", subclass=True, preflight=True),
         setting('Versions', [], releases.sort, 'versions', special=True, entry="version"),
-        setting('Special character renaming', ['Please specify a character or string that should be replaced: ','Please specify with what character or string it should be replaced: '],releases.rename, 'replaceChars', entry="rule",help='In this setting you can specify a character or a string that should be replaced by nothing, some other character or a string.'),
+        setting('Special character renaming', ['Please specify a character or string that should be replaced, or provide a regex using {{regex}}: ','Please specify with what character or string it should be replaced: '],releases.rename, 'replaceChars', entry="rule",help='In this setting you can specify a character or a string that should be replaced by nothing, some other character or a string. You can enter regular expressions using {{regex}}.'),
         setting('Rarbg API Key', 'The Rarbg API Key gets refreshed automatically, enter the default value: ',scraper.services.rarbg, 'token', hidden=True),
         setting('Jackett Base URL', 'Please specify your Jackett base URL: ', scraper.services.jackett, 'base_url',hidden=True),
         setting('Jackett API Key', 'Please specify your Jackett API Key: ', scraper.services.jackett, 'api_key',hidden=True),
