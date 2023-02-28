@@ -688,10 +688,10 @@ class library(classes.library):
             if not season.parentGuid in shows:
                 continue
             show = shows[season.parentGuid]
-            if season in show.Seasons:
-                season = next((x for x in show.Seasons if season == x), None)
-                season.Episodes.append(episode)
-                season.leafCount += 1
+            season_ = next((x for x in show.Seasons if season == x), None)
+            if season_ != None:
+                season_.Episodes.append(episode)
+                season_.leafCount += 1
                 show.leafCount += 1
             else:
                 season.Episodes.append(episode)
