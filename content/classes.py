@@ -460,7 +460,7 @@ class media:
             for title in aliases:
                 special_char = False
                 for i in title:
-                    if ord(i) > 128:
+                    if ord(i) > 512:
                         special_char = True
                 if special_char:
                     continue
