@@ -1129,7 +1129,7 @@ def aliases(self,lan):
                         if alias.country in ctrs:
                             special_chars = False
                             for i in alias.title:
-                                if ord(i) > 128:
+                                if ord(i) > 512:
                                     special_chars = True
                                     break
                             if not special_chars:
@@ -1152,7 +1152,7 @@ def translations(self,lan):
                         for alias in response:
                             special_chars = False
                             for i in alias.title:
-                                if ord(i) > 128:
+                                if ord(i) > 512:
                                     special_chars = True
                                     break
                             if not special_chars:
