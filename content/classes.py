@@ -980,7 +980,7 @@ class media:
                     return datetime.datetime.utcnow() > datetime.datetime.strptime(release_date,'%Y-%m-%d')
                 elif self.type == 'season':
                     try:
-                        if hasattr(self,"offset_airtime"):
+                        if hasattr(self,"offset_airtime") and len(self.offset_airtime) > 0:
                             for offset in self.offset_airtime:
                                 if datetime.datetime.utcnow() > datetime.datetime.strptime(self.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(offset)):
                                     return True
