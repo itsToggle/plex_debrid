@@ -1069,6 +1069,8 @@ class sort:
                                 episode.offset_airtime[self.value] = datetime.datetime.strptime(episode.originallyAvailableAt,'%Y-%m-%d') + datetime.timedelta(hours=float(self.value))
                     return element.offset_airtime[self.value] < datetime.datetime.utcnow() 
                 except:
+                    if element.type == "season":
+                        return True
                     return False
         
         class year(trigger):
