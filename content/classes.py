@@ -460,7 +460,7 @@ class media:
             for title in aliases:
                 special_char = False
                 for i in title:
-                    if ord(i) > 128:
+                    if ord(i) > 512:
                         special_char = True
                 if special_char:
                     continue
@@ -980,7 +980,7 @@ class media:
                     return datetime.datetime.utcnow() > datetime.datetime.strptime(release_date,'%Y-%m-%d')
                 elif self.type == 'season':
                     try:
-                        if hasattr(self,"offset_airtime"):
+                        if hasattr(self,"offset_airtime") and len(self.offset_airtime) > 0:
                             for offset in self.offset_airtime:
                                 if datetime.datetime.utcnow() > datetime.datetime.strptime(self.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(offset)):
                                     return True

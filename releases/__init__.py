@@ -1069,6 +1069,8 @@ class sort:
                                 episode.offset_airtime[self.value] = datetime.datetime.strptime(episode.originallyAvailableAt,'%Y-%m-%d') + datetime.timedelta(hours=float(self.value))
                     return element.offset_airtime[self.value] < datetime.datetime.utcnow() 
                 except:
+                    if element.type == "season":
+                        return True
                     return False
         
         class year(trigger):
@@ -1330,7 +1332,7 @@ class sort:
             ["cache status", "requirement", "cached", ""],
             ["resolution", "requirement", "<=", "1080"],
             ["resolution", "preference", "highest", ""],
-            ["title", "requirement", "exclude", "[^A-CE-Z0-9](CAM|TS|TC)[^A-Z0-9]"],
+            ["title", "requirement", "exclude", "([^A-Z0-9]|HD|HQ)(CAM|T(ELE)?(S(YNC)?|C(INE)?)|ADS|HINDI)([^A-Z0-9]|RIP|$)"],
             ["title", "requirement", "exclude", "(3D)"],
             ["title", "requirement", "exclude", "(DO?VI?)"],
             ["title", "requirement", "exclude", "(HDR)"],

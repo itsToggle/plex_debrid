@@ -665,6 +665,8 @@ class library(classes.library):
                             section_response += [classes.media(element)]
             if len(section_response) == 0:
                 ui_print("[plex error]: couldnt reach local plex library section '" + section + "' at server address: " + library.url + " - or this library really is empty.")
+                list_ = []
+                break
             else:
                 list_ += section_response
         if len(list_) == 0:
@@ -688,10 +690,10 @@ class library(classes.library):
             if not season.parentGuid in shows:
                 continue
             show = shows[season.parentGuid]
-            if season in show.Seasons:
-                season = next((x for x in show.Seasons if season == x), None)
-                season.Episodes.append(episode)
-                season.leafCount += 1
+            season_ = next((x for x in show.Seasons if season == x), None)
+            if season_ != None:
+                season_.Episodes.append(episode)
+                season_.leafCount += 1
                 show.leafCount += 1
             else:
                 season.Episodes.append(episode)
