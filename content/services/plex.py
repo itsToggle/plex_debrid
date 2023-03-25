@@ -665,6 +665,8 @@ class library(classes.library):
                             section_response += [classes.media(element)]
             if len(section_response) == 0:
                 ui_print("[plex error]: couldnt reach local plex library section '" + section + "' at server address: " + library.url + " - or this library really is empty.")
+                list_ = []
+                break
             else:
                 list_ += section_response
         if len(list_) == 0:
