@@ -1262,12 +1262,13 @@ class media:
                     threads = []
                     # start thread for each season
                     for index, Season in enumerate(self.Seasons):
-                        t = Thread(target=download, args=(Season, library, parentReleases, results, index))
-                        threads.append(t)
-                        t.start()
-                    # wait for the threads to complete
-                    for t in threads:
-                        t.join()
+                        result[index] = Season.download(library=library, parentReleases=parentReleases)
+                    #     t = Thread(target=download, args=(Season, library, parentReleases, results, index))
+                    #     threads.append(t)
+                    #     t.start()
+                    # # wait for the threads to complete
+                    # for t in threads:
+                    #     t.join()
                     retry = False
                     for index, result in enumerate(results):
                         if result == None:
