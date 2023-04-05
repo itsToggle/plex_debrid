@@ -5,7 +5,7 @@ import releases
 
 name = "torrentio"
 
-default_opts = "https://torrentio.strem.fun/sort=qualitysize|qualityfilter=720p,480p,other,scr,cam,unknown/manifest.json"
+default_opts = "https://torrentio.strem.fun/sort=qualitysize|qualityfilter=480p,other,scr,cam,unknown/manifest.json"
 
 session = requests.Session()
 
@@ -62,7 +62,7 @@ def scrape(query, altquery):
     if altquery == "(.*)":
         altquery = query
     type = ("show" if regex.search(r'(S[0-9]|complete|S\?[0-9])',altquery,regex.I) else "movie")
-    opts = default_opts.split("/")[-2]
+    opts = default_opts.split("/")[-2] if default_opts.endswith("manifest.json") else ""
     ep = ""
     if type == "show":
         s = (regex.search(r'(?<=S)([0-9]+)',altquery,regex.I).group() if regex.search(r'(?<=S)([0-9]+)',altquery,regex.I) else None)
