@@ -98,7 +98,7 @@ def scrape(query, altquery):
                 if spack:
                     url = "https://v3-cinemeta.strem.io/meta/series/"+query+".json"
                     meta = get(url)
-                    for episode in meta.videos:
+                    for episode in meta.meta.videos:
                         if spack and episode.season == int(s) and not episode.episode == int(e):
                             url = 'https://torrentio.strem.fun/' + opts + '/stream/series/' + query + ':' + str(int(s)) + ':' + str(int(episode.episode)) + '.json'
                             more = get(url)
