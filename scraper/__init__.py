@@ -35,7 +35,7 @@ def scrape(query, altquery="(.*)"):
             if not result == [] and not result == None:
                 scraped_releases += result
         for release in scraped_releases:
-            release.title = ''.join([i if ord(i) < 128 else '' for i in release.title])
+            release.title = ''.join([i if ord(i) < 512 else '' for i in release.title])
         ui_print('done - found ' + str(len(scraped_releases)) + ' releases')
         if len(scraped_releases) > 0:
             break
