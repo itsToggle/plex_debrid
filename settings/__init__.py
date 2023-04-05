@@ -379,6 +379,7 @@ settings_list = [
         setting('Nyaa parameters', 'Enter custom url parameters. Categories: anime "&c=1_0", anime raw "&c=1_4", anime EN subs "&c=1_2", anime non-EN subs "&c=1_3". Enter your parameters (default: "&c=1_0&s=seeders&o=desc"): ',scraper.services.nyaa, 'params', hidden=True),
         setting('Nyaa sleep time', 'Enter a time in seconds to sleep between requests (default: "5"): ',scraper.services.nyaa, 'sleep', hidden=True),
         setting('Nyaa proxy', 'Enter a proxy to use for nyaa (default: "nyaa.si"): ',scraper.services.nyaa, 'proxy', hidden=True),
+        setting('Torrentio Scraper Parameters',['Please enter a valid torrentio parameter: ','Please enter a valid value: '],scraper.services.torrentio, 'default_opts', entry="parameter", help='This settings lets you control the torrentio scraping parameters. Check out the possible parameters and their values at "https://torrentio.strem.fun/configure". Configure your settings and have a look at your clipboard. (beta)', hidden=True),
     ]
         ],
     ['Debrid Services', [
