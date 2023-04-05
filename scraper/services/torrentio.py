@@ -63,23 +63,52 @@ def scrape(query, altquery):
         altquery = query
     type = ("show" if regex.search(r'(S[0-9]|complete|S\?[0-9])',altquery,regex.I) else "movie")
     opts = default_opts.split("/")[-2] if default_opts.endswith("manifest.json") else ""
-    ep = ""
+    spack = False
     if type == "show":
         s = (regex.search(r'(?<=S)([0-9]+)',altquery,regex.I).group() if regex.search(r'(?<=S)([0-9]+)',altquery,regex.I) else None)
         e = (regex.search(r'(?<=E)([0-9]+)',altquery,regex.I).group() if regex.search(r'(?<=E)([0-9]+)',altquery,regex.I) else None)
         if s == None or int(s) == 0:
             s = 1
-        ep += ':' + str(int(s))
         if e == None or int(e) == 0:
             e = 1
-        ep += ':' + str(int(e))
+            spack = True
     if regex.search(r'(tt[0-9]+)', altquery, regex.I):
         query = regex.search(r'(tt[0-9]+)', altquery, regex.I).group()
+    else:
+        try:
+            if type == "show":
+                url = "https://v3-cinemeta.strem.io/catalog/series/top/search=" + query + ".json"
+                meta = get(url)
+            else:
+                url = "https://v3-cinemeta.strem.io/catalog/movie/top/search=" + query + ".json"
+                meta = get(url)
+            query = meta.metas[0].imdb_id
+        except:
+            ui_print('[torrentio] error: could not find IMDB ID')
+            return scraped_releases
     if type == "show":
-        url = 'https://torrentio.strem.fun/' + opts + '/stream/series/' + query + ep + '.json'
+        url = 'https://torrentio.strem.fun/' + opts + '/stream/series/' + query + ':' + str(int(s)) + ':' + str(int(e)) + '.json'
+        response = get(url)
+        if spack:
+            try:
+                for result in response.streams:
+                    if spack and regex.search(r'S[0-9]+( |\.)',result.title,regex.I):
+                        spack = False
+                        break  
+                if spack:
+                    url = "https://v3-cinemeta.strem.io/meta/series/"+query+".json"
+                    meta = get(url)
+                    for episode in meta.videos
+                        if spack and episode.season == int(s) and not episode.episode == int(e)
+                            url = 'https://torrentio.strem.fun/' + opts + '/stream/series/' + query + ':' + str(int(s)) + ':' + str(int(episode.episode)) + '.json'
+                            more = get(url)
+                            if not more == None and len(more.streams) > 0:
+                                response.streams += more.streams                                   
+            except:
+                None
     else:    
         url = 'https://torrentio.strem.fun/' + opts + '/stream/movie/' + query + '.json'
-    response = get(url)
+        response = get(url)
     if not hasattr(response,"streams"):
         try:
             ui_print('[torrentio] error: ' + str(response))
