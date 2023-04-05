@@ -104,8 +104,8 @@ def scrape(query, altquery):
                             more = get(url)
                             if not more == None and len(more.streams) > 0:
                                 response.streams += more.streams                                   
-            except:
-                None
+            except Exception as e:
+                print(str(e))
     else:    
         url = 'https://torrentio.strem.fun/' + opts + '/stream/movie/' + query + '.json'
         response = get(url)
