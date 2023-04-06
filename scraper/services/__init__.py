@@ -12,7 +12,7 @@ from scraper.services import torrentio
 def __subclasses__():
     return [rarbg,x1337,jackett,prowlarr,orionoid,nyaa,torrentio]
 
-active = ['rarbg', '1337x', ]
+active = ['torrentio']
 overwrite = []
 
 def setup(cls, new=False):
