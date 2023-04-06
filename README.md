@@ -434,7 +434,7 @@ If github is not your cup of tea;
 
 >
 ><details>
->  <summary><b><u><img src="https://i.ibb.co/w4BnkC9/GwxAcDV.png" height="16">torrentio (highly recommended):</u></b></summary>
+>  <summary><b><u><img src="https://i.ibb.co/w4BnkC9/GwxAcDV.png" height="16"> torrentio (highly recommended):</u></b></summary>
 >  
 >  - The torrentio implementation uses the torrentio API to instantaniously get releases from torrentions gigantic release database. No actual scraping is done, which is why this service is so fast.
 >  - You can enable torrentio by navigating to '/Settings/Scraper/Sources/Add/'. There are no other steps needed.
