@@ -430,18 +430,27 @@ If github is not your cup of tea;
  
 ### :magnet: Scraping Services:
 
-*The services that plex_debrid can use to find torrents. You can add any combination of services. By default, only the legacy scrapers (rarbg, 1337x) are enabled. Its highly recommended to connect more scraping services to make sure you find high quality, cached releases.*
+*The services that plex_debrid can use to find torrents. You can add any combination of services. By default, torrentio is the only service enabled. You can connect more scraping services to make sure you find high quality, cached releases.*
 
 >
 ><details>
->  <summary><b><u><img src="https://progsoft.net/images/rarbg-icon-648af4dcc6ec63ee49d6c050af63d2547c74d46c.png" height="16"><img src="https://1337x.to/favicon.ico" height="16"> legacy scrapers (rarbg, 1337x):</u></b></summary>
+>  <summary><b><u><img src="https://i.ibb.co/w4BnkC9/GwxAcDV.png" height="16">torrentio (highly recommended):</u></b></summary>
 >  
->  - The only "legacy" scrapers currently integrated are for rarbg.to and 1337x.to - you can turn these off or on by navigating to '/Settings/Scraper/Sources/Edit/'.
+>  - The torrentio implementation uses the torrentio API to instantaniously get releases from torrentions gigantic release database. No actual scraping is done, which is why this service is so fast.
+>  - You can enable torrentio by navigating to '/Settings/Scraper/Sources/Add/'. There are no other steps needed.
+>  - You can edit the torrentio settings by navigating to '/Settings/Scraper/Sources/Edit/'. The settings menu will prompt you to visit 'https://torrentio.strem.fun/configure', where you can edit your settings. Your configuration "manifest url" will be copied to your clipboard after every change you make. You can paste that url into the plex_debrid setting to update your configuration. Dont enter your Debrid information, its not needed.
 >
 ></details>
 >
 ><details>
->  <summary><b><u><img src="https://user-images.githubusercontent.com/27040483/28728094-99f3e3f6-73c7-11e7-8f8d-28912dc6ac0d.png" height="16"> jackett (highly recommended):</u></b></summary>
+>  <summary><b><u><img src="https://progsoft.net/images/rarbg-icon-648af4dcc6ec63ee49d6c050af63d2547c74d46c.png" height="16"><img src="https://1337x.to/favicon.ico" height="16"> legacy scrapers (rarbg, 1337x, nyaa):</u></b></summary>
+>  
+>  - The only "legacy" scrapers currently integrated are for rarbg.to, nyaa.si and 1337x.to - you can turn these off or on by navigating to '/Settings/Scraper/Sources/Edit/'.
+>
+></details>
+>
+><details>
+>  <summary><b><u><img src="https://user-images.githubusercontent.com/27040483/28728094-99f3e3f6-73c7-11e7-8f8d-28912dc6ac0d.png" height="16"> jackett:</u></b></summary>
 >  
 >  - Its recommended to install "jackett", a program that wraps a huge amount of torrent indexers (https://github.com/Jackett/Jackett). Once installed, go to http://localhost:9117 and add a few of your favorite indexers. Enable the jackett server setting "CORS". Once the jackett setup is complete, you can enable jackett inside plex_debrid by navigating to '/Settings/Scraper/Sources/Edit/Add source/jackett'.
 >  - You can now choose to use a specific debrid service for a specific torrent tracker by navigating to "/Settings/Debrid Services/Tracker specific Debrid Services". This comes in handy if you are using a private tracker that forces you to use a debrid service that will seed your torrents (e.g. debridlink,put.io).
