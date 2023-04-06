@@ -117,7 +117,7 @@ def scrape(query, altquery):
         return scraped_releases
     for result in response.streams:
         title = result.title.split('\n')[0].replace(' ','.')
-        size = (float(regex.search(r'(?<=💾 )([0-9]+.?[0-9]+)(?= GB)',result.title).group()) if regex.search(r'(?<=💾 )([0-9]+.?[0-9]+)(?= GB)',result.title) else 0)
+        size = (float(regex.search(r'(?<=💾 )([0-9]+.?[0-9]+)(?= GB)',result.title).group()) if regex.search(r'(?<=💾 )([0-9]+.?[0-9]+)(?= GB)',result.title) else float(regex.search(r'(?<=💾 )([0-9]+.?[0-9]+)(?= MB)',result.title).group())/1000 if regex.search(r'(?<=💾 )([0-9]+.?[0-9]+)(?= MB)',result.title) else 0)
         links = ['magnet:?xt=urn:btih:' + result.infoHash + '&dn=&tr=']
         seeds = (int(regex.search(r'(?<=👤 )([0-9]+)',result.title).group()) if regex.search(r'(?<=👤 )([1-9]+)',result.title) else 0)
         source = ((regex.search(r'(?<=⚙️ )(.*)(?=\n|$)',result.title).group()) if regex.search(r'(?<=⚙️ )(.*)(?=\n|$)',result.title) else "unknown")
