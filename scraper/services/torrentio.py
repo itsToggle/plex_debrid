@@ -5,7 +5,7 @@ import releases
 
 name = "torrentio"
 
-default_opts = "https://torrentio.strem.fun/sort=qualitysize|qualityfilter=480p,other,scr,cam,unknown/manifest.json"
+default_opts = "https://torrentio.strem.fun/sort=qualitysize|qualityfilter=480p,other,scr,cam,unknown|providers=yts,eztv,rarbg,1337x,kickasstorrents,torrentgalaxy,magnetdl,horriblesubs,nyaasi,nyaapantsu/manifest.json"
 
 session = requests.Session()
 
