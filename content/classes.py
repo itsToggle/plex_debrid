@@ -1184,11 +1184,11 @@ class media:
                                     imdb_scraped = True
                                 if len(self.Releases) > 0:
                                     break
+                        debrid.check(self)
                         parentReleases = copy.deepcopy(self.Releases)
                         # if there are more than 3 uncollected seasons, look for multi-season releases before downloading single-season releases
                         if len(self.Seasons) > 3:
                             # gather file information on scraped, cached releases
-                            debrid.check(self)
                             multi_season_releases = []
                             season_releases = [None] * len(self.Seasons)
                             minimum_episodes = len(self.files()) / 2
@@ -1314,6 +1314,7 @@ class media:
                             if len(self.Releases) > 0:
                                 break
                     #Set the episodes parent releases to be the newly scraped releases
+                    debrid.check(self)
                     scraped_releases = copy.deepcopy(self.Releases)
             #If there was nothing downloaded, attempt downloading again using the newly scraped releases
             if not debrid_downloaded:
