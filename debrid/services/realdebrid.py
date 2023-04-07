@@ -212,8 +212,7 @@ def check(element, force=False):
                     if len(getattr(response, release.hash.lower()).rd) > 0:
                         original_list = getattr(response, release.hash.lower()).rd
                         filtered_list = [entry for entry in original_list if len(entry.__dict__) >= len(wanted)/2]
-                        setattr(response, release.hash.lower()).rd = filtered_list
-                        for cashed_version in getattr(response, release.hash.lower()).rd:
+                        for cashed_version in filtered_list:
                             version_files = []
                             for file_ in cashed_version.__dict__:
                                 debrid_file = file(file_,getattr(cashed_version, file_).filename,getattr(cashed_version, file_).filesize,wanted, unwanted)
