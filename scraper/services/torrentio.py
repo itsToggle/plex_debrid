@@ -107,7 +107,7 @@ def scrape(query, altquery):
             except Exception as e:
                 ui_print(str(e))
     else:    
-        url = 'https://torrentio.strem.fun/' + opts + '/stream/movie/' + query + '.json'
+        url = 'https://torrentio.strem.fun/' + opts + ("/" if len(opts) > 0 else "") + 'stream/movie/' + query + '.json'
         response = get(url)
     if not hasattr(response,"streams"):
         try:
