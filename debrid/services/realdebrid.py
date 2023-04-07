@@ -176,7 +176,7 @@ def download(element, stream=True, query='', force=False):
                                 if not actual_title == "":
                                     release.title = actual_title
                                 return True
-                ui_print('done')
+                ui_print('[realdebrid] error: no streamable version could be selected for release: ' + release.title)
                 return False
             else:
                 try:
