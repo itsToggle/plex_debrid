@@ -204,11 +204,15 @@ def check(element, force=False):
             element.Releases.remove(release)
     if len(hashes) > 0:
         response = get('https://api.real-debrid.com/rest/1.0/torrents/instantAvailability/' + '/'.join(hashes))
+        ui_print("[realdebrid] checking and sorting all release files ...",ui_settings.debug)
         for release in element.Releases:
             release.files = []
             if hasattr(response, release.hash.lower()):
                 if hasattr(getattr(response, release.hash.lower()), 'rd'):
                     if len(getattr(response, release.hash.lower()).rd) > 0:
+                        original_list = getattr(response, release.hash.lower()).rd
+                        filtered_list = [entry for entry in original_list if len(entry.__dict__) >= len(wanted)/2]
+                        setattr(response, release.hash.lower()).rd = filtered_list
                         for cashed_version in getattr(response, release.hash.lower()).rd:
                             version_files = []
                             for file_ in cashed_version.__dict__:
@@ -223,3 +227,4 @@ def check(element, force=False):
                         release.unwanted = release.files[0].unwanted
                         release.cached += ['RD']
                         continue
+        ui_print("done",ui_settings.debug)
