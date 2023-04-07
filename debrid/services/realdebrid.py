@@ -212,6 +212,8 @@ def check(element, force=False):
                     if len(getattr(response, release.hash.lower()).rd) > 0:
                         original_list = getattr(response, release.hash.lower()).rd
                         filtered_list = [entry for entry in original_list if len(entry.__dict__) >= len(wanted)/2]
+                        if len(filtered_list) == 0:
+                            continue
                         for cashed_version in filtered_list:
                             version_files = []
                             for file_ in cashed_version.__dict__:
