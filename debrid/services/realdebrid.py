@@ -38,6 +38,7 @@ def logerror(response):
 def get(url):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36','authorization': 'Bearer ' + api_key}
+    response = None
     try:
         response = session.get(url, headers=headers)
         logerror(response)
@@ -51,6 +52,7 @@ def get(url):
 def post(url, data):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36','authorization': 'Bearer ' + api_key}
+    response = None
     try:
         response = session.post(url, headers=headers, data=data)
         logerror(response)
