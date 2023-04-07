@@ -81,7 +81,7 @@ def download(element, stream=True, query='', force=False):
         query = element.deviation()
     for release in cached[:]:
         # if release matches query
-        if regex.match(r'(' + query.replace('.', '\.').replace("\.*", ".*") + ')', release.title,regex.I) or force:
+        if regex.match(r'(' + query + ')', release.title,regex.I) or force:
             if stream:
                 # Cached Download Method for debridlink
                 hashstring = regex.findall(r'(?<=btih:).*?(?=&)', str(release.download[0]), regex.I)[0]

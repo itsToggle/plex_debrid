@@ -67,8 +67,7 @@ def download(element, stream=True, query='', force=False):
         query = element.deviation()
     for release in cached[:]:
         # if release matches query
-        if regex.match(r'(' + query.replace('.', '\.').replace("\.*", ".*") + ')', release.title,
-                        regex.I) or force:
+        if regex.match(r'(' + query + ')', release.title, regex.I) or force:
             if stream:
                 # Cached Download Method for AllDebrid
                 url = 'https://api.alldebrid.com/v4/magnet/instant?magnets[]=' + release.download[0]
