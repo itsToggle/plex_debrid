@@ -83,16 +83,19 @@ class file:
         self.size = size / 1000000000
         self.match = ''
         wanted = False
-        for key in wanted_list:
-            if regex.search(r'(' + key + ')', self.name, regex.I):
+        unwanted = False
+        for key, wanted_pattern in wanted_list:
+            if wanted_pattern.search(self.name):
                 wanted = True
                 self.match = key
                 break
-        unwanted = False
-        for key in unwanted_list:
-            if regex.search(r'(' + key + ')', self.name, regex.I) or self.name.endswith('.exe') or self.name.endswith('.txt'):
-                unwanted = True
-                break
+
+        if not wanted:
+            for key, unwanted_pattern in unwanted_list:
+                if unwanted_pattern.search(self.name) or self.name.endswith('.exe') or self.name.endswith('.txt'):
+                    unwanted = True
+                    break
+
         self.wanted = wanted
         self.unwanted = unwanted
 
@@ -195,6 +198,9 @@ def check(element, force=False):
     else:
         wanted = element.files()
     unwanted = releases.sort.unwanted
+    wanted_patterns = list(zip(wanted, [regex.compile(r'(' + key + ')', regex.IGNORECASE) for key in wanted]))
+    unwanted_patterns = list(zip(unwanted, [regex.compile(r'(' + key + ')', regex.IGNORECASE) for key in unwanted]))
+
     hashes = []
     for release in element.Releases[:]:
         if len(release.hash) == 40:
@@ -204,20 +210,20 @@ def check(element, force=False):
             element.Releases.remove(release)
     if len(hashes) > 0:
         response = get('https://api.real-debrid.com/rest/1.0/torrents/instantAvailability/' + '/'.join(hashes))
-        ui_print("[realdebrid] checking and sorting all release files ...",ui_settings.debug)
+        ui_print("[realdebrid] checking and sorting all release files ...", ui_settings.debug)
         for release in element.Releases:
             release.files = []
-            if hasattr(response, release.hash.lower()):
-                if hasattr(getattr(response, release.hash.lower()), 'rd'):
-                    if len(getattr(response, release.hash.lower()).rd) > 0:
-                        original_list = getattr(response, release.hash.lower()).rd
-                        filtered_list = [entry for entry in original_list if len(entry.__dict__) >= len(wanted)/2]
-                        if len(filtered_list) == 0:
-                            continue
-                        for cashed_version in filtered_list:
+            release_hash = release.hash.lower()
+            if hasattr(response, release_hash):
+                response_attr = getattr(response, release_hash)
+                if hasattr(response_attr, 'rd'):
+                    rd_attr = response_attr.rd
+                    if len(rd_attr) > 0:
+                        for cashed_version in rd_attr:
                             version_files = []
                             for file_ in cashed_version.__dict__:
-                                debrid_file = file(file_,getattr(cashed_version, file_).filename,getattr(cashed_version, file_).filesize,wanted, unwanted)
+                                file_attr = getattr(cashed_version, file_)
+                                debrid_file = file(file_, file_attr.filename, file_attr.filesize, wanted_patterns, unwanted_patterns)
                                 version_files.append(debrid_file)
                             release.files += [version(version_files), ]
                         # select cached version that has the most needed, most wanted, least unwanted files and most files overall
