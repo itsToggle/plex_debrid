@@ -124,8 +124,6 @@ def download(element, stream=True, query='', force=False):
     wanted = [query]
     if not isinstance(element, releases.release):
         wanted = element.files()
-        if not element.isanime():
-            query = '(' + query.replace('.', '\.').replace("\.*", ".*") + ')'
     for release in cached[:]:
         # if release matches query
         if regex.match(query, release.title,regex.I) or force:
