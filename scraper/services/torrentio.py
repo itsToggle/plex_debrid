@@ -87,7 +87,7 @@ def scrape(query, altquery):
             ui_print('[torrentio] error: could not find IMDB ID')
             return scraped_releases
     if type == "show":
-        url = 'https://torrentio.strem.fun/' + opts + '/stream/series/' + query + ':' + str(int(s)) + ':' + str(int(e)) + '.json'
+        url = 'https://torrentio.strem.fun/' + opts + ("/" if len(opts) > 0 else "") + 'stream/series/' + query + ':' + str(int(s)) + ':' + str(int(e)) + '.json'
         response = get(url)
         if spack:
             try:
