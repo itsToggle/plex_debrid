@@ -111,7 +111,8 @@ def scrape(query, altquery):
         response = get(url)
     if not hasattr(response,"streams"):
         try:
-            ui_print('[torrentio] error: ' + str(response))
+            if not response == None:
+                ui_print('[torrentio] error: ' + str(response))
         except:
             ui_print('[torrentio] error: unknown error')
         return scraped_releases
