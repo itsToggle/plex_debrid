@@ -555,10 +555,10 @@ class media:
                     return '[^A-Za-z0-9]*(' + title + ')'
             elif self.type == 'show':
                 title = title.replace('.' + str(self.year), '')
-                return '[^A-Za-z0-9]*(' + title + ':?.)(series.)?((\(?' + str(self.year) + '\)?.)|(complete.)|(seasons?.[0-9]+.[0-9]?[0-9]?.?)|(S[0-9]+.S?[0-9]?[0-9]?.?)|(S[0-9]+E[0-9]+))'
+                return '[^A-Za-z0-9]*(' + title + ':?.)(series.|[^A-Za-z0-9]+)?((\(?' + str(self.year) + '\)?.)|(complete.)|(seasons?.[0-9]+.[0-9]?[0-9]?.?)|(S[0-9]+.S?[0-9]?[0-9]?.?)|(S[0-9]+E[0-9]+))'
             elif self.type == 'season':
                 title = title.replace('.' + str(self.parentYear), '')
-                return '[^A-Za-z0-9]*(' + title + ':?.)(series.)?(\(?' + str(self.parentYear) + '\)?.)?(season.' + str(self.index) + '.|season.' + str("{:02d}".format(self.index)) + '.|S' + str("{:02d}".format(self.index)) + '.)'
+                return '[^A-Za-z0-9]*(' + title + ':?.)(series.|[^A-Za-z0-9]+)?(\(?' + str(self.parentYear) + '\)?.)?(season.' + str(self.index) + '\.|season.' + str("{:02d}".format(self.index)) + '\.|S' + str("{:02d}".format(self.index)) + '\.)'
             elif self.type == 'episode':
                 title = title.replace('.' + str(self.grandparentYear), '')
                 try:
@@ -1143,7 +1143,7 @@ class media:
                         if not len(self.Releases) == 0:
                             self.year = year
                             break                        
-                    debrid_downloaded, retry = self.debrid_download(force=True)
+                    debrid_downloaded, retry = self.debrid_download(force=False)
                     if debrid_downloaded:
                         refresh_ = True
                         if not retry and (self.watchlist.autoremove == "both" or self.watchlist.autoremove == "movie"):
@@ -1184,11 +1184,11 @@ class media:
                                     imdb_scraped = True
                                 if len(self.Releases) > 0:
                                     break
+                        debrid.check(self)
                         parentReleases = copy.deepcopy(self.Releases)
                         # if there are more than 3 uncollected seasons, look for multi-season releases before downloading single-season releases
                         if len(self.Seasons) > 3:
                             # gather file information on scraped, cached releases
-                            debrid.check(self)
                             multi_season_releases = []
                             season_releases = [None] * len(self.Seasons)
                             minimum_episodes = len(self.files()) / 2
@@ -1314,6 +1314,7 @@ class media:
                             if len(self.Releases) > 0:
                                 break
                     #Set the episodes parent releases to be the newly scraped releases
+                    debrid.check(self)
                     scraped_releases = copy.deepcopy(self.Releases)
             #If there was nothing downloaded, attempt downloading again using the newly scraped releases
             if not debrid_downloaded:
@@ -1419,12 +1420,9 @@ class media:
                     episode.downloaded()
 
     def debrid_download(self,force=False):
-        if len(self.Releases) > 0:
-            ui_print("checking cache status for scraped releases on: [" + "],[".join(debrid.services.active) + "] ...")
         debrid.check(self)
         self.bitrate()
         if len(self.Releases) > 0:
-            ui_print("done")
             releases.print_releases(self.Releases,True)
         scraped_releases = copy.deepcopy(self.Releases)
         downloaded = []

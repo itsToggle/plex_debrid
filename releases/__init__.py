@@ -15,6 +15,7 @@ class release:
             if regex.search(r'(?<=btih:).*?(?=&)', str(self.download[0]), regex.I):
                 self.hash = regex.findall(r'(?<=btih:).*?(?=&)', str(self.download[0]), regex.I)[0]
         self.cached = []
+        self.checked = False
         self.wanted = 0
         self.unwanted = 0
         self.seeders = seeders

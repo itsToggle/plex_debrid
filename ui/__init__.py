@@ -458,7 +458,17 @@ def threaded(stop):
                 ui_print('checking new content ...')
                 for element in unique(watchlists):
                     if hasattr(element, 'download'):
-                        if not element in content.classes.media.ignore_queue:
+                        newly_added = True
+                        if element.type == "show":
+                            for season in element.Seasons:
+                                if season in content.classes.media.ignore_queue or not newly_added:
+                                    newly_added = False
+                                    break
+                                for episode in season.Episodes:
+                                    if episode in content.classes.media.ignore_queue:
+                                        newly_added = False
+                                        break
+                        if newly_added:
                             element.download(library=library)
                 ui_print('done')
             elif timeout_counter >= regular_check:

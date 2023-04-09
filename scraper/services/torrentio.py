@@ -5,7 +5,7 @@ import releases
 
 name = "torrentio"
 
-default_opts = "https://torrentio.strem.fun/sort=qualitysize|qualityfilter=480p,other,scr,cam,unknown/manifest.json"
+default_opts = "https://torrentio.strem.fun/sort=qualitysize|qualityfilter=480p,other,scr,cam,unknown|providers=yts,eztv,rarbg,1337x,kickasstorrents,torrentgalaxy,magnetdl,horriblesubs,nyaasi,nyaapantsu/manifest.json"
 
 session = requests.Session()
 
@@ -87,7 +87,7 @@ def scrape(query, altquery):
             ui_print('[torrentio] error: could not find IMDB ID')
             return scraped_releases
     if type == "show":
-        url = 'https://torrentio.strem.fun/' + opts + '/stream/series/' + query + ':' + str(int(s)) + ':' + str(int(e)) + '.json'
+        url = 'https://torrentio.strem.fun/' + opts + ("/" if len(opts) > 0 else "") + 'stream/series/' + query + ':' + str(int(s)) + ':' + str(int(e)) + '.json'
         response = get(url)
         if spack:
             try:
@@ -107,11 +107,12 @@ def scrape(query, altquery):
             except Exception as e:
                 ui_print(str(e))
     else:    
-        url = 'https://torrentio.strem.fun/' + opts + '/stream/movie/' + query + '.json'
+        url = 'https://torrentio.strem.fun/' + opts + ("/" if len(opts) > 0 else "") + 'stream/movie/' + query + '.json'
         response = get(url)
     if not hasattr(response,"streams"):
         try:
-            ui_print('[torrentio] error: ' + str(response))
+            if not response == None:
+                ui_print('[torrentio] error: ' + str(response))
         except:
             ui_print('[torrentio] error: unknown error')
         return scraped_releases
