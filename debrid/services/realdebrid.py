@@ -110,7 +110,9 @@ class version:
         self.needed = 0
         self.wanted = 0
         self.unwanted = 0
+        self.size = 0
         for file in self.files:
+            self.size += file.size
             if file.wanted:
                 self.wanted += 1
             if file.unwanted:
@@ -232,6 +234,7 @@ def check(element, force=False):
                         release.files.sort(key=lambda x: x.unwanted, reverse=False)
                         release.wanted = release.files[0].wanted
                         release.unwanted = release.files[0].unwanted
+                        release.size = release.files[0].size
                         release.cached += ['RD']
                         continue
         ui_print("done",ui_settings.debug)
