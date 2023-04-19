@@ -672,7 +672,8 @@ class media:
         #get all versions
         versions = []
         for version in releases.sort.versions:
-            versions += [releases.sort.version(version[0], version[1], version[2], version[3])]
+            if not '\u0336' in version[0]:
+                versions += [releases.sort.version(version[0], version[1], version[2], version[3])]
         #update media items ignore count
         if self in media.ignore_queue:
             match = next((x for x in media.ignore_queue if self == x), None)
@@ -789,7 +790,8 @@ class media:
             match = next((x for x in media.ignore_queue if self == x), None)
             self.ignored_count = match.ignored_count
         for version in releases.sort.versions:
-            all_versions += [releases.sort.version(version[0], version[1], version[2], version[3])]
+            if not '\u0336' in version[0]:
+                all_versions += [releases.sort.version(version[0], version[1], version[2], version[3])]
         for version in all_versions[:]:
             if not version.applies(self):
                 all_versions.remove(version)
