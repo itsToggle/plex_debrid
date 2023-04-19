@@ -64,6 +64,7 @@ def scrape(query, altquery):
     type = ("show" if regex.search(r'(S[0-9]|complete|S\?[0-9])',altquery,regex.I) else "movie")
     opts = default_opts.split("/")[-2] if default_opts.endswith("manifest.json") else ""
     spack = False
+    episodes = []
     if type == "show":
         s = (regex.search(r'(?<=S)([0-9]+)',altquery,regex.I).group() if regex.search(r'(?<=S)([0-9]+)',altquery,regex.I) else None)
         e = (regex.search(r'(?<=E)([0-9]+)',altquery,regex.I).group() if regex.search(r'(?<=E)([0-9]+)',altquery,regex.I) else None)
@@ -91,22 +92,23 @@ def scrape(query, altquery):
         response = get(url)
         if spack:
             try:
+                url = "https://v3-cinemeta.strem.io/meta/series/"+query+".json"
+                meta = get(url)
+                for episode in meta.meta.videos:
+                    if episode.season == int(s) and not episode.episode == int(e):
+                        episodes += [e]
                 for result in response.streams:
                     if spack and regex.search(r'S[0-9]+( |\.)',result.title,regex.I):
                         spack = False
                         break  
                 if spack:
-                    url = "https://v3-cinemeta.strem.io/meta/series/"+query+".json"
-                    meta = get(url)
-                    for episode in meta.meta.videos:
-                        if spack and episode.season == int(s) and not episode.episode == int(e):
-                            url = 'https://torrentio.strem.fun/' + opts + '/stream/series/' + query + ':' + str(int(s)) + ':' + str(int(episode.episode)) + '.json'
-                            more = get(url)
-                            if not more == None and len(more.streams) > 0:
-                                response.streams += more.streams                                   
+                    for episode in episodes:
+                        url = 'https://torrentio.strem.fun/' + opts + '/stream/series/' + query + ':' + str(int(s)) + ':' + str(int(episode)) + '.json'
+                        more = get(url)
+                        if not more == None and len(more.streams) > 0:
+                            response.streams += more.streams                                   
             except Exception as e:
-                if not response == None:
-                    ui_print('[torrentio] error: ' + str(response))
+                ui_print(str(e),debug=ui_settings.debug)
     else:    
         url = 'https://torrentio.strem.fun/' + opts + ("/" if len(opts) > 0 else "") + 'stream/movie/' + query + '.json'
         response = get(url)
@@ -118,8 +120,10 @@ def scrape(query, altquery):
             ui_print('[torrentio] error: unknown error')
         return scraped_releases
     for result in response.streams:
+        size_multiplier = (1 + len(episodes) if regex.search(r'S[0-9]+( |\.)',result.title,regex.I) else 1)
         title = result.title.split('\n')[0].replace(' ','.')
         size = (float(regex.search(r'(?<=💾 )([0-9]+.?[0-9]+)(?= GB)',result.title).group()) if regex.search(r'(?<=💾 )([0-9]+.?[0-9]+)(?= GB)',result.title) else float(regex.search(r'(?<=💾 )([0-9]+.?[0-9]+)(?= MB)',result.title).group())/1000 if regex.search(r'(?<=💾 )([0-9]+.?[0-9]+)(?= MB)',result.title) else 0)
+        size = size_multiplier * size
         links = ['magnet:?xt=urn:btih:' + result.infoHash + '&dn=&tr=']
         seeds = (int(regex.search(r'(?<=👤 )([0-9]+)',result.title).group()) if regex.search(r'(?<=👤 )([1-9]+)',result.title) else 0)
         source = ((regex.search(r'(?<=⚙️ )(.*)(?=\n|$)',result.title).group()) if regex.search(r'(?<=⚙️ )(.*)(?=\n|$)',result.title) else "unknown")
