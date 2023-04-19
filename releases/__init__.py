@@ -4,7 +4,7 @@ from ui.ui_print import *
 def strike(text):
     result = ''
     for c in text:
-        result = result + '\u0336' + c 
+        result = result + c + '\u0336'
     return result
 
 def unstrike(text):
