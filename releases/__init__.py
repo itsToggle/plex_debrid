@@ -106,6 +106,7 @@ class sort:
             elif choice == "2":
                 ui_cls('Options/Settings/Scraper Settings/Versions/Add')
                 names = []
+                indices = []
                 name = "Id rather be watching the 1999 cinematic masterpiece 'The Mummy'."
                 names += [name]
                 for version in sort.versions[:]:
@@ -113,7 +114,20 @@ class sort:
                 while name in names:
                     name = input("Please provide a unique name for this version: ")
                 print()
-                default = copy.deepcopy(sort.versions[0])
+                if len(sort.versions) > 1:
+                    print("Please select a current version as a starting point for your new version: ")
+                    print()
+                    for index, version in enumerate(sort.versions):
+                        print(str(index + 1) + ') Duplicate version "' + version[0] + '"')
+                        indices += [str(index + 1)]
+                    print()
+                    choice2 = input("Please choose a version to duplicate: ")
+                    if choice2 in indices:
+                        default = copy.deepcopy(sort.versions[int(choice2)-1])
+                    else:
+                        return
+                else:
+                    default = copy.deepcopy(sort.versions[0])
                 sort.version.setup(name, default, new=True)
                 sort.versions += [default]
         return
