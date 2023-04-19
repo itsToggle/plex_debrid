@@ -77,8 +77,7 @@ If github is not your cup of tea;
 >  - **[Linux Server (Wiki)](https://github.com/itsToggle/plex_debrid/wiki/Setup-Guides#linux-server-setup)**
 >  - **[Linux ARM Server (Wiki)](https://github.com/itsToggle/plex_debrid/wiki/Setup-Guides#linux-arm64-server-setup)**
 >  - **[FreeBSD (u/TheNicestRichtofen)](https://www.reddit.com/r/Piracy/comments/v5zpj7/comment/ibnikqh/?utm_source=share&utm_medium=web2x&context=3)**
->  - **[Android](https://github.com/itsToggle/plex_debrid/tree/android)**
->  - **Rooted Nvidia Shield guide from user "b u n n y" up on discord**
+>  - **[Android (Nvidia Shield)](https://github.com/itsToggle/plex_debrid/wiki/Setup-Guides#android-nvidia-shield-setup)**
 ></details>
 >
 ><details>
