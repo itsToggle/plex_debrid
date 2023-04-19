@@ -354,6 +354,7 @@ If github is not your cup of tea;
 >  
 >  - To use one of your trakt users collections as your library service, navigate to '/Settings/Library Service/Library collection service/Change library service/'
 >  - If you choose your trakt collection as your library service, your *entire* trakt collection is checked before downloading anything and the script will avoid duplicate downloads. 
+>  - (You need at least one item in your trakt collection. If its currently empty, just add a random movie or show.)
 >
 ></details>
  
