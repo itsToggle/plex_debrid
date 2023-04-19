@@ -59,7 +59,7 @@ This is a work in progress, and im not a professional programmer. shits not read
 - or create a new [issue](https://github.com/itsToggle/plex_debrid/issues) if you find a bug or have an idea for an improvement.
 
 If github is not your cup of tea; 
-- join the plex_debrid [discord server](https://discord.gg/u3vTDGjeKE) 
+- join the plex_debrid [discord server](https://discord.gg/jMpyFryfaj) 
 - or find me on [reddit](https://www.reddit.com/user/itsToggle)
 
  
