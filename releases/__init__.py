@@ -1,6 +1,18 @@
 from base import *
 from ui.ui_print import *
 
+def strike(text):
+    result = ''
+    for c in text:
+        result = result + '\u0336' + c 
+    return result
+
+def unstrike(text):
+    result = ''
+    for c in text:
+        result = result + (c if c != '\u0336' else '')
+    return result
+
 class release:
     # Define release attributes
     def __init__(self, source, type, title, files, size, download, seeders=0):
@@ -92,7 +104,7 @@ class sort:
                     print("0) Back")
                     indices = []
                     for index, version in enumerate(sort.versions):
-                        print(str(index + 1) + ') Edit version "' + version[0] + '"')
+                        print(str(index + 1) + ') Edit version "' + version[0] + '"' + (' (disabled)' if '\u0336' in version[0] else '') )
                         indices += [str(index + 1)]
                     print()
                     choice2 = input("Choose an action: ")
@@ -197,6 +209,11 @@ class sort:
                 print("To change the scraping language of this version, type 'lang'")
                 print("To rename this version, type 'rename'")
                 if len(sort.versions) > 1:
+                    if not '\u0336' in version_[0] and len(list(x for x in sort.versions if not '\u0336' in x[0])) > 1:
+                        print("To disable this version, type 'disable'")
+                    elif '\u0336' in version_[0]:
+                        print("To enable this version, type 'enable'")
+                if len(sort.versions) > 1:
                     print("To delete this version, type 'remove'")
                 print()
                 choice = input("Choose an action: ")
@@ -229,6 +246,20 @@ class sort:
                             break
                     while name in names:
                         name = input("Please provide a unique name for this version: ")
+                    version[0] = name
+                    print()
+                elif choice == 'disable' and len(list(x for x in sort.versions if not '\u0336' in x[0])) > 1:
+                    for version in sort.versions[:]:
+                        if version[0] == name:
+                            break
+                    name = strike(name)
+                    version[0] = name
+                    print()
+                elif choice == 'enable' and '\u0336' in version_[0]:
+                    for version in sort.versions[:]:
+                        if version[0] == name:
+                            break
+                    name = unstrike(name)
                     version[0] = name
                     print()
                 elif choice == 'remove':
