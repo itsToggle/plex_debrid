@@ -500,6 +500,101 @@ class library(classes.library):
             except:
                 ui_print("[plex] error: couldnt refresh libraries. Make sure you have setup a plex user!")
 
+    class lable(classes.refresh):
+
+        name = 'Plex Lables'
+
+        def setup(cls, new=False):
+            ui_cls("Options/Settings/Library Services/Library update services")
+            from settings import settings_list
+            settings = []
+            for category, allsettings in settings_list:
+                for setting in allsettings:
+                    settings += [setting]
+            if len(users) == 0:
+                print("It looks like you havent setup a plex user. Please set up a plex user first.")
+                print()
+                for setting in settings:
+                    if setting.name == "Plex users":
+                        setting.setup()
+            working = False
+            while not working:
+                try:
+                    response = get(library.url  + '/library/sections/?X-Plex-Token=' + users[0][1])
+                    working = True
+                    if len(response.MediaContainer.Directory) == 0:
+                        print("It looks like this server does not have any libraries set-up! Please open the plex webui, setup at least one library and point it to your mounted debrid service drive.")
+                        print()
+                        input("Press enter to try again: ")
+                        print()
+                        working = False
+                except:
+                    working = False
+                    print("It looks like your plex server could not be reached at '" + library.url + "'. Make sure that plex media server is running, that you have claimed the server and that you have created at least one plex library.")
+                    print()
+                    for setting in settings:
+                        if setting.name == "Plex server address":
+                            setting.setup()
+                    print()
+            if not new:
+                print()
+                print("nothing to edit!")
+                print()
+                time.sleep(3)
+            else:
+                if not library.lable.name in classes.refresh.active:
+                    classes.refresh.active += [library.lable.name]
+                print()
+                print("Successfully added plex lable update service!")
+                print()
+                time.sleep(3)
+
+        def call(element):
+            tags = []
+            try:
+                # Add user Tag
+                if hasattr(element,"requestedBy"):
+                    tags += [element.requestedBy.displayName]
+                elif isinstance(element.user[0],list):
+                    for user in element.user:
+                        tags += ["From: " + user[0]]
+                else:
+                    tags += ["From: " + element.user[0]]
+                # Add version Tag
+                for version in element.downloaded_versions:
+                    if element.query() in version:
+                        tags += ["Version: " +version.split("[")[-1][:-1]]
+                retries = 0
+                while element not in current_library and retries < 3:
+                    time.sleep(10)
+                    _ = library(silent=True)
+                    retries += 1
+                library_item = next((x for x in current_library if element == x), None)
+                if library_item == None:
+                    ui_print("[plex] error: couldnt add lables!")
+                    return
+                num = 0 if not hasattr(library_item,"Label") else len(library_item.Label)
+                tags_string = ""
+                for tag in tags:
+                    tags_string += '&label%5B' + str(num) + '%5D.tag.tag=' + tag
+                    num += 1
+                type_string = "1" if element.type == "movie" else "2"
+                ui_print('[plex] adding lables: "' + '","'.join(tags) + '" to item: "' + element.query() + '"')
+                url = library.url + '/library/sections/' + str(library_item.librarySectionID) + '/all?type=' + type_string + '&id=' + library_item.ratingKey + '&label.locked=1' + tags_string + '&X-Plex-Token=' + users[0][1]
+                response = session.put(url,headers=headers)
+                response
+            except Exception as e:
+                ui_print("[plex] error: couldnt add lables!")
+                ui_print(str(e), debug=ui_settings.debug)
+
+        def __new__(cls, element):
+            try:
+                results = [None]
+                t = Thread(target=multi_init, args=(library.lable.call, element, results, 0))
+                t.start()
+            except:
+                ui_print("[plex] error: couldnt add lables!")
+
     class ignore(classes.ignore):
 
         name = 'Plex Discover Watch Status'
@@ -633,7 +728,7 @@ class library(classes.library):
                 ui_print("[plex] error: couldnt check ignore status for item: " + str(e), debug=ui_settings.debug)
                 return False
 
-    def __new__(self):
+    def __new__(self,silent=False):
         global current_library
         list_ = []
         sections = []
@@ -651,7 +746,8 @@ class library(classes.library):
             ui_print("[plex error]: couldnt reach local plex server at: " + library.url + " to determine library sections. Make sure the address is correct, the server is running, and youve set up at least one library.")
         if len(sections) == 0:
             return list_
-        ui_print('[plex] getting plex library section/s "' + '","'.join(names) + '" ...')
+        if not silent:
+            ui_print('[plex] getting plex library section/s "' + '","'.join(names) + '" ...')
         for section,types in sections:
             if section == '':
                 continue
