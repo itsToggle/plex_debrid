@@ -65,7 +65,7 @@ def scrape():
     obj = releases.release('', '', '', [], 0, [])
     indices = []
     for index, version in enumerate(releases.sort.versions):
-        print(str(index + 1) + ') ' + version[0])
+        print(str(index + 1) + ') ' + version[0] + (' (disabled)' if '\u0336' in version[0] else ''))
         indices += [str(index + 1)]
     print(str(index + 2) + ') Scrape without defining a version')
     indices += [str(index + 2)]
