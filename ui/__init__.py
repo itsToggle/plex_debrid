@@ -65,7 +65,7 @@ def scrape():
     obj = releases.release('', '', '', [], 0, [])
     indices = []
     for index, version in enumerate(releases.sort.versions):
-        print(str(index + 1) + ') ' + version[0])
+        print(str(index + 1) + ') ' + version[0] + (' (disabled)' if '\u0336' in version[0] else ''))
         indices += [str(index + 1)]
     print(str(index + 2) + ') Scrape without defining a version')
     indices += [str(index + 2)]
@@ -362,6 +362,7 @@ def update_available():
         return ""
     except:
         return ""
+
 def update(settings, version):
     ui_cls('/Update ' + version[0] + '/')
     print('There has been an update to plex_debrid, which is not compatible with your current settings:')
@@ -404,19 +405,19 @@ def threaded(stop):
     regular_check = 1800
     timeout_counter = 0
     library = content.classes.library()[0]()
+    # get entire plex_watchlist
+    plex_watchlist = content.services.plex.watchlist()
+    # get entire trakt_watchlist
+    trakt_watchlist = content.services.trakt.watchlist()
+    # get all overseerr request
+    overseerr_requests = content.services.overseerr.requests()
+    # combine all content, sort by newest
+    watchlists = plex_watchlist + trakt_watchlist + overseerr_requests
+    try:
+        watchlists.data.sort(key=lambda s: s.watchlistedAt,reverse=True)
+    except:
+        ui_print("couldnt sort monitored media by newest, using default order.", ui_settings.debug)
     if len(library) > 0:
-        # get entire plex_watchlist
-        plex_watchlist = content.services.plex.watchlist()
-        # get entire trakt_watchlist
-        trakt_watchlist = content.services.trakt.watchlist()
-        # get all overseerr request
-        overseerr_requests = content.services.overseerr.requests()
-        # combine all content, sort by newest
-        watchlists = plex_watchlist + trakt_watchlist + overseerr_requests
-        try:
-            watchlists.data.sort(key=lambda s: s.watchlistedAt,reverse=True)
-        except:
-            ui_print("couldnt sort monitored media by newest, using default order.", ui_settings.debug)
         ui_print('checking new content ...')
         t0 = time.time()
         for element in unique(watchlists):
@@ -445,80 +446,80 @@ def threaded(stop):
                         ui_print('done')
                     t0 = time.time()
         ui_print('done')
-        while not stop():
-            if plex_watchlist.update() or overseerr_requests.update() or trakt_watchlist.update():
-                library = content.classes.library()[0]()
-                if len(library) == 0:
-                    continue
-                watchlists = plex_watchlist + trakt_watchlist + overseerr_requests
-                try:
-                    watchlists.data.sort(key=lambda s: s.watchlistedAt,reverse=True)
-                except:
-                    ui_print("couldnt sort monitored media by newest, using default order.", ui_settings.debug)
-                ui_print('checking new content ...')
-                for element in unique(watchlists):
-                    if hasattr(element, 'download'):
-                        newly_added = True
-                        if element.type == "show":
-                            for season in element.Seasons:
-                                if season in content.classes.media.ignore_queue or not newly_added:
+    while not stop():
+        if plex_watchlist.update() or overseerr_requests.update() or trakt_watchlist.update():
+            library = content.classes.library()[0]()
+            if len(library) == 0:
+                continue
+            watchlists = plex_watchlist + trakt_watchlist + overseerr_requests
+            try:
+                watchlists.data.sort(key=lambda s: s.watchlistedAt,reverse=True)
+            except:
+                ui_print("couldnt sort monitored media by newest, using default order.", ui_settings.debug)
+            ui_print('checking new content ...')
+            for element in unique(watchlists):
+                if hasattr(element, 'download'):
+                    newly_added = True
+                    if element.type == "show":
+                        for season in element.Seasons:
+                            if season in content.classes.media.ignore_queue or not newly_added:
+                                newly_added = False
+                                break
+                            for episode in season.Episodes:
+                                if episode in content.classes.media.ignore_queue:
                                     newly_added = False
                                     break
-                                for episode in season.Episodes:
-                                    if episode in content.classes.media.ignore_queue:
-                                        newly_added = False
-                                        break
-                        if newly_added:
-                            element.download(library=library)
-                ui_print('done')
-            elif timeout_counter >= regular_check:
-                # get entire plex_watchlist
-                plex_watchlist = content.services.plex.watchlist()
-                # get entire trakt_watchlist
-                trakt_watchlist = content.services.trakt.watchlist()
-                # get all overseerr request, match content to plex media type and add to monitored list
-                overseerr_requests = content.services.overseerr.requests()
-                # combine all content, sort by newest
-                watchlists = plex_watchlist + trakt_watchlist + overseerr_requests
-                try:
-                    watchlists.data.sort(key=lambda s: s.watchlistedAt,reverse=True)
-                except:
-                    ui_print("couldnt sort monitored media by newest, using default order.", ui_settings.debug)
-                library = content.classes.library()[0]()
-                timeout_counter = 0
-                if len(library) == 0:
-                    continue
-                ui_print('checking new content ...')
-                t0 = time.time()
-                for element in unique(watchlists):
-                    if hasattr(element, 'download'):
+                    if newly_added:
                         element.download(library=library)
-                        t1 = time.time()
-                        #if more than 5 seconds have passed, check for newly watchlisted content
-                        if t1-t0 >= 5:
-                            if plex_watchlist.update() or overseerr_requests.update() or trakt_watchlist.update():
-                                library = content.classes.library()[0]()
-                                if len(library) == 0:
-                                    continue
-                                new_watchlists = plex_watchlist + trakt_watchlist + overseerr_requests
-                                try:
-                                    new_watchlists.data.sort(key=lambda s: s.watchlistedAt,reverse=True)
-                                except:
-                                    ui_print("couldnt sort monitored media by newest, using default order.", ui_settings.debug)
-                                new_watchlists = unique(new_watchlists)
-                                for element in new_watchlists[:]:
-                                    if element in watchlists:
-                                        new_watchlists.remove(element)
-                                ui_print('checking new content ...')
-                                for element in new_watchlists:
-                                    if hasattr(element, 'download'):
-                                        element.download(library=library)
-                                ui_print('done')
-                            t0 = time.time()
-                ui_print('done')
-            else:
-                timeout_counter += timeout
-            time.sleep(timeout)
+            ui_print('done')
+        elif timeout_counter >= regular_check:
+            # get entire plex_watchlist
+            plex_watchlist = content.services.plex.watchlist()
+            # get entire trakt_watchlist
+            trakt_watchlist = content.services.trakt.watchlist()
+            # get all overseerr request, match content to plex media type and add to monitored list
+            overseerr_requests = content.services.overseerr.requests()
+            # combine all content, sort by newest
+            watchlists = plex_watchlist + trakt_watchlist + overseerr_requests
+            try:
+                watchlists.data.sort(key=lambda s: s.watchlistedAt,reverse=True)
+            except:
+                ui_print("couldnt sort monitored media by newest, using default order.", ui_settings.debug)
+            library = content.classes.library()[0]()
+            timeout_counter = 0
+            if len(library) == 0:
+                continue
+            ui_print('checking new content ...')
+            t0 = time.time()
+            for element in unique(watchlists):
+                if hasattr(element, 'download'):
+                    element.download(library=library)
+                    t1 = time.time()
+                    #if more than 5 seconds have passed, check for newly watchlisted content
+                    if t1-t0 >= 5:
+                        if plex_watchlist.update() or overseerr_requests.update() or trakt_watchlist.update():
+                            library = content.classes.library()[0]()
+                            if len(library) == 0:
+                                continue
+                            new_watchlists = plex_watchlist + trakt_watchlist + overseerr_requests
+                            try:
+                                new_watchlists.data.sort(key=lambda s: s.watchlistedAt,reverse=True)
+                            except:
+                                ui_print("couldnt sort monitored media by newest, using default order.", ui_settings.debug)
+                            new_watchlists = unique(new_watchlists)
+                            for element in new_watchlists[:]:
+                                if element in watchlists:
+                                    new_watchlists.remove(element)
+                            ui_print('checking new content ...')
+                            for element in new_watchlists:
+                                if hasattr(element, 'download'):
+                                    element.download(library=library)
+                            ui_print('done')
+                        t0 = time.time()
+            ui_print('done')
+        else:
+            timeout_counter += timeout
+        time.sleep(timeout)
 
 def download_script_run():
     if preflight():
