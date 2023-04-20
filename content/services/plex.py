@@ -550,20 +550,8 @@ class library(classes.library):
                 time.sleep(3)
 
         def call(element):
-            tags = []
             try:
-                # Add user Tag
-                if hasattr(element,"requestedBy"):
-                    tags += [element.requestedBy.displayName]
-                elif isinstance(element.user[0],list):
-                    for user in element.user:
-                        tags += ["From: " + user[0]]
-                else:
-                    tags += ["From: " + element.user[0]]
-                # Add version Tag
-                for version in element.downloaded_versions:
-                    if element.query() in version and not "Version: " +version.split("[")[-1][:-1] in tags:
-                        tags += ["Version: " +version.split("[")[-1][:-1]]
+                tags = element.post_tags
                 retries = 0
                 while element not in current_library and retries < 3:
                     time.sleep(10)
@@ -587,7 +575,31 @@ class library(classes.library):
                 ui_print(str(e), debug=ui_settings.debug)
 
         def __new__(cls, element):
+            tags = []
             try:
+                if not isinstance(element,classes.media):
+                    return
+                # Add user Tag
+                if hasattr(element,"requestedBy"):
+                    tags += [element.requestedBy.displayName]
+                elif isinstance(element.user[0],list):
+                    for user in element.user:
+                        tags += ["From: " + user[0]]
+                else:
+                    tags += ["From: " + element.user[0]]
+                # Add version Tag
+                for version in element.downloaded_versions:
+                    if element.query() in version and not "Version: " +version.split("[")[-1][:-1] in tags:
+                        tags += ["Version: " +version.split("[")[-1][:-1]]
+                library_item = next((x for x in current_library if element == x), None)
+                # Check existing Tags
+                if hasattr(library_item,"Label"):
+                    for lable in library_item.Label:
+                        if lable.tag in tags:
+                            tags.remove(lable.tag)
+                if len(tags) == 0:
+                    return
+                element.post_tags = tags
                 results = [None]
                 t = Thread(target=multi_init, args=(library.lable.call, element, results, 0))
                 t.start()
