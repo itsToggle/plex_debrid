@@ -562,7 +562,7 @@ class library(classes.library):
                     tags += ["From: " + element.user[0]]
                 # Add version Tag
                 for version in element.downloaded_versions:
-                    if element.query() in version:
+                    if element.query() in version and not "Version: " +version.split("[")[-1][:-1] in tags:
                         tags += ["Version: " +version.split("[")[-1][:-1]]
                 retries = 0
                 while element not in current_library and retries < 3:
@@ -582,7 +582,6 @@ class library(classes.library):
                 ui_print('[plex] adding lables: "' + '","'.join(tags) + '" to item: "' + element.query() + '"')
                 url = library.url + '/library/sections/' + str(library_item.librarySectionID) + '/all?type=' + type_string + '&id=' + library_item.ratingKey + '&label.locked=1' + tags_string + '&X-Plex-Token=' + users[0][1]
                 response = session.put(url,headers=headers)
-                response
             except Exception as e:
                 ui_print("[plex] error: couldnt add lables!")
                 ui_print(str(e), debug=ui_settings.debug)
