@@ -1014,7 +1014,7 @@ class media:
         except:
             return False
 
-    def collect(self,refresh_):
+    def collect(self,refresh_=True):
         for refresh_service in refresh():
             if refresh_service.__module__ == self.__module__ or (self.__module__ in ["content.services.trakt","releases","content.services.overseerr","content.services.plex"] and refresh_service.__module__ in ["content.services.plex","content.services.jellyfin"]):
                 if refresh_ or refresh_service.name == "Plex Lables":
@@ -1384,7 +1384,7 @@ class media:
                     refresh_ = True
                 return refresh_, retry
             return debrid_downloaded, retry
-        self.collect()
+        self.collect(refresh_)
 
     def downloaded(self):
         global imdb_scraped
