@@ -588,10 +588,15 @@ class library(classes.library):
                 else:
                     tags += ["From: " + element.user[0]]
                 # Add version Tag
+                version_tags = False
                 for version in element.downloaded_versions:
                     if element.query() in version and not "Version: " +version.split("[")[-1][:-1] in tags:
                         tags += ["Version: " +version.split("[")[-1][:-1]]
+                        version_tags = True
                 library_item = next((x for x in current_library if element == x), None)
+                # Return if no version tags and not collected
+                if library_item == None and version_tags == False:
+                    return
                 # Check existing Tags
                 if hasattr(library_item,"Label"):
                     for lable in library_item.Label:
