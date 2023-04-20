@@ -1014,14 +1014,16 @@ class media:
         except:
             return False
 
-    def collect(self):
+    def collect(self,refresh_):
         for refresh_service in refresh():
             if refresh_service.__module__ == self.__module__ or (self.__module__ in ["content.services.trakt","releases","content.services.overseerr","content.services.plex"] and refresh_service.__module__ in ["content.services.plex","content.services.jellyfin"]):
-                refresh_service(self)
+                if refresh_ or refresh_service.name == "Plex Lables":
+                    refresh_service(self)
             elif self.__module__ in ["content.services.plex","content.services.overseerr"] and refresh_service.__module__ == "content.services.trakt":
                 try:
-                    self.match('content.services.trakt')
-                    refresh_service(self)
+                    if refresh_ :
+                        self.match('content.services.trakt')
+                        refresh_service(self)
                 except:
                     ui_print("[trakt] error: adding item to trakt collection failed")
             else:
@@ -1382,8 +1384,7 @@ class media:
                     refresh_ = True
                 return refresh_, retry
             return debrid_downloaded, retry
-        if refresh_:
-            self.collect()
+        self.collect()
 
     def downloaded(self):
         global imdb_scraped
