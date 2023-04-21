@@ -829,6 +829,10 @@ class library(classes.library):
                     match = next((x for x in current_library if item == x), None)
                     if hasattr(match,"Guid"):
                         item.Guid = match.Guid
+                    if hasattr(match,"Label"):
+                        item.Label = match.Label
+                    if hasattr(match,"librarySectionID"):
+                        item.librarySectionID = match.librarySectionID
                 item.EID = setEID(item)
                 if item.type == "show":
                     for season in item.Seasons:
@@ -844,8 +848,7 @@ class library(classes.library):
 
 def search(query, library=[]):
     query = query.replace(' ', '%20')
-    url = 'https://metadata.provider.plex.tv/library/search?query=' + query + '&limit=20&searchTypes=movies%2Ctv&includeMetadata=1&X-Plex-Token=' + \
-            users[0][1]
+    url = 'https://metadata.provider.plex.tv/library/search?query=' + query + '&limit=20&searchTypes=movies%2Ctv&includeMetadata=1&X-Plex-Token=' + users[0][1]
     response = get(url)
     try:
         return response.MediaContainer.SearchResult
