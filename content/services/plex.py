@@ -561,7 +561,7 @@ class library(classes.library):
             try:
                 tags = element.post_tags
                 retries = 0
-                while element not in current_library and retries < 3:
+                while element not in current_library and retries < 6:
                     time.sleep(10)
                     _ = library(silent=True)
                     retries += 1
@@ -575,6 +575,9 @@ class library(classes.library):
                     type_string = "1" if element.type == "movie" else "2"
                     url = library.url + '/library/sections/' + str(library_item.librarySectionID) + '/all?type=' + type_string + '&id=' + library_item.ratingKey + '&label.locked=1' + tags_string + '&X-Plex-Token=' + users[0][1]
                     response = session.put(url,headers=headers)
+                url = library.url + '/library/metadata/' + library_item.ratingKey + '?X-Plex-Token=' + users[0][1]
+                response = get(url)
+                library_item.__dict__.update(response.MediaContainer.Metadata[0].__dict__)
             except Exception as e:
                 ui_print("[plex] error: couldnt add lables! Turn on debug printing for more info.")
                 ui_print(str(e), debug=ui_settings.debug)

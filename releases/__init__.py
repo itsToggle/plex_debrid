@@ -589,7 +589,7 @@ class sort:
                             return scraped_releases
                     return scraped_releases
                 except:
-                    ui_print("version rule exception - ignoring this rule")
+                    ui_print("version rule exception - ignoring " + self.attribute + " " + self.weight + ": "+ str(self.operator) + " " + str(self.value))
                     return scraped_releases
 
             def check(self):
@@ -700,7 +700,7 @@ class sort:
                             return scraped_releases
                     return scraped_releases
                 except:
-                    ui_print("version rule exception - ignoring this rule")
+                    ui_print("version rule exception - ignoring " + self.attribute + " " + self.weight + ": "+ str(self.operator) + " " + str(self.value))
                     return scraped_releases
 
             def check(self):
@@ -790,7 +790,7 @@ class sort:
                             return scraped_releases
                     return scraped_releases
                 except:
-                    ui_print("version rule exception - ignoring this rule")
+                    ui_print("version rule exception - ignoring " + self.attribute + " " + self.weight + ": "+ str(self.operator) + " " + str(self.value))
                     return scraped_releases
 
         class file_names(rule):
@@ -883,7 +883,7 @@ class sort:
                             return scraped_releases
                     return scraped_releases
                 except:
-                    ui_print("version rule exception - ignoring this rule")
+                    ui_print("version rule exception - ignoring " + self.attribute + " " + self.weight + ": "+ str(self.operator) + " " + str(self.value))
                     return scraped_releases
 
             def check(self):
@@ -914,7 +914,7 @@ class sort:
                                 if len(getattr(release, "files")) == 0:
                                     continue
                                 for version in release.files[:]:
-                                    if hasattr(version,"size"):
+                                    if hasattr(version,"name"):
                                         if self.operator.startswith("video") and not regex.search(video_formats,version.name,regex.I):
                                             continue
                                         if version.size <= float(self.value):
@@ -940,7 +940,7 @@ class sort:
                                 if len(getattr(release, "files")) == 0:
                                     continue
                                 for version in release.files[:]:
-                                    if hasattr(version,"size"):
+                                    if hasattr(version,"name"):
                                         if self.operator.startswith("video") and not regex.search(video_formats,version.name,regex.I):
                                             continue
                                         if version.size >= float(self.value):
@@ -966,7 +966,7 @@ class sort:
                                     continue
                                 for version in release.files:
                                     version.file_size_sorting = 0
-                                    if hasattr(version,"size"):
+                                    if hasattr(version,"name"):
                                         if self.operator.startswith("video") and not regex.search(video_formats,version.name,regex.I):
                                             continue
                                         if version.size >= float(self.value):
@@ -988,7 +988,7 @@ class sort:
                                     continue
                                 for version in release.files:
                                     version.file_size_sorting = 0
-                                    if hasattr(version,"size"):
+                                    if hasattr(version,"name"):
                                         if self.operator.startswith("video") and not regex.search(video_formats,version.name,regex.I):
                                             continue
                                         if version.size <= float(self.value):
@@ -1005,7 +1005,7 @@ class sort:
                             return scraped_releases
                     return scraped_releases
                 except:
-                    ui_print("version rule exception - ignoring this rule")
+                    ui_print("version rule exception - ignoring " + self.attribute + " " + self.weight + ": "+ str(self.operator) + " " + str(self.value))
                     return scraped_releases
 
             def check(self):
@@ -1382,7 +1382,7 @@ class sort:
             ["title", "requirement", "exclude", "(3D)"],
             ["title", "requirement", "exclude", "(DO?VI?)"],
             ["title", "requirement", "exclude", "(HDR)"],
-            ["title", "preference", "include", "(EXTENDED|REMASTERED)"],
+            ["title", "preference", "include", "(EXTENDED|REMASTERED|DIRECTORS|THEATRICAL|UNRATED|UNCUT|CRITERION|ANNIVERSARY|COLLECTORS|LIMITED|SPECIAL|DELUXE|SUPERBIT|RESTORED|REPACK)"],
             ["size", "preference", "highest", ""],
             ["seeders", "preference", "highest", ""],
             ["size", "requirement", ">=", "0.1"],
