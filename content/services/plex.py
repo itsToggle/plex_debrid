@@ -569,14 +569,12 @@ class library(classes.library):
                 if library_item == None:
                     ui_print('[plex] error: couldnt add lables - item: "' + element.query() + '" could not be found on server.')
                     return
-                num = 0 if not hasattr(library_item,"Label") else len(library_item.Label)
                 tags_string = ""
                 for tag in tags:
-                    tags_string += '&label%5B' + str(num) + '%5D.tag.tag=' + tag
-                    num += 1
-                type_string = "1" if element.type == "movie" else "2"
-                url = library.url + '/library/sections/' + str(library_item.librarySectionID) + '/all?type=' + type_string + '&id=' + library_item.ratingKey + '&label.locked=1' + tags_string + '&X-Plex-Token=' + users[0][1]
-                response = session.put(url,headers=headers)
+                    tags_string = '&label%5B-1%5D.tag.tag=' + tag
+                    type_string = "1" if element.type == "movie" else "2"
+                    url = library.url + '/library/sections/' + str(library_item.librarySectionID) + '/all?type=' + type_string + '&id=' + library_item.ratingKey + '&label.locked=1' + tags_string + '&X-Plex-Token=' + users[0][1]
+                    response = session.put(url,headers=headers)
             except Exception as e:
                 ui_print("[plex] error: couldnt add lables! Turn on debug printing for more info.")
                 ui_print(str(e), debug=ui_settings.debug)
