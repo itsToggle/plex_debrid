@@ -1291,7 +1291,8 @@ class media:
             scraped_releases = copy.deepcopy(parentReleases)
             # If there is more than one episode
             if len(self.Episodes) > 1:
-                debrid_downloaded, retry = self.debrid_download()
+                if self.season_pack(scraped_releases):
+                    debrid_downloaded, retry = self.debrid_download()
                 #If there is more than one episode missing, skip scraping for individual episodes
                 for episode in self.Episodes:
                     episode.skip_scraping = True
@@ -1322,7 +1323,8 @@ class media:
                 for release in self.Releases[:]:
                     if not regex.match(self.deviation(),release.title,regex.I):
                         self.Releases.remove(release)
-                debrid_downloaded, retry = self.debrid_download()
+                if self.season_pack(scraped_releases):
+                    debrid_downloaded, retry = self.debrid_download()
             retryep = False
             #If a season pack was downloaded, make sure there are episode releases available for missing versions before attempting to download
             if debrid_downloaded:
@@ -1491,6 +1493,26 @@ class media:
             ui_print("set release bitrate using total "+self.type+" duration: " + "{:02d}h:{:02d}m".format(int(duration / 1000) // 3600, (int(duration / 1000) % 3600) // 60), ui_settings.debug)
         except:
             ui_print("error: couldnt set release bitrate",ui_settings.debug)
+
+    def season_pack(self,releases):
+        season_releases = -1
+        episode_releases = [-2] * len(self.Episodes)
+        for release in self.Releases:
+            if len(release.cached > 0) and release.resolution > season_releases:
+                season_releases = release.resolution
+        for i,episode in enumerate(self.Episodes):
+            ep_match = regex.compile(episode.deviation(), regex.IGNORECASE)
+            for release in releases:
+                if len(release.cached > 0) and release.resolution >= season_releases and release.resolution > episode_releases[i] and ep_match.match(release.title):
+                    episode_releases[i] = release.resolution
+        lowest = 2160
+        for quality in episode_releases:
+            if quality < lowest:
+                lowest = quality
+        # If no cached episode release available for all episodes, or the quality is equal or lower to the cached season packs return True
+        if quality <= season_releases:
+            return True
+        return False
 
 def download(cls, library, parentReleases, result, index):
     result[index] = cls.download(library=library, parentReleases=parentReleases)
