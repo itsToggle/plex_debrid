@@ -1498,13 +1498,13 @@ class media:
         season_releases = -1
         episode_releases = [-2] * len(self.Episodes)
         for release in self.Releases:
-            if len(release.cached) > 0 and release.resolution > season_releases:
-                season_releases = release.resolution
+            if len(release.cached) > 0 and int(release.resolution) > season_releases:
+                season_releases = int(release.resolution)
         for i,episode in enumerate(self.Episodes):
             ep_match = regex.compile(episode.deviation(), regex.IGNORECASE)
             for release in releases:
-                if len(release.cached) > 0 and release.resolution >= season_releases and release.resolution > episode_releases[i] and ep_match.match(release.title):
-                    episode_releases[i] = release.resolution
+                if len(release.cached) > 0 and int(release.resolution) >= season_releases and int(release.resolution) > episode_releases[i] and ep_match.match(release.title):
+                    episode_releases[i] = int(release.resolution)
         lowest = 2160
         for quality in episode_releases:
             if quality < lowest:
