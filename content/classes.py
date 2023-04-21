@@ -1030,9 +1030,6 @@ class media:
                 ui_print("error: library update service could not be determined",ui_settings.debug)
 
     def collected(self, list):
-        import content.services.plex as plex
-        import content.services.trakt as trakt
-        import content.services.overseerr as overseerr
         if self.type in ["movie","show"]:
             if self in list:
                 if self.type == "movie":
