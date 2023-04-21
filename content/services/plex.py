@@ -561,7 +561,7 @@ class library(classes.library):
             try:
                 tags = element.post_tags
                 retries = 0
-                while element not in current_library and retries < 3:
+                while element not in current_library and retries < 6:
                     time.sleep(10)
                     _ = library(silent=True)
                     retries += 1
