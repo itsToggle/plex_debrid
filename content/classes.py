@@ -1319,7 +1319,7 @@ class media:
                     debrid.check(self)
                     scraped_releases = copy.deepcopy(self.Releases)
             #If there was nothing downloaded, attempt downloading again using the newly scraped releases
-            retry = True
+            retry = False
             if not debrid_downloaded:
                 for release in self.Releases[:]:
                     if not regex.match(self.deviation(),release.title,regex.I):
