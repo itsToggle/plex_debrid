@@ -96,9 +96,13 @@ def scrape(query, altquery):
         except:
             try:
                 if type == "movie":
+                    type = "show"
+                    s = 1
+                    e = 1
                     url = "https://v3-cinemeta.strem.io/catalog/series/top/search=" + query + ".json"
                     meta = get(url)
                 else:
+                    type = "movie"
                     url = "https://v3-cinemeta.strem.io/catalog/movie/top/search=" + query + ".json"
                     meta = get(url)
                 query = meta.metas[0].imdb_id
