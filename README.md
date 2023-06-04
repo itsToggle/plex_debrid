@@ -161,9 +161,8 @@ If github is not your cup of tea;
 >  8. enter an api key as your user name
 >  9. choose option 'y) yes, enter in my own password'
 >  10. enter 'eeeee' as the password
->  11. You can mount your newly created remote by running the command 'rclone mount your-remote:links X: --dir-cache-time 10s' (replace 'your-remote' with your remote name, replace X with a drive letter of your choice or replace 'X:' with a destination folder)
->  12. You've successfuly created a virtual drive of your debrid service!
->  13. You will only be able to watch content from the "links" and "history" folder, not the "magnet" folder. The "links" folder is recommended and the one used in the mounting command above.
+>  11. You can mount your newly created remote by running the command 'rclone mount your-remote:links X: --dir-cache-time 10s' and 'rclone mount your-remote:magnets Y: --dir-cache-time 10s (replace 'your-remote' with your remote name, replace X and Y with a drive letter of your choice or replace 'X:' and 'Y:' with a destination folder)
+>  12. You've successfully created 2 virtual drives of your debrid service - your movies are in the links drive, and shows are in the magnets drive.!
 >  
 >  *You can run rclone as a background service by adding the mounting tag '--no-console' (Windows) or '--deamon' (Linux, Mac, etc)*
 ></details>

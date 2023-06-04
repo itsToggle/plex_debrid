@@ -69,12 +69,14 @@ def download(element, stream=True, query='', force=False):
         # if release matches query
         if regex.match(r'(' + query + ')', release.title, regex.I) or force:
             if stream:
-                # Cached Download Method for AllDebrid
+                # This request will add the torrent to the magnets directory of webdav. For shows, we're done after this.
                 url = 'https://api.alldebrid.com/v4/magnet/instant?magnets[]=' + release.download[0]
                 response = get(url)
                 instant = False
                 try:
                     instant = response.data.magnets[0].instant
+                    if element.type != 'movie':
+                        return True
                 except:
                     continue
                 if instant:
@@ -83,6 +85,7 @@ def download(element, stream=True, query='', force=False):
                     torrent_id = response.data.magnets[0].id
                     url = 'https://api.alldebrid.com/v4/magnet/status?id=' + str(torrent_id)
                     response = get(url)
+                    total_size = response.data.magnets.size
                     torrent_files = response.data.magnets.links
                     torrent_links = []
                     for file in torrent_files:
@@ -91,7 +94,19 @@ def download(element, stream=True, query='', force=False):
                         rate_limit = 1 / 12
                         success = False
                         saved_links = []
-                        for link in torrent_links:
+                        files_response = requests.get("https://uptobox.com/api/link/info?fileCodes=" + ",".join(link.split("uptobox.com/")[1] for link in torrent_links), timeout=5000)
+                        if not files_response.status_code == 200:
+                            pass
+                        files_data = json.loads(files_response.content)
+                        files = files_data["data"]["list"]
+                        for f in files:
+                            # if file doesn't look like a video, ignore it
+                            if "error" in f or f["file_name"].endswith(".nfo") or f["file_name"].endswith(".srt") or f["file_name"].endswith(".txt") or f["file_name"].endswith("png"):
+                                continue
+                            # if file is too small it's probably a sample or trailer, so ignore it
+                            if int(f["file_size"]) <= 0.6 * total_size:
+                                continue
+                            link = "https://uptobox.com/" + f["file_code"]
                             url = 'https://api.alldebrid.com/v4/link/unlock?link=' + requests.utils.quote(link)
                             response = get(url)
                             if not response.status == 'success':
@@ -105,6 +120,8 @@ def download(element, stream=True, query='', force=False):
                             url = 'https://api.alldebrid.com/v4/user/links/save?links[]=' + saved_links
                             response = get(url)
                             ui_print('[alldebrid] adding cached release: ' + release.title)
+                            url = 'https://api.alldebrid.com/v4/magnet/delete?id=' + str(torrent_id)
+                            ui_print("[alldebrid] deleted torrent since links have been saved: " + str(torrent_id))
                             return True
                         else:
                             # delete failed torrent
