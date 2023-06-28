@@ -210,9 +210,10 @@ If github is not your cup of tea;
 >  1. Create a plex 'movie' library of the mounted virtual drive or add the virtual drive to an existing 'movie' library.
 >  2. Create a plex 'shows' library of the mounted virtual drive or add the virtual drive to an existing 'shows' library.
 >  3. *If you are running rclone on a Linux based OS and Plex cant find your mounted virtual drive, try adding the mounting tag '--allow-other'*
->  4. *Recommendation: disable 'video preview thumbnails', disable the scheduled task 'perfom extensive media analysis' to reduce the download traffic. If you are planning on having a very large library, increase your libraries cache size from the default 40MB to 1GB.*
->  5. Disable the libary setting "Empty trash after every scan", to make sure that no content is removed accidentaly
->  6. You and your home users can now stream cached torrents from your debrid service/s!
+   4. *If getting errors with --allow-other when running rclone on Linux based OS. Run Sudo SU and chmod -r a+rwe /etc/fuse.conf and REMOVE # 'user_allow_other'
+>  5. *Recommendation: disable 'video preview thumbnails', disable the scheduled task 'perfom extensive media analysis' to reduce the download traffic. If you are planning on having a very large library, increase your libraries cache size from the default 40MB to 1GB.*
+>  6. Disable the libary setting "Empty trash after every scan", to make sure that no content is removed accidentaly
+>  7. You and your home users can now stream cached torrents from your debrid service/s!
 >  
 >  **Please keep your libraries metadata agent as the default Plex metadata agent**
 >  </details>
