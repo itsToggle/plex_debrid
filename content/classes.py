@@ -1028,6 +1028,8 @@ class media:
                         refresh_service(self)
                 except:
                     ui_print("[trakt] error: adding item to trakt collection failed")
+            elif self.__module__ in ["content.services.mdblist"]:
+                    refresh_service(self)
             else:
                 ui_print("error: library update service could not be determined",ui_settings.debug)
 

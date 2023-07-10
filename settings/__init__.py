@@ -333,6 +333,8 @@ settings_list = [
         setting('Overseerr API Key', 'Please specify your Overseerr API Key: ', content.services.overseerr, 'api_key', hidden=True),
         setting('Overseerr Base URL', 'Please specify your Overseerr base URL: ', content.services.overseerr, 'base_url',
                 hidden=True),
+        setting('mbd API Key', 'Please specify your mbdlist.com API Key: ', content.services.mdblist, 'api_key', hidden=True),
+        setting('mdb lists', {}, content.services.mdblist, 'lists', hidden=True),
     ]
         ],
     ['Library Services', [

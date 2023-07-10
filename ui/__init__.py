@@ -410,10 +410,12 @@ def threaded(stop):
     plex_watchlist = content.services.plex.watchlist()
     # get entire trakt_watchlist
     trakt_watchlist = content.services.trakt.watchlist()
+    # mdblist
+    mdb_watchlist = content.services.mdblist.watchlist()
     # get all overseerr request
     overseerr_requests = content.services.overseerr.requests()
     # combine all content, sort by newest
-    watchlists = plex_watchlist + trakt_watchlist + overseerr_requests
+    watchlists = plex_watchlist + trakt_watchlist + mdb_watchlist + overseerr_requests
     try:
         watchlists.data.sort(key=lambda s: s.watchlistedAt,reverse=True)
     except:
@@ -448,11 +450,11 @@ def threaded(stop):
                     t0 = time.time()
         ui_print('done')
     while not stop():
-        if plex_watchlist.update() or overseerr_requests.update() or trakt_watchlist.update():
+        if plex_watchlist.update() or overseerr_requests.update() or trakt_watchlist.update() or mdb_watchlist.update():
             library = content.classes.library()[0]()
             if len(library) == 0:
                 continue
-            watchlists = plex_watchlist + trakt_watchlist + overseerr_requests
+            watchlists = plex_watchlist + trakt_watchlist + overseerr_requests + mdb_watchlist
             try:
                 watchlists.data.sort(key=lambda s: s.watchlistedAt,reverse=True)
             except:
@@ -478,6 +480,8 @@ def threaded(stop):
             plex_watchlist = content.services.plex.watchlist()
             # get entire trakt_watchlist
             trakt_watchlist = content.services.trakt.watchlist()
+            # -||-
+            mdb_watchlist = content.services.mdblist.watchlist()
             # get all overseerr request, match content to plex media type and add to monitored list
             overseerr_requests = content.services.overseerr.requests()
             # combine all content, sort by newest
