@@ -48,17 +48,24 @@ def setup_lists(self):
                             print(f"{i + 1}) {name}")
                             list_dict.update({i: value})
                             i += 1
+                    choice = input("Choose list to add or enter list id: ")
                     try:
-                        choice = int(input("Choose list to add: "))
-                        if choice == 0:
-                            break
-                        elif choice > len(response):
+                        choice = int(choice)
+                    except ValueError:
+                        continue
+                    if choice == 0:
+                        break
+                    elif choice in list_dict:
+                        self.lists.update(list_dict[choice - 1])
+                    elif not choice in list_dict:
+                        _response = get(f"https://mdblist.com/api/lists/{choice}")
+                        if len(_response) == 0:
+                            input("[mdb] No list found! Press any key to continue...")
                             continue
                         else:
-                            # self.lists[str(list_dict[choice - 1])] = list_dict[choice - 1]
-                            self.lists.update(list_dict[choice - 1])
-                    except(ValueError):
-                        continue
+                            _response = _response[0]
+                            input(f"[mdb] Found list \"{_response['name']}\"\nPress any key to save...")
+                            self.lists[str(choice)] = _response['name']
             case "2":
                 while True:
                     ui_cls("Options/Settings/Content Services/Content Services/" + self.name + "/lists")
@@ -134,20 +141,7 @@ class watchlist(classes.watchlist):
             return
 
     def remove(self, item):
-        from content.services.plex import users, library, current_library
-        url = library.url
-        _, token = users[0]
-        if library.name == "Plex Library":
-            for _section in library.check:
-                if type(_section) is list:
-                    _section = _section[0]
-                headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
-                response = requests.get(f"{url}/library/sections/{_section}/all?X-Plex-Token={token}", headers=headers)
-                content = json.loads(response.text)
-                for _item in content['MediaContainer']['Metadata']:
-                    if _item['title'] == item.title:
-                        for _media in item.watchlist.data:
-                            item.watchlist.data.remove(_media)
+        return True
 
     def update(self):
         for id in lists:
@@ -159,7 +153,10 @@ class watchlist(classes.watchlist):
 
     def split_lists_to_threads(self, lst):
         thread_count = os.cpu_count() // 2
-        chunk_size = len(lst) // thread_count
+        if thread_count > len(lst):
+            chunk_size = len(lst)
+        else:
+            chunk_size = len(lst) // thread_count
         sublists = [lst[i:i+chunk_size] for i in range(0, len(lst), chunk_size)]
 
         threads = []
