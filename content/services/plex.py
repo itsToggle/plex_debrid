@@ -353,6 +353,8 @@ class library(classes.library):
                     print()
                     choice0 = input("Choose an action: ")
                     ui_cls("Options/Settings/Library Services/Library update services")
+                    if choice0 == '0':
+                        back=True
                     if choice0 == "2":
                         for setting in settings:
                             if setting.name == "Plex library refresh delay":

@@ -6,12 +6,13 @@ from content.services import trakt
 from content.services import overseerr
 from content.services import textfile
 from content.services import jellyfin
+from content.services import mdblist
 
 #define subclass method
 def __subclasses__():
-    return [plex,trakt,overseerr]
+    return [plex,trakt,overseerr,mdblist]
 
-active = ['Plex', 'Trakt', 'Overseerr']
+active = ['Plex', 'Trakt', 'Overseerr', "Mdblist"]
 
 def setup(cls, new=False):
     from settings import settings_list
