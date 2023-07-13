@@ -130,15 +130,20 @@ class watchlist(classes.watchlist):
     global _data
     refresh = False
     data = []
+    init = False
 
     def __init__(self):
         global settings
+        self.init = True
         try:
             if len(lists) >= 0:
                 ui_print('[mdb] getting all lists ...')
+                self.update()
+                if self.init: ui_print(f'[mdb] Found {len(self.data)} new items!')
         except:
             ui_print('[mdb] oops, you dont have mdb lists setup!')
             return
+        self.init = False
 
     def remove(self, item):
         return True
@@ -182,9 +187,9 @@ class watchlist(classes.watchlist):
                         response = trakt_get(f"https://api.trakt.tv/search/imdb/{item['imdb_id']}?extended=full,type=movie")[0][0]
                         _media_item = movie(response.movie)
                         _media_item.type = "movie"
-                if any(hasattr(x, "EID") and not x.EID[0] == _media_item.EID[0] for x in current_library):
+                if not _media_item in current_library and not _media_item in self.data:
                     self.data.append(_media_item)
-                    ui_print(f"[mdb] {_media_item.type.capitalize()} \"{_media_item.title}\" found!")
+                    if not self.init: ui_print(f"[mdb] {_media_item.type.capitalize()} \"{_media_item.title}\" found!")
                     self.refresh = True
             except IndexError or AttributeError:
                 ui_print(f"[mdb error] Could not find {item['mediatype']} with imdb id: {item['imdb_id']}!", debug=ui_settings.debug)
