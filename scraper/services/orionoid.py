@@ -117,10 +117,13 @@ def scrape(query, altquery):
     except:
         None
     for result in response.data.streams:
-        title = result.file.name.replace(' ','.')
-        size = (float(result.file.size) / 1000000000 if not result.file.size == None else 0)
-        links = result.links
-        seeds = (result.stream.seeds if not result.stream.seeds == None else 0)
-        source = (result.stream.source if not result.stream.source == None else "unknown")
-        scraped_releases += [releases.release('[orionoid: '+source+']','torrent',title,[],size,links,seeds)]
+        try:
+            title = result.file.name.replace(' ','.')
+            size = (float(result.file.size) / 1000000000 if not result.file.size == None else 0)
+            links = result.links
+            seeds = (result.stream.seeds if not result.stream.seeds == None else 0)
+            source = (result.stream.source if not result.stream.source == None else "unknown")
+            scraped_releases += [releases.release('[orionoid: '+source+']','torrent',title,[],size,links,seeds)]
+        except:
+            continue
     return scraped_releases
