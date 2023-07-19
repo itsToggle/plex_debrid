@@ -1266,12 +1266,6 @@ class media:
                     # start thread for each season
                     for index, Season in enumerate(self.Seasons):
                         results[index] = Season.download(library=library, parentReleases=parentReleases)
-                    #     t = Thread(target=download, args=(Season, library, parentReleases, results, index))
-                    #     threads.append(t)
-                    #     t.start()
-                    # # wait for the threads to complete
-                    # for t in threads:
-                    #     t.join()
                     retry = False
                     for index, result in enumerate(results):
                         if result == None:
@@ -1295,9 +1289,9 @@ class media:
             if len(self.Episodes) > 2:
                 if self.season_pack(scraped_releases):
                     debrid_downloaded, retry = self.debrid_download()
-                #If there is more than one episode missing, skip scraping for individual episodes
-                for episode in self.Episodes:
-                    episode.skip_scraping = True
+                if scraper.traditional():
+                    for episode in self.Episodes:
+                        episode.skip_scraping = True
                 #If there was nothing downloaded, scrape specifically for this season
                 if not debrid_downloaded:
                     self.Releases = []
@@ -1515,7 +1509,7 @@ class media:
         # If no cached episode release available for all episodes, or the quality is equal or lower to the cached season packs return True
         if quality <= season_releases:
             return True
-        return False
+        return False       
 
 def download(cls, library, parentReleases, result, index):
     result[index] = cls.download(library=library, parentReleases=parentReleases)
