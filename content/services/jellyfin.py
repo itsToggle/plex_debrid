@@ -9,7 +9,7 @@ session = requests.Session()
 api_key = ''
 
 def logerror(response):
-    if not response.status_code == 200:
+    if not response.status_code == 200 and hasattr(response,"content") and len(str(response.content)) > 0:
         ui_print("jellyfin error: " + str(response.content), debug=ui_settings.debug)
     if response.status_code == 401:
         ui_print("jellyfin error: (401 unauthorized): api token does not seem to work. check your jellyfin settings.")
