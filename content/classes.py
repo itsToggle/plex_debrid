@@ -827,6 +827,8 @@ class media:
                     if element.type == "show":
                         if any(eid in self.grandparentEID for eid in element.EID):
                             for season in element.Seasons:
+                                if not hasattr(season,"index"):
+                                    continue
                                 if self.parentIndex == season.index:
                                     for episode in season.Episodes:
                                         if self == episode:
