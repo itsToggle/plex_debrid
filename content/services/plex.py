@@ -85,7 +85,10 @@ class watchlist(classes.watchlist):
                                     element = next(x for x in self.data if x == entry)
                                     if not user in element.user:
                                         element.user += [user]
-            self.data.sort(key=lambda s: s.watchlistedAt, reverse=True)
+            try:
+                self.data.sort(key=lambda s: s.watchlistedAt, reverse=True)
+            except:
+                ui_print("[plex error]: (watchlist exception): could not sort watchlist chronologically for unknown reason", debug=ui_settings.debug)
         except Exception as e:
             ui_print('done')
             ui_print("[plex error]: (watchlist exception): " + str(e), debug=ui_settings.debug)
@@ -151,7 +154,10 @@ class watchlist(classes.watchlist):
             for entry in self.data[:]:
                 if not entry in new_watchlist:
                     self.data.remove(entry)
-            self.data.sort(key=lambda s: s.watchlistedAt, reverse=True)
+            try:
+                self.data.sort(key=lambda s: s.watchlistedAt, reverse=True)
+            except:
+                ui_print("[plex error]: (watchlist exception): could not sort watchlist chronologically for unknown reason", debug=ui_settings.debug)
         except Exception as e:
             ui_print("[plex error]: (watchlist exception): " + str(e), debug=ui_settings.debug)
             ui_print('[plex error]: could not reach plex')
@@ -257,6 +263,11 @@ class show(classes.media):
                     time.sleep(1)
             else:
                 time.sleep(1)
+        if not hasattr(self,"watchlistedAt"):
+            if hasattr(self,"addedAt"):
+                self.watchlistedAt = self.addedAt
+            else:
+                self.watchlistedAt = 0
 
 class movie(classes.media):
     def __init__(self, ratingKey):
@@ -275,6 +286,11 @@ class movie(classes.media):
         response = get(url)
         self.__dict__.update(response.MediaContainer.Metadata[0].__dict__)
         self.EID = setEID(self)
+        if not hasattr(self,"watchlistedAt"):
+            if hasattr(self,"addedAt"):
+                self.watchlistedAt = self.addedAt
+            else:
+                self.watchlistedAt = 0
 
 class library(classes.library):
     name = 'Plex Library'
@@ -646,7 +662,7 @@ class library(classes.library):
                     if setting.name == "Plex users":
                         setting.setup()
             if not new:
-                print("Current plex user, whos plex discover watch status is used to ignore content: '" + library.ignore.user + "'")
+                print("Current plex user, whose plex discover watch status is used to ignore content: '" + library.ignore.user + "'")
                 print()
                 print("0) Back")
                 print("1) Change plex user")

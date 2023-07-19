@@ -80,101 +80,102 @@ def scrape():
         obj.version = None
     else:
         return
-    ui_cls('Options/Scraper/')
-    print('Press Enter to return to the main menu.')
-    print()
-    query = input("Enter a query: ")
-    if query == '':
-        return
-    print()
-    if hasattr(obj,"version"):
-        if not obj.version == None:
-            for trigger, operator, value in obj.version.triggers:
-                if trigger == "scraper sources":
-                    if operator in ["==","include"]:
-                        if value in scraper.services.active:
-                            scraper.services.overwrite += [value]
-                    elif operator == "exclude":
-                        if value in scraper.services.active:
-                            for s in scraper.services.active:
-                                if not s == value:
-                                    scraper.services.overwrite += [s]
-                if trigger == "scraping adjustment":
-                    if operator == "add text before title":
-                        query = value + query
-                    elif operator == "add text after title":
-                        query = query + value
-    scraped_releases = scraper.scrape(query)
-    if len(scraped_releases) > 0:
-        obj.Releases = scraped_releases
-        debrid.check(obj, force=True)
-        scraped_releases = obj.Releases
-        if not obj.version == None:
-            releases.sort(scraped_releases, obj.version)
-        back = False
-        while not back:
-            ui_cls('Options/Scraper/')
-            print("0) Back")
-            releases.print_releases(scraped_releases)
-            print()
-            print("Type 'auto' to automatically download the first cached release.")
-            print()
-            choice = input("Choose a release to download: ")
-            try:
-                if choice == 'auto':
-                    release = scraped_releases[0]
-                    release.Releases = scraped_releases
-                    release.type = ("show" if regex.search(r'(S[0-9]+|SEASON|E[0-9]+|EPISODE|[0-9]+-[0-9])',release.title,regex.I) else "movie")
-                    if debrid.download(release, stream=True, query=query, force=True):
-                        content.classes.media.collect(release)
-                        scraped_releases.remove(scraped_releases[0])
-                        time.sleep(3)
-                    else:
-                        print()
-                        print("These releases do not seem to be cached on your debrid services. Add uncached torrent?")
-                        print()
-                        print("0) Back")
-                        print("1) Add uncached torrent")
-                        print()
-                        choice = input("Choose an action: ")
-                        if choice == '1':
-                            debrid.download(release, stream=False, query=query, force=True)
+    while True:
+        ui_cls('Options/Scraper/')
+        print('Press Enter to return to the main menu.')
+        print()
+        query = input("Enter a query: ")
+        if query == '':
+            return
+        print()
+        if hasattr(obj,"version"):
+            if not obj.version == None:
+                for trigger, operator, value in obj.version.triggers:
+                    if trigger == "scraper sources":
+                        if operator in ["==","include"]:
+                            if value in scraper.services.active:
+                                scraper.services.overwrite += [value]
+                        elif operator == "exclude":
+                            if value in scraper.services.active:
+                                for s in scraper.services.active:
+                                    if not s == value:
+                                        scraper.services.overwrite += [s]
+                    if trigger == "scraping adjustment":
+                        if operator == "add text before title":
+                            query = value + query
+                        elif operator == "add text after title":
+                            query = query + value
+        scraped_releases = scraper.scrape(query)
+        if len(scraped_releases) > 0:
+            obj.Releases = scraped_releases
+            debrid.check(obj, force=True)
+            scraped_releases = obj.Releases
+            if not obj.version == None:
+                releases.sort(scraped_releases, obj.version)
+            back = False
+            while not back:
+                ui_cls('Options/Scraper/')
+                print("0) Back")
+                releases.print_releases(scraped_releases)
+                print()
+                print("Type 'auto' to automatically download the first cached release.")
+                print()
+                choice = input("Choose a release to download: ")
+                try:
+                    if choice == 'auto':
+                        release = scraped_releases[0]
+                        release.Releases = scraped_releases
+                        release.type = ("show" if regex.search(r'(S[0-9]+|SEASON|E[0-9]+|EPISODE|[0-9]+-[0-9])',release.title,regex.I) else "movie")
+                        if debrid.download(release, stream=True, query=query, force=True):
                             content.classes.media.collect(release)
                             scraped_releases.remove(scraped_releases[0])
                             time.sleep(3)
-                elif int(choice) <= len(scraped_releases) and not int(choice) <= 0:
-                    release = scraped_releases[int(choice) - 1]
-                    release.Releases = [release, ]
-                    release.type = ("show" if regex.search(r'(S[0-9]+|SEASON|E[0-9]+|EPISODE|[0-9]+-[0-9])',release.title,regex.I) else "movie")
-                    if debrid.download(release, stream=True, query=release.title, force=True):
-                        content.classes.media.collect(release)
-                        scraped_releases.remove(scraped_releases[int(choice) - 1])
-                        time.sleep(3)
-                    else:
-                        print()
-                        print(
-                            "This release does not seem to be cached on your debrid services. Add uncached torrent?")
-                        print()
-                        print("0) Back")
-                        print("1) Add uncached torrent")
-                        print()
-                        choice2 = input("Choose an action: ")
-                        if choice2 == '1':
-                            if debrid.download(release, stream=False, query=query, force=True):
+                        else:
+                            print()
+                            print("These releases do not seem to be cached on your debrid services. Add uncached torrent?")
+                            print()
+                            print("0) Back")
+                            print("1) Add uncached torrent")
+                            print()
+                            choice = input("Choose an action: ")
+                            if choice == '1':
+                                debrid.download(release, stream=False, query=query, force=True)
                                 content.classes.media.collect(release)
-                                scraped_releases.remove(scraped_releases[int(choice) - 1])
+                                scraped_releases.remove(scraped_releases[0])
                                 time.sleep(3)
-                            else:
-                                print()
-                                print(
-                                    "There was an error adding this uncached torrent to your debrid service. Choose another release?")
-                elif choice == '0':
-                    back = True
-            except:
-                back = False
-    else:
-        print("No releases were found!")
-        time.sleep(3)
+                    elif int(choice) <= len(scraped_releases) and not int(choice) <= 0:
+                        release = scraped_releases[int(choice) - 1]
+                        release.Releases = [release, ]
+                        release.type = ("show" if regex.search(r'(S[0-9]+|SEASON|E[0-9]+|EPISODE|[0-9]+-[0-9])',release.title,regex.I) else "movie")
+                        if debrid.download(release, stream=True, query=release.title, force=True):
+                            content.classes.media.collect(release)
+                            scraped_releases.remove(scraped_releases[int(choice) - 1])
+                            time.sleep(3)
+                        else:
+                            print()
+                            print(
+                                "This release does not seem to be cached on your debrid services. Add uncached torrent?")
+                            print()
+                            print("0) Back")
+                            print("1) Add uncached torrent")
+                            print()
+                            choice2 = input("Choose an action: ")
+                            if choice2 == '1':
+                                if debrid.download(release, stream=False, query=query, force=True):
+                                    content.classes.media.collect(release)
+                                    scraped_releases.remove(scraped_releases[int(choice) - 1])
+                                    time.sleep(3)
+                                else:
+                                    print()
+                                    print(
+                                        "There was an error adding this uncached torrent to your debrid service. Choose another release?")
+                    elif choice == '0':
+                        back = True
+                except:
+                    back = False
+        else:
+            print("No releases were found!")
+            time.sleep(3)
 
 def settings():
     back = False

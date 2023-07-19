@@ -41,6 +41,16 @@ def scrape(query, altquery="(.*)"):
             break
     return scraped_releases
 
+def traditional():
+    scrapers = services.sequential()
+    if len(scrapers) == 0:
+        scrapers = [services.get()]
+    for sequence in scrapers:
+        for scraper_ in sequence:
+            if scraper_.name in ["rarbg","1337x","jackett","prowlarr","nyaa"]:
+                return True
+    return False
+
 # Multiprocessing scrape method
 def multi_scrape(cls, query, altquery, result, index):
     result[index] = cls.scrape(query, altquery)

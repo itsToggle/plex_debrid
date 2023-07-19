@@ -134,6 +134,9 @@ def scrape(query, altquery):
         except:
             ui_print('[torrentio] error: unknown error')
         return scraped_releases
+    elif len(response.streams) == 1 and not hasattr(response.streams[0],"infoHash"):
+        ui_print('[torrentio] error: "' + response.streams[0].name.replace('\n', ' ') + '" - ' + response.streams[0].title.replace('\n', ' '))
+        return scraped_releases
     for result in response.streams:
         title = result.title.split('\n')[0].replace(' ','.')
         size = (float(regex.search(r'(?<=💾 )([0-9]+.?[0-9]+)(?= GB)',result.title).group()) if regex.search(r'(?<=💾 )([0-9]+.?[0-9]+)(?= GB)',result.title) else float(regex.search(r'(?<=💾 )([0-9]+.?[0-9]+)(?= MB)',result.title).group())/1000 if regex.search(r'(?<=💾 )([0-9]+.?[0-9]+)(?= MB)',result.title) else 0)
