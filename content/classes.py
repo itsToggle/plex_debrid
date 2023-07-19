@@ -1289,7 +1289,7 @@ class media:
             if len(self.Episodes) > 2:
                 if self.season_pack(scraped_releases):
                     debrid_downloaded, retry = self.debrid_download()
-                if scraper.traditional():
+                if scraper.traditional() or debrid_downloaded:
                     for episode in self.Episodes:
                         episode.skip_scraping = True
                 #If there was nothing downloaded, scrape specifically for this season
@@ -1328,6 +1328,7 @@ class media:
                 refresh_ = True
                 attempt_episodes = False
                 for episode in self.Episodes:
+                    episode.skip_scraping = True
                     for version in copy.deepcopy(episode.versions()):
                         for rule in version.rules[:]:
                             if rule[0] == "bitrate":
