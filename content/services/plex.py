@@ -268,7 +268,7 @@ class show(classes.media):
                 self.watchlistedAt = self.addedAt
             else:
                 self.watchlistedAt = 0
-                
+
 class movie(classes.media):
     def __init__(self, ratingKey):
         self.watchlist = watchlist
@@ -662,7 +662,7 @@ class library(classes.library):
                     if setting.name == "Plex users":
                         setting.setup()
             if not new:
-                print("Current plex user, whos plex discover watch status is used to ignore content: '" + library.ignore.user + "'")
+                print("Current plex user, whose plex discover watch status is used to ignore content: '" + library.ignore.user + "'")
                 print()
                 print("0) Back")
                 print("1) Change plex user")
