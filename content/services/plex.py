@@ -149,7 +149,10 @@ class watchlist(classes.watchlist):
                             else:
                                 element = next(x for x in self.data if x == entry)
                                 if not user in element.user:
+                                    ui_print('[plex] item: "' + entry.title + '" found in ' + user[0] + '`s watchlist')
                                     element.user += [user]
+                                    if library.lable.name in classes.refresh.active:
+                                        library.lable(element)
                         new_watchlist += response.MediaContainer.Metadata
             for entry in self.data[:]:
                 if not entry in new_watchlist:
