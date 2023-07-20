@@ -149,7 +149,10 @@ class watchlist(classes.watchlist):
                             else:
                                 element = next(x for x in self.data if x == entry)
                                 if not user in element.user:
+                                    ui_print('[plex] item: "' + entry.title + '" found in ' + user[0] + '`s watchlist')
                                     element.user += [user]
+                                    if library.lable.name in classes.refresh.active:
+                                        library.lable(element)
                         new_watchlist += response.MediaContainer.Metadata
             for entry in self.data[:]:
                 if not entry in new_watchlist:
@@ -775,6 +778,10 @@ class library(classes.library):
         list_ = []
         sections = []
         names = []
+        first_load = False
+        if len(current_library) == 0:
+            first_load = True
+            current_library = store.load("plex","metadata")
         if library.check == [['']]:
             library.check = []
         try:
@@ -845,9 +852,11 @@ class library(classes.library):
         if len(list_) - len(current_library) > 0:
             ui_print('done')
             ui_print('[plex] getting metadata for ' + str(len(list_) - len(current_library)) + ' collected movies/shows ...')
+        updated = False
         for item in list_:
             try:
                 if not item in current_library:
+                    updated = True
                     url = library.url + '/library/metadata/' + item.ratingKey + '?X-Plex-Token=' + users[0][1]
                     response = get(url)
                     item.__dict__.update(response.MediaContainer.Metadata[0].__dict__)
@@ -870,6 +879,8 @@ class library(classes.library):
                 ui_print("[plex error]: found incorrectly matched library item : " + item.title + " - this item needs a metadata refresh (open plex webui, find item, open item menu, refresh metadata).")  
         ui_print('done')
         current_library = copy.deepcopy(list_)
+        if first_load and updated:
+            store.save(current_library,"plex","metadata")       
         return list_
 
 def search(query, library=[]):

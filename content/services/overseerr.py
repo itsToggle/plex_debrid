@@ -275,7 +275,7 @@ class requests(classes.watchlist):
                 try:
                     element.match(matching_service)
                     element.watchlist = sys.modules[matching_service].watchlist
-                    element.request_id = element_.id
+                    element.request_id = element_.media.id
                     add += [element]
                 except:
                     ui_print('[overseerr] error: couldnt match item to service ' + matching_service, ui_settings.debug)
@@ -291,7 +291,7 @@ class requests(classes.watchlist):
             try:
                 response = get(base_url + '/api/v1/request?take=10000')
                 for element_ in response.results:
-                    if not element_.id in (x.id for x in last_requests) and (element_.requestedBy.displayName in users or users == ['all']) and ([str(element_.media.status)] in allowed_movie_status if element_.type == 'movie' else [str(element_.media.status)] in allowed_show_status):
+                    if not any(x.id == element_.id and x.updatedAt == element_.updatedAt for x in last_requests) and (element_.requestedBy.displayName in users or users == ['all']) and ([str(element_.media.status)] in allowed_movie_status if element_.type == 'movie' else [str(element_.media.status)] in allowed_show_status):
                         ui_print('[overseerr] found new overseerr request by user "' + element_.requestedBy.displayName + '".')
                         refresh = True
                         last_requests.append(element_)
@@ -313,9 +313,15 @@ class requests(classes.watchlist):
                             element.watchlist = sys.modules[matching_service].watchlist
                         except:
                             ui_print('[overseerr] error: couldnt match item to service ' + matching_service, ui_settings.debug)
-                        element.request_id = element_.id
+                        element.request_id = element_.media.id
                         if not element in self.data:
                             self.data.append(element)
+                        else:
+                            existing = next(x for x in self.data if x == element)
+                            if element.type == "show":
+                                for season in element.Seasons:
+                                    if not any(season.index == x.index for x in existing.Seasons):
+                                        existing.Seasons.append(season)
                         ui_print('done')
                 for element in last_requests[:]:
                     if not element.id in (x.id for x in response.results):
