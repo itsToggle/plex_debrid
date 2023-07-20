@@ -884,6 +884,8 @@ class media:
                         retries = int(float(trigger[2]))
         if retries == 0:
             return
+        if len(media.ignore_queue) == 0:
+            media.ignore_queue = store.load("media","ignore_queue")
         if not self in media.ignore_queue:
             self.ignored_count = 1
             media.ignore_queue += [self]
@@ -896,6 +898,7 @@ class media:
             else:
                 media.ignore_queue.remove(match)
                 ignore.add(self)
+        store.save(media.ignore_queue,"media","ignore_queue",doprint="false")
 
     def unwatch(self):
         ignore.remove(self)
