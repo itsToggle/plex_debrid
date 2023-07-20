@@ -781,7 +781,7 @@ class library(classes.library):
         first_load = False
         if len(current_library) == 0:
             first_load = True
-            current_library = cache.load("plex","metadata")
+            current_library = store.load("plex","metadata")
         if library.check == [['']]:
             library.check = []
         try:
@@ -880,7 +880,7 @@ class library(classes.library):
         ui_print('done')
         current_library = copy.deepcopy(list_)
         if first_load and updated:
-            cache.save(current_library,"plex","metadata")       
+            store.save(current_library,"plex","metadata")       
         return list_
 
 def search(query, library=[]):
