@@ -3,6 +3,7 @@
 from ui.ui_print import *
 
 def load(module,variable):
+    cache = []
     try:
         filename = config_dir + '/' + module + "_" + variable + '.pkl'
         if os.path.exists(filename):
