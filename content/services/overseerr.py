@@ -275,7 +275,7 @@ class requests(classes.watchlist):
                 try:
                     element.match(matching_service)
                     element.watchlist = sys.modules[matching_service].watchlist
-                    element.request_id = element_.id
+                    element.request_id = element_.media.id
                     add += [element]
                 except:
                     ui_print('[overseerr] error: couldnt match item to service ' + matching_service, ui_settings.debug)
