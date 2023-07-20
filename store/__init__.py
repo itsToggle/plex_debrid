@@ -1,12 +1,12 @@
-
-#import child modules
-from ui.ui_print import *
-
 def load(module,variable):
+    from ui.ui_print import ui_print
+    from ui.ui_print import ui_settings
+    from ui.ui_print import config_dir
+    from base import pickle
+    from base import os
     cache = []
     try:
         filename = config_dir + '/' + module + "_" + variable + '.pkl'
-        ui_print("["+module+"] accessing file " + filename, ui_settings.debug)
         if os.path.exists(filename):
             ui_print("["+module+"] reading cached "+variable+" file ...")
             with open(filename, 'rb') as f:
@@ -18,9 +18,13 @@ def load(module,variable):
     return cache
 
 def save(cache,module,variable):
+    from ui.ui_print import ui_print
+    from ui.ui_print import ui_settings
+    from ui.ui_print import config_dir
+    from base import pickle
+    from base import os
     try:
         filename = config_dir + '/' + module + "_" + variable + '.pkl'
-        ui_print("["+module+"] accessing file " + filename, ui_settings.debug)
         ui_print("["+module+"] writing cached "+variable+" file ...")    
         with open(filename, 'wb') as f:
             pickle.dump(cache, f)
