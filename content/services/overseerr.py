@@ -294,7 +294,6 @@ class requests(classes.watchlist):
                     if not any(x.id == element_.id and x.updatedAt == element_.updatedAt for x in last_requests) and (element_.requestedBy.displayName in users or users == ['all']) and ([str(element_.media.status)] in allowed_movie_status if element_.type == 'movie' else [str(element_.media.status)] in allowed_show_status):
                         ui_print('[overseerr] found new overseerr request by user "' + element_.requestedBy.displayName + '".')
                         refresh = True
-                        #If the request is for an existing media item.
                         last_requests.append(element_)
                         if len(sys.modules['content.services.plex'].users) > 0:
                             matching_service = 'content.services.plex'
