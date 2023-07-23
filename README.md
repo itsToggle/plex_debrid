@@ -34,6 +34,7 @@ This is a work in progress, and im not a professional programmer. shits not read
    - <img src="https://walter.trakt.tv/hotlink-ok/public/favicon.ico" height="16"> **[Trakt Collection](https://trakt.tv/)**
 - Determining precise release dates and times, checking for early releases of movies
 - Scraping Releases from:
+   - <img src="https://i.ibb.co/w4BnkC9/GwxAcDV.png" height="16"> **[Torrentio](https://torrentio.strem.fun/configure)**
    - <img src="https://user-images.githubusercontent.com/27040483/28728094-99f3e3f6-73c7-11e7-8f8d-28912dc6ac0d.png" height="16"> **[Jackett](https://github.com/Jackett/Jackett)**
    - <img src="https://prowlarr.com/img/favicon-32x32.png" height="16"> **[Prowlarr](https://github.com/Prowlarr/Prowlarr)**
    - <img src="https://orionoid.com/web/images/logo/logo256.png" height="16"> **[Orionoid](https://orionoid.com/)**
@@ -58,7 +59,7 @@ This is a work in progress, and im not a professional programmer. shits not read
 - or create a new [issue](https://github.com/itsToggle/plex_debrid/issues) if you find a bug or have an idea for an improvement.
 
 If github is not your cup of tea; 
-- join the plex_debrid [discord server](https://discord.gg/u3vTDGjeKE) 
+- join the plex_debrid [discord server](https://discord.gg/jMpyFryfaj) 
 - or find me on [reddit](https://www.reddit.com/user/itsToggle)
 
  
@@ -76,8 +77,7 @@ If github is not your cup of tea;
 >  - **[Linux Server (Wiki)](https://github.com/itsToggle/plex_debrid/wiki/Setup-Guides#linux-server-setup)**
 >  - **[Linux ARM Server (Wiki)](https://github.com/itsToggle/plex_debrid/wiki/Setup-Guides#linux-arm64-server-setup)**
 >  - **[FreeBSD (u/TheNicestRichtofen)](https://www.reddit.com/r/Piracy/comments/v5zpj7/comment/ibnikqh/?utm_source=share&utm_medium=web2x&context=3)**
->  - **[Android](https://github.com/itsToggle/plex_debrid/tree/android)**
->  - **Rooted Nvidia Shield guide from user "b u n n y" up on discord**
+>  - **[Android (Nvidia Shield)](https://github.com/itsToggle/plex_debrid/wiki/Setup-Guides#android-nvidia-shield-setup)**
 ></details>
 >
 ><details>
@@ -210,7 +210,7 @@ If github is not your cup of tea;
 >  1. Create a plex 'movie' library of the mounted virtual drive or add the virtual drive to an existing 'movie' library.
 >  2. Create a plex 'shows' library of the mounted virtual drive or add the virtual drive to an existing 'shows' library.
 >  3. *If you are running rclone on a Linux based OS and Plex cant find your mounted virtual drive, try adding the mounting tag '--allow-other'*
->  4. *Recommendation: disable 'video preview thumbnails', disable the scheduled task 'perfom extensive media analysis' to reduce the download traffic*
+>  4. *Recommendation: disable 'video preview thumbnails', disable the scheduled task 'perfom extensive media analysis' to reduce the download traffic. If you are planning on having a very large library, increase your libraries cache size from the default 40MB to 1GB.*
 >  5. Disable the libary setting "Empty trash after every scan", to make sure that no content is removed accidentaly
 >  6. You and your home users can now stream cached torrents from your debrid service/s!
 >  
@@ -230,9 +230,9 @@ If github is not your cup of tea;
 >  2. Start the script by running `python ./main.py`
 >  3. The script will guide you through the initial setup and the next steps. When setting up plex_debrid, you will be prompted to choose the 5 main services that this script connects:
 >  4. Pick and setup at least one [**content service**](https://github.com/itsToggle/plex_debrid#tv-content-services) which plex_debrid should monitor for new content
->  5. Pick and setup a [**library collection service**](https://github.com/itsToggle/plex_debrid#open_file_folder-library-collection-service), which plex_debrid will use to determine your current media collection. If you intend to run a plex server, choose plex.
->  6. Pick and setup a [**library update service**](https://github.com/itsToggle/plex_debrid#-library-update-services), which plex_debrid will update/refresh after a successful download. If you intent to run a plex server, choose plex.
->  7. Pick and setup a [**library ignore service**](https://github.com/itsToggle/plex_debrid#eyes-library-ignore-services), which plex_debrid will use to ignore content. If you intent to run a plex server, choose plex.
+>  5. Pick and setup a [**library collection service**](https://github.com/itsToggle/plex_debrid#open_file_folder-library-collection-service), which plex_debrid will use to determine your current media collection. If you intend to run a plex server, choose "Plex Libraries".
+>  6. Pick and setup a [**library update service**](https://github.com/itsToggle/plex_debrid#-library-update-services), which plex_debrid will update/refresh after a successful download. If you intent to run a plex server, choose "Plex Libraries".
+>  7. Pick and setup a [**library ignore service**](https://github.com/itsToggle/plex_debrid#eyes-library-ignore-services), which plex_debrid will use to ignore content. If you intent to run a plex server, choose "Plex Discover Watch Status".
 >  8. Pick and setup at least one [**debrid service**](https://github.com/itsToggle/plex_debrid#arrow_down_small-debrid-services), which plex_debrid will use to download content.
 >  9. You're done!
 >  10. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run. 
@@ -248,9 +248,9 @@ If github is not your cup of tea;
 >  2. Run `docker run -v /path/to/config:/config --net host -ti itstoggle/plex_debrid` . Where `/path/to/config` is the directory path where you want to save your plex_debrid config data.
 >  3. The script will guide you through the initial setup and the next steps. When setting up plex_debrid, you will be prompted to choose the 5 main services that this script connects:
 >  4. Pick and setup at least one [**content service**](https://github.com/itsToggle/plex_debrid#tv-content-services) which plex_debrid should monitor for new content
->  5. Pick and setup a [**library collection service**](https://github.com/itsToggle/plex_debrid#open_file_folder-library-collection-service), which plex_debrid will use to determine your current media collection. If you intend to run a plex server, choose plex.
->  6. Pick and setup a [**library update service**](https://github.com/itsToggle/plex_debrid#-library-update-services), which plex_debrid will update/refresh after a successful download. If you intent to run a plex server, choose plex.
->  7. Pick and setup a [**library ignore service**](https://github.com/itsToggle/plex_debrid#eyes-library-ignore-services), which plex_debrid will use to ignore content. If you intent to run a plex server, choose plex.
+>  5. Pick and setup a [**library collection service**](https://github.com/itsToggle/plex_debrid#open_file_folder-library-collection-service), which plex_debrid will use to determine your current media collection. If you intend to run a plex server, choose "Plex Libraries".
+>  6. Pick and setup a [**library update service**](https://github.com/itsToggle/plex_debrid#-library-update-services), which plex_debrid will update/refresh after a successful download. If you intent to run a plex server, choose "Plex Libraries".
+>  7. Pick and setup a [**library ignore service**](https://github.com/itsToggle/plex_debrid#eyes-library-ignore-services), which plex_debrid will use to ignore content. If you intent to run a plex server, choose "Plex Discover Watch Status".
 >  8. Pick and setup at least one [**debrid service**](https://github.com/itsToggle/plex_debrid#arrow_down_small-debrid-services), which plex_debrid will use to download content.
 >  9. You're done!
 >  10. Choose option '1' to run the download automation. Choose option '2' to explore or edit the Settings or open the "settings.json" file the script creates after the first run.
@@ -353,6 +353,7 @@ If github is not your cup of tea;
 >  
 >  - To use one of your trakt users collections as your library service, navigate to '/Settings/Library Service/Library collection service/Change library service/'
 >  - If you choose your trakt collection as your library service, your *entire* trakt collection is checked before downloading anything and the script will avoid duplicate downloads. 
+>  - (You need at least one item in your trakt collection. If its currently empty, just add a random movie or show.)
 >
 ></details>
  
@@ -366,6 +367,15 @@ If github is not your cup of tea;
 >  - To refresh your plex libraries after a succesful download, navigate to '/Settings/Library Service/Library update service/Edit/'
 >  - You can add an unlimited amount of libraries to be refreshed
 >  - plex_debrid is now capable of only partially scanning your libraries. This feature is currently only available for content that's downloaded through realdebrid.
+>
+></details>
+>
+><details>
+>  <summary><b><u><img src="https://app.plex.tv/desktop/favicon.ico" height="16"> Plex lables:</u></b></summary>
+>  
+>  - To add automatic version and user lables to your downloaded content, navigate to '/Settings/Library Service/Library update service/Edit/'
+>  - This requires a Plex library refresh to be set up aswell (see above).
+>  - Lables that will be added are: "From: ..." for each user that watchlisted this item, "Version: ..." for each version that was downloaded.
 >
 ></details>
 >
@@ -429,18 +439,27 @@ If github is not your cup of tea;
  
 ### :magnet: Scraping Services:
 
-*The services that plex_debrid can use to find torrents. You can add any combination of services. By default, only the legacy scrapers (rarbg, 1337x) are enabled. Its highly recommended to connect more scraping services to make sure you find high quality, cached releases.*
+*The services that plex_debrid can use to find torrents. You can add any combination of services. By default, torrentio is the only service enabled. You can connect more scraping services to make sure you find high quality, cached releases.*
 
 >
 ><details>
->  <summary><b><u><img src="https://progsoft.net/images/rarbg-icon-648af4dcc6ec63ee49d6c050af63d2547c74d46c.png" height="16"><img src="https://1337x.to/favicon.ico" height="16"> legacy scrapers (rarbg, 1337x):</u></b></summary>
+>  <summary><b><u><img src="https://i.ibb.co/w4BnkC9/GwxAcDV.png" height="16"> torrentio (highly recommended):</u></b></summary>
 >  
->  - The only "legacy" scrapers currently integrated are for rarbg.to and 1337x.to - you can turn these off or on by navigating to '/Settings/Scraper/Sources/Edit/'.
+>  - The torrentio implementation uses the torrentio API to instantaniously get releases from torrentions gigantic release database. No actual scraping is done, which is why this service is so fast.
+>  - You can enable torrentio by navigating to '/Settings/Scraper/Sources/Add/'. There are no other steps needed.
+>  - You can edit the torrentio settings by navigating to '/Settings/Scraper/Sources/Edit/'. The settings menu will prompt you to visit 'https://torrentio.strem.fun/configure', where you can edit your settings. Your configuration "manifest url" will be copied to your clipboard after every change you make. You can paste that url into the plex_debrid setting to update your configuration. Dont enter your Debrid information, its not needed.
 >
 ></details>
 >
 ><details>
->  <summary><b><u><img src="https://user-images.githubusercontent.com/27040483/28728094-99f3e3f6-73c7-11e7-8f8d-28912dc6ac0d.png" height="16"> jackett (highly recommended):</u></b></summary>
+>  <summary><b><u><img src="https://progsoft.net/images/rarbg-icon-648af4dcc6ec63ee49d6c050af63d2547c74d46c.png" height="16"><img src="https://1337x.to/favicon.ico" height="16"> legacy scrapers (rarbg, 1337x, nyaa):</u></b></summary>
+>  
+>  - The only "legacy" scrapers currently integrated are for rarbg.to, nyaa.si and 1337x.to - you can turn these off or on by navigating to '/Settings/Scraper/Sources/Edit/'.
+>
+></details>
+>
+><details>
+>  <summary><b><u><img src="https://user-images.githubusercontent.com/27040483/28728094-99f3e3f6-73c7-11e7-8f8d-28912dc6ac0d.png" height="16"> jackett:</u></b></summary>
 >  
 >  - Its recommended to install "jackett", a program that wraps a huge amount of torrent indexers (https://github.com/Jackett/Jackett). Once installed, go to http://localhost:9117 and add a few of your favorite indexers. Enable the jackett server setting "CORS". Once the jackett setup is complete, you can enable jackett inside plex_debrid by navigating to '/Settings/Scraper/Sources/Edit/Add source/jackett'.
 >  - You can now choose to use a specific debrid service for a specific torrent tracker by navigating to "/Settings/Debrid Services/Tracker specific Debrid Services". This comes in handy if you are using a private tracker that forces you to use a debrid service that will seed your torrents (e.g. debridlink,put.io).
