@@ -220,11 +220,42 @@ class watchlist(classes.watchlist):
                 if list.startswith(user[0] + "'s private list:"):
                     list_type = "private"
                     break
+                if list.startswith("local:"):
+                    list_type = "local"
+                    break
             current_user = user
             if list_type == "watchlist":
                 try:
                     watchlist_items, header = get('https://api.trakt.tv/users/me/watchlist/movies,shows?extended=full')
                     for element in watchlist_items:
+                        if hasattr(element, 'show'):
+                            element.show.type = 'show'
+                            element.show.user = user
+                            element.show.guid = element.show.ids.trakt
+                            try:
+                                element.show.watchlistedAt = datetime.datetime.timestamp(datetime.datetime.strptime(element.listed_at,'%Y-%m-%dT%H:%M:%S.000Z'))
+                            except:
+                                element.show.watchlistedAt = 0
+                            if not element.show in self.data:
+                                self.data.append(show(element.show))
+                        elif hasattr(element, 'movie'):
+                            element.movie.type = 'movie'
+                            element.movie.user = user
+                            element.movie.guid = element.movie.ids.trakt
+                            try:
+                                element.movie.watchlistedAt = datetime.datetime.timestamp(datetime.datetime.strptime(element.listed_at,'%Y-%m-%dT%H:%M:%S.000Z'))
+                            except:
+                                element.movie.watchlistedAt = 0
+                            if not element.movie in self.data:
+                                self.data.append(movie(element.movie))
+                except Exception as e:
+                    ui_print("[trakt error]: (exception): " + str(e), debug=ui_settings.debug)
+                    continue
+            elif list_type == "local":
+                try:
+                    path = regex.sub("^local:\s*","",list)
+                    local_items = json.loads(open(path).read(), object_hook=lambda d: SimpleNamespace(**d))
+                    for element in local_items:
                         if hasattr(element, 'show'):
                             element.show.type = 'show'
                             element.show.user = user
