@@ -162,7 +162,7 @@ class sort:
                 else:
                     ui_cls('Options/Settings/Scraper Settings/Versions/Edit')
                 print()
-                print('Current settigns for version [' + name + ']:')
+                print('Current settings for version [' + name + ']:')
                 print()
                 print("0) Back")
                 print()
