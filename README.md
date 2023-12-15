@@ -1,8 +1,3 @@
-# plex_debrid
-Plex/Emby/Jellyfin/Infuse torrent streaming through Debrid Services, using Plex Discover Watchlists, Trakt lists and Overseerr.
-
-Using content services like plex discover, trakt and overseerr, your personal media server users can add movies/shows to their watchlist and they become available to stream in seconds.
-
 ## Other peoples way better projects worth checking out:
 
 
@@ -11,6 +6,11 @@ Using content services like plex discover, trakt and overseerr, your personal me
 https://github.com/debridmediamanager 
 
 (also includes zurg, a way better alternative to rclone_rd)
+
+# plex_debrid
+Plex/Emby/Jellyfin/Infuse torrent streaming through Debrid Services, using Plex Discover Watchlists, Trakt lists and Overseerr.
+
+Using content services like plex discover, trakt and overseerr, your personal media server users can add movies/shows to their watchlist and they become available to stream in seconds.
 
  
 ### In Action:
