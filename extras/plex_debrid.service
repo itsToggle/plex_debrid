@@ -1,0 +1,14 @@
+[Unit]
+Description=Plex torrent streaming through Debrid Services
+After=network.target
+
+# Adjust paths and user/group as required.
+[Service]
+ExecStart=/usr/bin/python3 /usr/local/plex_debrid/main.py --service --config-dir=/var/lib/plex_debrid
+Restart=always
+User=media
+Group=media
+WorkingDirectory=/var/lib/plex_debrid
+
+[Install]
+WantedBy=multi-user.target
