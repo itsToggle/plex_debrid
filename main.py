@@ -1,21 +1,15 @@
+import argparse
 import ui
 from base import *
 
-config_dir = ""
-service_mode = False
+parser = argparse.ArgumentParser(description='Plex Debrid')
 
-if os.path.exists('./settings.json'):
-    if os.path.getsize('./settings.json') > 0 and os.path.isfile('./settings.json'):
-        config_dir = "."
+parser.add_argument('--config-dir', '-c', type=str, default='.', help='Configuration directory')
+parser.add_argument('--service', '-s', default=True, action='store_true', help='Run in service mode')
 
-for i,arg in enumerate(sys.argv):
-    if config_dir == "" and arg == "--config-dir":
-        config_dir = sys.argv[i+1]
-    if arg == "-service":
-        service_mode = True
+args = parser.parse_args()
 
-if config_dir == "":
-    config_dir = "."
+settings_path = f"{args.config_dir}/settings.json"
 
 if __name__ == "__main__":
-    ui.run(config_dir, service_mode)
+    ui.run(args.config_dir, args.service)
